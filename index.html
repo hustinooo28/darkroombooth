@@ -206,7 +206,7 @@ header{
 .fchip.active .fchip-name{color:var(--amber);}
 
 .shoot-row{
-  display:grid;grid-template-columns:52px 1fr 52px;align-items:center;gap:12px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px));
 }
 .timer-sel-wrapper {
@@ -223,23 +223,6 @@ header{
 .timer-sel:focus + .timer-trigger-btn, .timer-trigger-btn.active {
   border-color:var(--amber);color:var(--amber);background:var(--amber-bg);
 }
-
-.mob-shoot-btn-outer {
-  display:flex;justify-content:center;align-items:center;
-}
-.mob-shoot-btn{
-  width:72px;height:72px;border-radius:50%;
-  background:#ffffff;border:5px solid var(--surface2);
-  box-shadow:0 0 0 2px var(--amber), 0 4px 12px rgba(0,0,0,0.15);
-  cursor:pointer;transition:all .15s ease;position:relative;
-}
-.mob-shoot-btn::after {
-  content:'';position:absolute;inset:4px;border-radius:50%;
-  background:var(--amber);transition:all .15s ease;
-}
-.mob-shoot-btn:active {transform:scale(0.92);}
-.mob-shoot-btn:active::after {background:var(--text);transform:scale(0.95);}
-.mob-shoot-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none;}
 
 .mob-gal-preview-btn {
   width:44px;height:44px;border-radius:8px;background:var(--surface2);
@@ -390,15 +373,6 @@ header{
     cursor:pointer;outline:none;width:100%;transition:border-color .15s;
   }
   .desk-timer:hover{border-color:var(--amber);}
-  .desk-shoot-btn{
-    width:100%;padding:10px;display:block!important;visibility:visible!important;opacity:1!important;
-    background:var(--amber);border:none;border-radius:5px;
-    color:#fff;font-family:'DM Serif Display',serif;font-size:14px;
-    cursor:pointer;transition:all .15s;letter-spacing:.02em;box-shadow:0 3px 10px rgba(0,0,0,0.15);
-  }
-  .desk-shoot-btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px);}
-  .desk-shoot-btn:active:not(:disabled){transform:none;filter:none;}
-  .desk-shoot-btn:disabled{opacity:.32;cursor:not-allowed;transform:none;box-shadow:none;}
   .desk-allow-btn{
     width:100%;padding:6px;background:transparent;border:1px solid var(--amber);border-radius:4px;
     color:var(--amber);font-family:'DM Mono',monospace;font-size:9px;
@@ -551,10 +525,6 @@ header{
         <div class="timer-trigger-btn" id="mob-timer-pill">0s</div>
       </div>
 
-      <div class="mob-shoot-btn-outer">
-        <button class="mob-shoot-btn" id="mob-shoot-btn" disabled onclick="capturePhoto()" title="Capture Frame"></button>
-      </div>
-
       <button class="mob-gal-preview-btn" onclick="openSheet()" id="mob-gallery-preview" title="Expand View History">
         <div class="gal-icon-fallback">⊞</div>
       </button>
@@ -626,7 +596,6 @@ header{
           <option value="5">5 second countdown</option>
           <option value="10">10 second countdown</option>
         </select>
-        <button class="desk-shoot-btn" id="desk-shoot-btn" disabled onclick="capturePhoto()">trigger snapshot</button>
         <button class="desk-allow-btn" id="desk-allow-btn" onclick="startCamera()">initialize camera hardware</button>
       </div>
     </aside>
@@ -734,13 +703,11 @@ function toggleMirror(){
   const dt=$('desk-mirror-toggle'); if(dt) dt.classList.toggle('on',mirrored);
 }
 
-// Fixed Mobile Hardware Flash Support Handler
 async function toggleFlash() {
   flashEnabled = !flashEnabled;
   const mobBtn = $('mob-flash-btn'); if(mobBtn) mobBtn.classList.toggle('on', flashEnabled);
   const deskTgl = $('desk-flash-toggle'); if(deskTgl) deskTgl.classList.toggle('on', flashEnabled);
   
-  // Directly interface track constraints if available on device hardware
   if(stream) {
     const track = stream.getVideoTracks()[0];
     if(track) {
@@ -820,8 +787,7 @@ async function reqCam(fc){
   allVideos().forEach(v=>{v.srcObject=stream;});
   ['no-cam','desk-no-cam'].forEach(id=>{const el=$(id);if(el)el.style.display='none';});
   
-  // Enable all persistent control triggers across user layouts
-  ['mob-shoot-btn','desk-shoot-btn','mob-overlay-snap-btn','desk-overlay-snap-btn'].forEach(id=>{
+  ['mob-overlay-snap-btn','desk-overlay-snap-btn'].forEach(id=>{
     const el=$(id); if(el) el.disabled=false;
   });
   
@@ -831,7 +797,6 @@ async function reqCam(fc){
   allVideos().forEach(v=>v.style.filter=f.css==='none'?'':f.css);
   if(mirrored)allVideos().forEach(v=>v.classList.add('mirrored'));
   
-  // Re-verify torch track state requirements if preset active
   if(flashEnabled && fc === 'environment') {
     setTimeout(async () => {
       try {
@@ -857,7 +822,7 @@ async function capturePhoto(){
   if(capturing)return;
   capturing=true;
   
-  const targetButtons = ['mob-shoot-btn','desk-shoot-btn','mob-overlay-snap-btn','desk-overlay-snap-btn'];
+  const targetButtons = ['mob-overlay-snap-btn','desk-overlay-snap-btn'];
   targetButtons.forEach(id=>{const el=$(id); if(el)el.disabled=true;});
   
   const timerVal=parseInt((isMob()?$('mob-timer'):$('desk-timer')).value);
