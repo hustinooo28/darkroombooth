@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -9,60 +9,52 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
 /* ── Themes ── */
-[data-theme="light"]{  
-  --bg:#f5f1eb; 
-  --surface:#ffffff; --surface2:#f0ece4; --border:#ddd5c8;  
-  --text:#1a1612; --text-dim:#6b6158; --text-muted:#a09488;  
-  --amber:#c07810; --amber-bg:rgba(192,120,16,.10); --amber-glow:rgba(192,120,16,.22);  
-  --pol-paper:#fffef9; --pol-border:#ede5d8;  
-  --pol-shadow:0 3px 16px rgba(0,0,0,.12),0 1px 4px rgba(0,0,0,.07);  
-  --pol-hover:0 10px 32px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.10);  
-  --meta-col:#8a7a68; --act-border:#c8b8a8;  
-  --grain-op:.14; --vig:rgba(205,196,182,.45);  
-  --vf-bg:#1a1612; --sheet-bg:rgba(245,241,235,.97); --scrollbar:#c8bfb4;  
-  --overlay-btn:rgba(0,0,0,.55); --overlay-btn-border:rgba(255,255,255,.15);  
-  --filmstrip-bg:rgba(245,241,235,.96);
+[data-theme="light"]{
+  --bg:#f5f1eb; --surface:#ffffff; --surface2:#f0ece4; --border:#ddd5c8;
+  --text:#1a1612; --text-dim:#6b6158; --text-muted:#a09488;
+  --amber:#c07810; --amber-bg:rgba(192,120,16,.10); --amber-glow:rgba(192,120,16,.22);
+  --pol-paper:#fffef9; --pol-border:#ede5d8;
+  --pol-shadow:0 3px 16px rgba(0,0,0,.12),0 1px 4px rgba(0,0,0,.07);
+  --pol-hover:0 10px 32px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.10);
+  --meta-col:#8a7a68; --act-border:#c8b8a8;
+  --grain-op:.14; --vig:rgba(205,196,182,.45);
+  --vf-bg:#1a1612; --sheet-bg:rgba(245,241,235,.97); --scrollbar:#c8bfb4;
+  --overlay-btn:rgba(0,0,0,.55); --overlay-btn-border:rgba(255,255,255,.15);
 }
-[data-theme="dark"]{  
-  --bg:#0c0b09; --surface:#131210; --surface2:#1c1a17; --border:#2d2a24;  
-  --text:#e6ddd0; --text-dim:#7a7060; --text-muted:#4e4840;  
-  --amber:#e0981c; --amber-bg:rgba(224,152,28,.10); --amber-glow:rgba(224,152,28,.20);  
-  --pol-paper:#f5f0e8; --pol-border:#ede5d8;  
-  --pol-shadow:0 4px 20px rgba(0,0,0,.55),0 1px 4px rgba(0,0,0,.30);  
-  --pol-hover:0 12px 36px rgba(0,0,0,.65),0 2px 8px rgba(0,0,0,.40);  
-  --meta-col:#8a7060; --act-border:#c0ae98;  
-  --grain-op:.24; --vig:transparent;  
-  --vf-bg:#0c0b09; --sheet-bg:rgba(13,12,10,.97);  
-  --scrollbar:#2d2a24;  
-  --overlay-btn:rgba(0,0,0,.65); --overlay-btn-border:rgba(255,255,255,.10);  
-  --filmstrip-bg:rgba(13,12,10,.96);
+[data-theme="dark"]{
+  --bg:#0c0b09; --surface:#131210; --surface2:#1c1a17; --border:#2d2a24;
+  --text:#e6ddd0; --text-dim:#7a7060; --text-muted:#4e4840;
+  --amber:#e0981c; --amber-bg:rgba(224,152,28,.10); --amber-glow:rgba(224,152,28,.20);
+  --pol-paper:#f5f0e8; --pol-border:#ede5d8;
+  --pol-shadow:0 4px 20px rgba(0,0,0,.55),0 1px 4px rgba(0,0,0,.30);
+  --pol-hover:0 12px 36px rgba(0,0,0,.65),0 2px 8px rgba(0,0,0,.40);
+  --meta-col:#8a7060; --act-border:#c0ae98;
+  --grain-op:.24; --vig:transparent;
+  --vf-bg:#0c0b09; --sheet-bg:rgba(13,12,10,.97); --scrollbar:#2d2a24;
+  --overlay-btn:rgba(0,0,0,.65); --overlay-btn-border:rgba(255,255,255,.10);
 }
 
-html,body{  
-  height:100%;  
-  overflow:hidden;  
-  background:var(--bg);color:var(--text);  
-  font-family:'DM Sans',sans-serif;  
-  -webkit-tap-highlight-color:transparent;  
-}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;-webkit-tap-highlight-color:transparent;}
 
-/* Grain Overlays */
-body::before{  
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;  
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3C/rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");  
+/* Grain */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
   background-size:200px 200px;opacity:var(--grain-op);mix-blend-mode:multiply;
 }
-body::after{  
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;  
+/* Vignette — light only */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
   background:radial-gradient(ellipse at center,transparent 40%,var(--vig) 100%);
 }
 
+/* ── Shared Shell ── */
 .app{height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
 
-header{  
-  display:flex;align-items:center;justify-content:space-between;  
-  padding:0 16px;height:48px;min-height:48px;  
-  border-bottom:1px solid var(--border);background:var(--surface);  
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:48px;min-height:48px;
+  border-bottom:1px solid var(--border);background:var(--surface);
   position:relative;z-index:100;flex-shrink:0;
 }
 .logo{font-family:'DM Serif Display',serif;font-size:17px;color:var(--amber);display:flex;align-items:baseline;gap:6px;}
@@ -72,1441 +64,933 @@ header{
 .pill{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:100px;border:1px solid var(--border);color:var(--text-dim);white-space:nowrap;}
 .pill.live{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);display:flex;align-items:center;gap:4px;}
 .live-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:pulse 2s ease-in-out infinite;}
-
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-.icon-btn{  
-  width:32px;height:32px;border-radius:50%;  
-  border:1px solid var(--border);background:var(--surface2);  
-  color:var(--text-dim);cursor:pointer;font-size:15px;  
-  display:flex;align-items:center;justify-content:center;  
+.icon-btn{
+  width:32px;height:32px;border-radius:50%;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--text-dim);cursor:pointer;font-size:15px;
+  display:flex;align-items:center;justify-content:center;
   transition:all .15s;flex-shrink:0;
 }
 .icon-btn:hover{border-color:var(--amber);color:var(--amber);}
 .icon-btn.on{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}
 
-/* Polaroid Styles */
-.pol{  
-  background:var(--pol-paper);padding:7px 7px 34px;  
-  box-shadow:var(--pol-shadow);position:relative;flex-shrink:0;  
+/* ── Film Strip Aesthetic Layouts ── */
+.film-strip-item{
+  background:#11110f;
+  color:#e6ddd0;
+  padding:24px 14px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  border-radius:2px;
   animation:slideUp .28s ease forwards;
 }
-@keyframes slideUp{from{opacity:0;transform:translateY(8px) rotate(var(--tilt,0deg))}to{opacity:1;transform:translateY(0) rotate(var(--tilt,0deg))}}
-.pol-img{width:100%;display:block;border:1px solid var(--pol-border);object-fit:cover;}
-.pol-foot{position:absolute;bottom:0;left:0;right:0;padding:0 7px 5px;display:flex;justify-content:space-between;align-items:flex-end;}
-.p-meta{font-family:'DM Mono',monospace;font-size:7px;color:var(--meta-col);line-height:1.6;}
-.p-acts{display:flex;gap:3px;}
-.p-btn{  
-  width:24px;height:24px;border-radius:50%;  
-  border:1px solid var(--act-border);background:transparent;  
-  cursor:pointer;display:flex;align-items:center;justify-content:center;  
-  font-size:11px;color:var(--meta-col);transition:all .15s;
+.film-strip-item::before, .film-strip-item::after{
+  content:'';
+  position:absolute;
+  top:0; bottom:0;
+  width:10px;
+  background-image: radial-gradient(circle, #000 40%, transparent 45%);
+  background-size: 10px 14px;
+  background-repeat: repeat-y;
 }
-.p-btn:hover,.p-btn:active{background:var(--bg);border-color:var(--amber);color:var(--amber);}
+.film-strip-item::before{left:3px;}
+.film-strip-item::after{right:3px;}
 
-/* ── MOBILE VIEWFINDER ── */
-.vf-panel{  
-  flex:1;position:relative;overflow:hidden;  
-  background:var(--vf-bg);min-height:0;  
+.strip-frame-wrap{
+  width:100%;
+  background:#000;
+  border:1px solid #221f1a;
+  padding:4px;
+  position:relative;
+}
+.strip-img{width:100%;display:block;object-fit:cover;}
+
+.strip-meta{
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:8px;
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  color:#8a7060;
+  padding:0 4px;
+}
+.strip-info{display:flex;flex-direction:column;gap:1px;}
+.strip-acts{display:flex;gap:4px;}
+.strip-btn{
+  width:22px;height:22px;border-radius:4px;
+  border:1px solid #3a352e;background:transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:#a09080;transition:all .15s;
+}
+.strip-btn:hover{background:#25221c;color:var(--amber);border-color:var(--amber);}
+
+.prow{display:grid;gap:14px;width:100%;}
+.prow.c2{grid-template-columns:repeat(2,1fr);}
+.prow.c3{grid-template-columns:repeat(3,1fr);}
+.prow.c4{grid-template-columns:repeat(4,1fr);}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:100px;left:50%;
+  transform:translateX(-50%) translateY(60px);
+  background:var(--text);color:var(--bg);
+  font-family:'DM Mono',monospace;font-size:11px;
+  letter-spacing:.07em;padding:8px 18px;
+  border-radius:100px;z-index:10000;
+  transition:transform .25s ease;white-space:nowrap;pointer-events:none;
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ══════════════════════════════════════
+   MOBILE LAYOUT  (< 769px)
+══════════════════════════════════════ */
+.vf-panel{
+  flex:1;position:relative;overflow:hidden;
+  background:var(--vf-bg);min-height:0;
+  display:flex; align-items:center; justify-content:center;
+  padding:12px;
+}
+.vf-track-wrap{
+  position:relative;
+  width:100%;
+  height:100%;
+  max-height: 80vh;
+  aspect-ratio: 4/5;
+  background:#11110f;
+  padding:16px 12px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+}
+.vf-track-wrap::before, .vf-track-wrap::after{
+  content:''; position:absolute; top:0; bottom:0; width:8px;
+  background-image: radial-gradient(circle, #000 40%, transparent 45%);
+  background-size: 8px 12px; background-repeat: repeat-y; opacity:0.85;
+}
+.vf-track-wrap::before{left:2px;}
+.vf-track-wrap::after{right:2px;}
+
+.vf-inner-frame{
+  position:relative; width:100%; height:100%; background:#000; overflow:hidden;
 }
 #video{width:100%;height:100%;object-fit:cover;display:block;}
 #canvas{display:none;}
 #video.mirrored{transform:scaleX(-1);}
-.vf-overlay{position:absolute;inset:0;pointer-events:none;}
-.corner{position:absolute;width:18px;height:18px;border-color:var(--amber);border-style:solid;opacity:.6;}
-.corner.tl{top:12px;left:12px;border-width:2px 0 0 2px;}
-.corner.tr{top:12px;right:12px;border-width:2px 2px 0 0;}
-.corner.bl{bottom:12px;left:12px;border-width:0 0 2px 2px;}
-.corner.br{bottom:12px;right:12px;border-width:0 2px 2px 0;}
-.flash-el{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .04s;}
-.flash-el.on{opacity:1;}
-.cd-num{  
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);  
-  font-family:'DM Serif Display',serif;font-size:88px;color:#fff;  
+
+.vf-overlay{position:absolute;inset:0;pointer-events:none;z-index:3;}
+.corner{position:absolute;width:14px;height:14px;border-color:var(--amber);border-style:solid;opacity:.6;}
+.corner.tl{top:8px;left:8px;border-width:2px 0 0 2px;}
+.corner.tr{top:8px;right:8px;border-width:2px 2px 0 0;}
+.corner.bl{bottom:8px;left:8px;border-width:0 0 2px 2px;}
+.corner.br{bottom:8px;right:8px;border-width:0 2px 2px 0;}
+
+/* Dynamic Non-linear Flash Layer */
+.flash-el{
+  position:absolute;inset:0;background:#ffffff;opacity:0;pointer-events:none;z-index:8;
+  mix-blend-mode: overlay;
+}
+.cd-num{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:'DM Serif Display',serif;font-size:72px;color:#fff;
   text-shadow:0 4px 28px rgba(0,0,0,.75);opacity:0;transition:opacity .18s;z-index:10;line-height:1;
 }
 .cd-num.show{opacity:1;}
-.vf-tag{  
-  position:absolute;top:10px;left:10px;  
-  font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);  
-  letter-spacing:.14em;text-transform:uppercase;  
-  background:rgba(0,0,0,.55);padding:3px 7px;border-radius:2px;  
-  border:1px solid rgba(180,110,10,.4);pointer-events:none;
+
+.vf-tag{
+  position:absolute;bottom:8px;left:8px;
+  font-family:'DM Mono',monospace;font-size:8px;color:var(--amber);
+  letter-spacing:.14em;text-transform:uppercase;
+  background:rgba(0,0,0,.75);padding:3px 6px;border-radius:2px;
+  border:1px solid rgba(180,110,10,.3);pointer-events:none;z-index:4;
 }
-.no-cam{  
-  position:absolute;inset:0;display:flex;flex-direction:column;  
-  align-items:center;justify-content:center;gap:14px;background:var(--vf-bg);  
-  z-index:5;
+
+.no-cam{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;
+  background:#11110f;z-index:9;
 }
-.no-cam svg{opacity:.15;}
-.no-cam-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;}
-.no-cam-btn{  
-  padding:11px 28px;background:var(--amber);border:none;border-radius:7px;  
-  color:#fff;font-family:'DM Serif Display',serif;font-size:16px;  
+.no-cam svg{opacity:.2; color:#fff;}
+.no-cam-label{font-family:'DM Mono',monospace;font-size:10px;color:#7a7060;letter-spacing:.1em;text-transform:uppercase;}
+.no-cam-btn{
+  padding:10px 22px;
+  background:var(--amber);border:none;border-radius:6px;
+  color:#fff;font-family:'DM Serif Display',serif;font-size:14px;
   cursor:pointer;letter-spacing:.02em;transition:all .15s;
 }
-.no-cam-btn:active{transform:scale(.95);}
 
-.vf-controls{  
-  position:absolute;bottom:12px;left:12px;right:12px;  
-  display:flex;justify-content:space-between;align-items:center;z-index:20;  
-  pointer-events:none;
+.vf-controls{ position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:20;}
+.vf-ctrl-btn{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--overlay-btn);border:1px solid var(--overlay-btn-border);
+  color:#fff;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;backdrop-filter:blur(4px);
 }
-.vf-controls-left, .vf-controls-right {
-  display:flex;gap:6px;pointer-events:auto;
-}
-.vf-ctrl-btn, .vf-cam-btn{  
-  width:36px;height:36px;border-radius:50%;  
-  background:var(--overlay-btn);border:1px solid var(--overlay-btn-border);  
-  color:#fff;font-size:13px;cursor:pointer;  
-  display:flex;align-items:center;justify-content:center;  
-  transition:all .15s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);  
-  font-family:'DM Mono',monospace;text-transform:uppercase;font-size:9px;
-}
-.vf-ctrl-btn:active, .vf-cam-btn:active{transform:scale(.88);}
-.vf-ctrl-btn.on, .vf-cam-btn.active{border-color:var(--amber);color:var(--amber);}
+.vf-ctrl-btn.on{border-color:var(--amber);color:var(--amber);}
 
-/* ── MOBILE ACTIONS INTERFACE PANEL ── */
-.bottom-bar{  
-  flex-shrink:0;  
-  background:var(--surface);  
-  border-top:1px solid var(--border);  
-  position:relative;  
-  z-index:300;
+.vf-cam-row{position:absolute;bottom:8px;right:8px;display:flex;gap:4px;z-index:20;}
+.vf-cam-btn{
+  font-family:'DM Mono',monospace;font-size:8px;
+  padding:4px 7px;border-radius:4px;
+  background:var(--overlay-btn);border:1px solid var(--overlay-btn-border);
+  color:rgba(255,255,255,.8);cursor:pointer;transition:all .15s;
 }
-.filter-strip{  
-  display:flex;overflow-x:auto;overflow-y:hidden;  
-  padding:7px 10px 5px;border-bottom:1px solid var(--border);  
-  -webkit-overflow-scrolling:touch;scrollbar-width:none;gap:2px;
-}
+.vf-cam-btn.active{border-color:var(--amber);color:var(--amber);}
+
+/* Bottom bar */
+.bottom-bar{flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);position:relative;z-index:50;}
+.filter-strip{display:flex;overflow-x:auto;overflow-y:hidden;padding:7px 10px;border-bottom:1px solid var(--border);gap:2px;scrollbar-width:none;}
 .filter-strip::-webkit-scrollbar{display:none;}
-.fchip{  
-  display:flex;flex-direction:column;align-items:center;  
-  gap:3px;padding:4px 7px;border-radius:5px;cursor:pointer;  
-  border:1px solid transparent;transition:all .15s;flex-shrink:0;min-width:50px;
-}
-.fchip:active{transform:scale(.92);}
+.fchip{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 7px;border-radius:5px;cursor:pointer;border:1px solid transparent;transition:all .15s;flex-shrink:0;min-width:50px;}
 .fchip.active{background:var(--amber-bg);border-color:var(--amber);}
 .fthumb{width:32px;height:22px;border-radius:3px;overflow:hidden;border:1px solid var(--border);}
 .fthumb-inner{width:100%;height:100%;background:linear-gradient(135deg,#c8b090,#907060,#604030);}
 .fchip-name{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:.03em;white-space:nowrap;}
 .fchip.active .fchip-name{color:var(--amber);}
 
-.shoot-row{  
-  display:grid;grid-template-columns:52px 1fr 52px;align-items:center;gap:12px;  
-  padding:12px 16px;  
-  padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px));
-}
-.timer-sel-wrapper {
-  position:relative;display:flex;align-items:center;justify-content:center;
-}
-.timer-sel{  
-  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2;
-}
-.timer-trigger-btn {
-  width:44px;height:44px;border-radius:50%;background:var(--surface2);  
-  border:1px solid var(--border);color:var(--text-dim);font-family:'DM Mono',monospace;  
-  font-size:12px;display:flex;align-items:center;justify-content:center;pointer-events:none;
-}
-.timer-sel:focus + .timer-trigger-btn, .timer-trigger-btn.active {
-  border-color:var(--amber);color:var(--amber);background:var(--amber-bg);
-}
+.shoot-row{display:flex;align-items:center;gap:8px;padding:9px 14px calc(9px + env(safe-area-inset-bottom,0px));}
+.timer-sel{font-family:'DM Mono',monospace;font-size:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:5px;cursor:pointer;outline:none;flex:1;min-width:0;}
+.mob-shoot-btn{padding:10px 22px;background:var(--amber);border:none;border-radius:7px;color:#fff;font-family:'DM Serif Display',serif;font-size:16px;cursor:pointer;transition:all .15s;letter-spacing:.02em;flex-shrink:0;}
+.mob-shoot-btn:disabled{opacity:.3;}
 
-.mob-shoot-btn-outer {
-  display:flex;justify-content:center;align-items:center;
+/* Roll drawer */
+.roll-sheet{
+  position:fixed;bottom:0;left:0;right:0;background:var(--sheet-bg);backdrop-filter:blur(14px);
+  border-radius:16px 16px 0 0;border-top:1px solid var(--border);z-index:200;
+  transform:translateY(calc(100% - 50px));transition:transform .32s cubic-bezier(.32,0,.67,0);
+  max-height:85dvh;display:flex;flex-direction:column;overflow:hidden;
 }
-.mob-shoot-btn{  
-  width:72px;height:72px;border-radius:50%;  
-  background:#ffffff;border:5px solid var(--surface2);  
-  box-shadow:0 0 0 2px var(--amber), 0 4px 12px rgba(0,0,0,0.15);  
-  cursor:pointer;transition:all .15s ease;position:relative;
-}
-.mob-shoot-btn::after {
-  content:'';position:absolute;inset:4px;border-radius:50%;  
-  background:var(--amber);transition:all .15s ease;
-}
-.mob-shoot-btn:active {transform:scale(0.92);}
-.mob-shoot-btn:active::after {background:var(--text);transform:scale(0.95);}
-.mob-shoot-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none;}
-
-.mob-gal-preview-btn {
-  width:44px;height:44px;border-radius:8px;background:var(--surface2);  
-  border:1px solid var(--border);overflow:hidden;cursor:pointer;  
-  display:flex;align-items:center;justify-content:center;transition:all 0.15s;  
-  padding:2px;
-}
-.mob-gal-preview-btn:active {transform:scale(0.92);}
-.mob-gal-preview-btn .gal-icon-fallback {
-  font-size:18px;color:var(--text-dim);
-}
-.mob-gal-preview-btn img {
-  width:100%;height:100%;object-fit:cover;border-radius:5px;
-}
-
-/* ── COMPACT FILMSTRIP BAR ── */
-.filmstrip-bar{  
-  flex-shrink:0;  
-  background:var(--filmstrip-bg);  
-  border-top:1px solid var(--border);  
-  display:flex;align-items:center;gap:0;  
-  height:62px;  
-  position:relative;  
-  z-index:290;  
-  overflow:hidden;
-}
-.filmstrip-thumbs{  
-  flex:1;display:flex;gap:5px;  
-  overflow-x:auto;overflow-y:hidden;  
-  padding:7px 10px;  
-  -webkit-overflow-scrolling:touch;scrollbar-width:none;  
-  align-items:center;
-}
-.filmstrip-thumbs::-webkit-scrollbar{display:none;}
-.fs-thumb{  
-  width:42px;height:42px;flex-shrink:0;  
-  background:var(--pol-paper);  
-  padding:2px 2px 10px;  
-  box-shadow:0 2px 6px rgba(0,0,0,.15);  
-  cursor:pointer;position:relative;  
-  animation:fsIn .2s ease forwards;
-}
-@keyframes fsIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
-.fs-thumb img{width:100%;height:26px;object-fit:cover;display:block;border:1px solid var(--pol-border);}
-.fs-empty{  
-  font-family:'DM Mono',monospace;font-size:9px;  
-  color:var(--text-muted);letter-spacing:.1em;padding:0 14px;opacity:.7;
-}
-.gallery-open-btn{  
-  flex-shrink:0;  
-  width:52px;height:62px;  
-  background:transparent;border:none;border-left:1px solid var(--border);  
-  color:var(--text-dim);cursor:pointer;  
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;  
-  transition:background .15s;padding:0;
-}
-.gallery-open-btn:active{background:var(--surface2);}
-.gallery-open-btn span:first-child{font-size:16px;}
-.gallery-open-btn .gal-lbl{font-family:'DM Mono',monospace;font-size:7px;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;}
-
-/* ── PROGRESSIVE DISCLOSURE ARCHIVE SLIDE DRAWER ── */
-.roll-sheet{  
-  position:fixed;  
-  bottom:0;left:0;right:0;  
-  background:var(--sheet-bg);  
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);  
-  border-radius:16px 16px 0 0;  
-  border-top:1px solid var(--border);  
-  z-index:400;  
-  transform:translateY(100%);  
-  transition:transform .32s cubic-bezier(.32,0,.67,0);  
-  max-height:85dvh;  
-  display:flex;flex-direction:column;overflow:hidden;  
-  pointer-events:none;
-}
-.roll-sheet.open{  
-  transform:translateY(0);  
-  transition:transform .38s cubic-bezier(.33,1,.68,1);  
-  pointer-events:auto;
-}
-.sheet-handle{  
-  flex-shrink:0;padding:10px 16px 8px;  
-  cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;user-select:none;
-}
+.roll-sheet.open{transform:translateY(0);transition:transform .38s cubic-bezier(.33,1,.68,1);}
+.sheet-handle{flex-shrink:0;padding:10px 16px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;user-select:none;}
 .handle-bar{width:36px;height:4px;border-radius:2px;background:var(--border);}
 .sheet-header{width:100%;display:flex;align-items:center;justify-content:space-between;}
 .shot-ctr{font-family:'DM Serif Display',serif;font-size:19px;color:var(--amber);line-height:1;}
 .shot-ctr small{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-left:2px;}
 .layout-picker{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;}
-.lp-btn{  
-  font-family:'DM Mono',monospace;font-size:9px;padding:4px 7px;border-radius:4px;  
-  border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;
-}
-.lp-btn:active{transform:scale(.9);}
+.lp-btn{font-family:'DM Mono',monospace;font-size:9px;padding:4px 7px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;}
 .lp-btn.active{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
 
-.pol-grid{  
-  flex:1;padding:10px 14px 6px;  
-  overflow-y:auto;-webkit-overflow-scrolling:touch;  
-  display:flex;flex-direction:column;gap:12px;min-height:0;
-}
+.pol-grid{flex:1;padding:12px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;min-height:0;}
 .pol-grid::-webkit-scrollbar{width:3px;}
 .pol-grid::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px;}
-.empty-st{  
-  flex:1;display:flex;flex-direction:column;  
-  align-items:center;justify-content:center;  
-  gap:8px;text-align:center;padding:28px 0;
-}
-.empty-st .ei{font-size:26px;opacity:.18;filter:grayscale(1);}
+.empty-st{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:28px 0;}
+.empty-st .ei{font-size:26px;opacity:.18;}
 .empty-st p{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.14em;text-transform:uppercase;line-height:2;}
 
-.roll-foot{  
-  padding:8px 12px;  
-  padding-bottom:calc(8px + env(safe-area-inset-bottom, 0px));  
-  border-top:1px solid var(--border);  
-  display:flex;gap:6px;background:var(--surface);flex-shrink:0;flex-wrap:wrap;
-}
-.ft-btn{  
-  flex:1;min-width:70px;padding:10px 6px;  
-  font-family:'DM Mono',monospace;font-size:9px;  
-  letter-spacing:.07em;text-transform:uppercase;  
-  border-radius:6px;border:1px solid var(--border);  
-  background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;
-}
-.ft-btn:active{transform:scale(.96);}
+.roll-foot{padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);display:flex;gap:6px;background:var(--surface);flex-shrink:0;}
+.ft-btn{flex:1;padding:10px 6px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.07em;text-transform:uppercase;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;}
 .ft-btn.pri{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}
-.ft-btn:disabled{opacity:.28;cursor:not-allowed;transform:none;}
+.ft-btn:disabled{opacity:.28;}
 
-.sheet-backdrop{  
-  position:fixed;inset:0;  
-  background:rgba(0,0,0,.35);  
-  z-index:399;  
-  opacity:0;pointer-events:none;  
-  transition:opacity .3s ease;
-}
-.sheet-backdrop.show{opacity:1;pointer-events:auto;}
+/* ══════════════════════════════════════
+   DESKTOP LAYOUT  (≥ 769px)
+══════════════════════════════════════ */
+@media(min-width:769px){
+  .bottom-bar,.roll-sheet,.vf-controls,.vf-cam-row{display:none!important;}
+  .toast{bottom:28px;}
 
-/* Hide desktop engine views layout arrays on mobile viewports */
-.desk-main { display: none !important; }
+  .app{height:100vh;display:grid;grid-template-rows:52px 1fr 34px;}
+  header{height:52px;padding:0 24px;}
+  .logo{font-size:19px;}
+  .pill{font-size:10px;padding:4px 10px;}
+  .icon-btn{width:30px;height:30px;}
 
-/* ── DESKTOP SCREEN ARCHITECTURE RECOVERY ENGINE (>= 769px) ── */
-@media(min-width:769px){  
-  .vf-panel,.bottom-bar,.filmstrip-bar,.roll-sheet,.sheet-backdrop,.vf-controls{display:none!important;}  
-  
-  .desk-main{    
-    display:grid !important;    
-    grid-template-columns:256px 1fr 320px;    
-    overflow:hidden;  
-    flex:1;
-  }  
-  .app{    
-    height:100vh;    
-    display:flex;
-    flex-direction:column;
-  }  
-  header{height:52px;padding:0 24px;}  
-  .logo{font-size:19px;}  
-  .pill{font-size:10px;padding:4px 10px;}  
-  .icon-btn{width:30px;height:30px;}  
-  
-  .desk-sidebar{    
-    display:flex;flex-direction:column;    
-    border-right:1px solid var(--border);    
-    background:var(--surface);overflow:hidden;  
-  }  
-  .sb-block{    
-    padding:13px 14px;border-bottom:1px solid var(--border);    
-    display:flex;flex-direction:column;gap:9px;flex-shrink:0;  
-  }  
-  .sb-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.18em;text-transform:uppercase;}  
-  .desk-cam-sw{display:flex;gap:3px;}  
-  .desk-cam-btn{    
-    flex:1;font-family:'DM Mono',monospace;font-size:10px;    
-    padding:6px 4px;border-radius:4px;border:1px solid var(--border);    
-    background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;text-align:center;  
-  }  
-  .desk-cam-btn:hover{border-color:var(--amber);color:var(--amber);}  
-  .desk-cam-btn.active{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}  
-  .mirror-row{display:flex;align-items:center;justify-content:space-between;}  
-  .toggle-track{    
-    width:34px;height:19px;border-radius:10px;background:var(--border);    
-    cursor:pointer;position:relative;transition:background .2s;border:none;flex-shrink:0;  
-  }  
-  .toggle-track.on{background:var(--amber);}  
-  .toggle-thumb{    
-    position:absolute;top:2.5px;left:2.5px;width:14px;height:14px;border-radius:50%;    
-    background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);  
-  }  
-  .toggle-track.on .toggle-thumb{left:18px;}  
-  .toggle-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);}  
-  .desk-filter-list{    
-    flex:1;overflow-y:auto;padding:7px 10px;    
-    display:flex;flex-direction:column;gap:3px;  
-  }  
-  .desk-filter-list::-webkit-scrollbar{width:3px;}  
-  .desk-filter-list::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px;}  
-  .desk-fchip{    
-    display:flex;align-items:center;gap:9px;    
-    padding:6px 8px;border-radius:5px;cursor:pointer;    
-    border:1px solid transparent;transition:all .15s;  
-  }  
-  .desk-fchip:hover{background:var(--surface2);border-color:var(--border);}  
-  .desk-fchip.active{background:var(--amber-bg);border-color:var(--amber);}  
-  .desk-fthumb{width:36px;height:26px;border-radius:3px;overflow:hidden;flex-shrink:0;border:1px solid var(--border);}  
-  .desk-fthumb-inner{width:100%;height:100%;background:linear-gradient(135deg,#c8b090,#907060,#604030);}  
-  .desk-fchip-name{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:.05em;}  
-  .desk-fchip.active .desk-fchip-name{color:var(--amber);}  
-  .desk-shoot-section{    
-    padding:11px 14px;border-top:1px solid var(--border);    
-    display:flex;flex-direction:column;gap:7px;flex-shrink:0;  
-  }  
-  .desk-timer{    
-    font-family:'DM Mono',monospace;font-size:11px;    
-    background:var(--surface2);border:1px solid var(--border);    
-    color:var(--text);padding:8px 10px;border-radius:5px;    
-    cursor:pointer;outline:none;width:100%;transition:border-color .15s;  
-  }  
-  .desk-timer:hover{border-color:var(--amber);}  
-  .desk-shoot-btn{    
-    width:100%;padding:12px;    
-    background:var(--amber);border:none;border-radius:6px;    
-    color:#fff;font-family:'DM Serif Display',serif;font-size:16px;    
-    cursor:pointer;transition:all .15s;letter-spacing:.02em;  
-  }  
-  .desk-shoot-btn:hover{filter:brightness(1.08);transform:translateY(-1px);}  
-  .desk-shoot-btn:active{transform:none;filter:none;}  
-  .desk-shoot-btn:disabled{opacity:.32;cursor:not-allowed;transform:none;}  
-  .desk-allow-btn{    
-    width:100%;padding:9px;    
-    background:transparent;border:1px solid var(--amber);border-radius:5px;    
-    color: var(--amber); font-family: 'DM Mono', monospace; font-size: 10px;  
-    letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s;  
-  }  
-  .desk-allow-btn:hover{background:var(--amber-bg);}  
-  .desk-vf{    
-    display:flex;align-items:center;justify-content:center;    
-    padding:20px;background:var(--bg);overflow:hidden;position:relative;  
-  }  
-  .desk-vf-wrap{    
-    position:relative;width:100%;max-width:640px;    
-    background:var(--vf-bg);border-radius:8px;overflow:hidden;    
-    border:1px solid var(--border);    
-    aspect-ratio:4/3;    
-    max-height:calc(100vh - 52px - 34px - 40px);  
-  }  
-  .desk-vf-wrap video{width:100%;height:100%;object-fit:cover;display:block;}  
-  .desk-vf-wrap video.mirrored{transform:scaleX(-1);}  
-  .desk-no-cam{    
-    position:absolute;inset:0;display:flex;flex-direction:column;    
-    align-items:center;justify-content:center;gap:12px;background:var(--vf-bg);  
-  }  
-  .desk-no-cam svg{opacity:.15;}  
-  .desk-no-cam-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;}  
-  .desk-vf-overlay{position:absolute;inset:0;pointer-events:none;}  
-  .desk-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .04s;}  
-  .desk-flash.on{opacity:1;}  
-  .desk-cdnum{    
-    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);    
-    font-family:'DM Serif Display',serif;font-size:88px;color:#fff;    
-    text-shadow:0 4px 28px rgba(0,0,0,.75);opacity:0;transition:opacity .18s;z-index:10;line-height:1;  
-  }  
-  .desk-cdnum.show{opacity:1;}  
-  .desk-vf-tag{    
-    position:absolute;bottom:10px;left:10px;    
-    font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);    
-    letter-spacing:.14em;text-transform:uppercase;    
-    background:rgba(0,0,0,.55);padding:3px 7px;border-radius:2px;    
-    border:1px solid rgba(180,110,10,.4);  
-  }  
-  .desk-roll{    
-    display:flex;flex-direction:column;    
-    border-left:1px solid var(--border);    
-    background:var(--surface);overflow:hidden;  
-  }  
-  .desk-roll-hdr{    
-    padding:11px 14px 9px;border-bottom:1px solid var(--border);    
-    display:flex;justify-content:space-between;align-items:flex-start;    
-    flex-shrink:0;gap:8px;  
-  }  
-  .desk-roll-title{font-family:'DM Serif Display',serif;font-size:18px;color:var(--amber);line-height:1.1;}  
-  .desk-roll-title small{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-left:2px;}  
-  .desk-lp-wrapper{display:flex;flex-direction:column;gap:3px;align-items:flex-end;}  
-  .desk-lp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}  
-  .desk-lp-btn{    
-    font-family:'DM Mono',monospace;font-size:9px;padding:3px 4px;border-radius:3px;    
-    border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;text-align:center;  
-  }  
-  .desk-lp-btn:hover{border-color:var(--border);color:var(--text);}  
-  .desk-lp-btn.active{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}  
-  .desk-grid-scroll{    
-    flex:1;overflow-y:auto;padding:14px;    
-    display:flex;flex-direction:column;gap:12px;  
-  }  
-  .desk-grid-scroll::-webkit-scrollbar{width:3px;}  
-  .desk-grid-scroll::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px;}  
-  .desk-actions-box{    
-    padding:10px 14px;border-top:1px solid var(--border);    
-    background:var(--surface2);display:flex;flex-direction:column;gap:6px;flex-shrink:0;  
-  }  
-  .desk-act-btn{    
-    width:100%;padding:9px;font-family:'DM Mono',monospace;font-size:10px;    
-    letter-spacing:.06em;text-transform:uppercase;border-radius:5px;    
-    border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;  
-  }  
-  .desk-act-btn:hover:not(:disabled){border-color:var(--text-dim);color:var(--text);}  
-  .desk-act-btn.pri{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}  
-  .desk-act-btn.pri:hover:not(:disabled){filter:brightness(1.05);}  
-  .desk-act-btn:disabled{opacity:.25;cursor:not-allowed;}  
+  .desk-main{display:grid;grid-template-columns:256px 1fr 340px;overflow:hidden;}
+
+  /* Left sidebar */
+  .desk-sidebar{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface);overflow:hidden;}
+  .sb-block{padding:13px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:9px;flex-shrink:0;}
+  .sb-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.18em;text-transform:uppercase;}
+  .desk-cam-sw{display:flex;gap:3px;}
+  .desk-cam-btn{flex:1;font-family:'DM Mono',monospace;font-size:10px;padding:6px 4px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;text-align:center;}
+  .desk-cam-btn.active{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+
+  .mirror-row{display:flex;align-items:center;justify-content:space-between;}
+  .toggle-track{width:34px;height:19px;border-radius:10px;background:var(--border);cursor:pointer;position:relative;border:none;flex-shrink:0;}
+  .toggle-track.on{background:var(--amber);}
+  .toggle-thumb{position:absolute;top:2.5px;left:2.5px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;}
+  .toggle-track.on .toggle-thumb{left:18px;}
+  .toggle-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);}
+
+  .desk-filter-list{flex:1;overflow-y:auto;padding:7px 10px;display:flex;flex-direction:column;gap:3px;}
+  .desk-filter-list::-webkit-scrollbar{width:3px;}
+  .desk-filter-list::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px;}
+  .desk-fchip{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:5px;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+  .desk-fchip.active{background:var(--amber-bg);border-color:var(--amber);}
+  .desk-fthumb{width:36px;height:26px;border-radius:3px;overflow:hidden;flex-shrink:0;border:1px solid var(--border);}
+  .desk-fthumb-inner{width:100%;height:100%;background:linear-gradient(135deg,#c8b090,#907060,#604030);}
+  .desk-fchip-name{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:.05em;}
+  .desk-fchip.active .desk-fchip-name{color:var(--amber);}
+
+  .desk-shoot-section{padding:11px 14px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:7px;flex-shrink:0;}
+  .desk-timer{font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:5px;cursor:pointer;outline:none;width:100%;}
+  .desk-shoot-btn{width:100%;padding:12px;background:var(--amber);border:none;border-radius:6px;color:#fff;font-family:'DM Serif Display',serif;font-size:16px;cursor:pointer;transition:all .15s;letter-spacing:.02em;}
+  .desk-shoot-btn:disabled{opacity:.32;}
+  .desk-allow-btn{width:100%;padding:9px;background:transparent;border:1px solid var(--amber);border-radius:5px;color:var(--amber);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s;}
+
+  /* Center: Viewfinder Panel with Film Perforations */
+  .desk-vf{display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg);overflow:hidden;}
+  .desk-film-housing{
+    position:relative; width:100%; max-width:440px; background:#11110f;
+    padding:24px 16px; display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.45); border-radius:4px;
+  }
+  .desk-film-housing::before, .desk-film-housing::after{
+    content:''; position:absolute; top:0; bottom:0; width:10px;
+    background-image: radial-gradient(circle, #000 40%, transparent 45%);
+    background-size: 10px 14px; background-repeat: repeat-y; opacity:0.9;
+  }
+  .desk-film-housing::before{left:3px;}
+  .desk-film-housing::after{right:3px;}
+
+  .desk-vf-wrap{
+    position:relative; width:100%; background:#000; overflow:hidden;
+    border:1px solid #221f1a; aspect-ratio: 4/5;
+    max-height:calc(100vh - 52px - 34px - 88px);
+  }
+  .desk-vf-wrap video{width:100%;height:100%;object-fit:cover;display:block;}
+  .desk-vf-wrap video.mirrored{transform:scaleX(-1);}
+
+  .desk-no-cam{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#11110f;z-index:9;}
+  .desk-no-cam svg{opacity:.2; color:#fff;}
+  .desk-no-cam-label{font-family:'DM Mono',monospace;font-size:11px;color:#7a7060;letter-spacing:.1em;text-transform:uppercase;}
+
+  .desk-vf-overlay{position:absolute;inset:0;pointer-events:none;z-index:3;}
+  .desk-flash{position:absolute;inset:0;background:#ffffff;opacity:0;pointer-events:none;z-index:8;mix-blend-mode:overlay;}
+  .desk-cdnum{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    font-family:'DM Serif Display',serif;font-size:88px;color:#fff;
+    text-shadow:0 4px 28px rgba(0,0,0,.75);opacity:0;transition:opacity .18s;z-index:10;line-height:1;
+  }
+  .desk-cdnum.show{opacity:1;}
+  .desk-vf-tag{
+    position:absolute;bottom:10px;left:10px;
+    font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);
+    letter-spacing:.14em;text-transform:uppercase;
+    background:rgba(0,0,0,.75);padding:3px 7px;border-radius:2px;
+    border:1px solid rgba(180,110,10,.3);z-index:4;
+  }
+
+  /* Right Side Photo Roll Panel */
+  .desk-roll{display:flex;flex-direction:column;border-left:1px solid var(--border);background:var(--surface);overflow:hidden;}
+  .desk-roll-hdr{padding:11px 14px 9px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;gap:8px;}
+  .desk-shot-ctr{font-family:'DM Serif Display',serif;font-size:24px;color:var(--amber);line-height:1;}
+  .desk-shot-ctr small{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-left:2px;}
+  .desk-layout-picker{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;}
+  .desk-lp-btn{font-family:'DM Mono',monospace;font-size:9px;padding:4px 7px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;}
+  .desk-lp-btn.active{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+
+  .desk-pol-grid{flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+  .desk-pol-grid::-webkit-scrollbar{width:3px;}
+  .desk-pol-grid::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px;}
+  .desk-pol-grid .film-strip-item:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,0.5);z-index:10;transition:all 0.2s;}
+  .desk-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;}
+  .desk-empty .ei{font-size:28px;opacity:.18;}
+  .desk-empty p{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.14em;text-transform:uppercase;line-height:2;}
+
+  .desk-roll-foot{padding:9px 12px;border-top:1px solid var(--border);display:flex;gap:6px;background:var(--surface);flex-shrink:0;}
+  .desk-ft-btn{flex:1;padding:9px 6px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.07em;text-transform:uppercase;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;}
+  .desk-ft-btn.pri{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}
+  .desk-ft-btn:disabled{opacity:.28;}
+
+  footer{display:flex;align-items:center;justify-content:center;border-top:1px solid var(--border);background:var(--bg);position:relative;z-index:1;flex-shrink:0;height:34px;}
+  .foot-txt{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.12em;display:flex;align-items:center;gap:7px;}
+  .foot-handle{color:var(--amber);}
+  .foot-dot{color:var(--amber);}
 }
 
-footer{  
-  display:flex;align-items:center;justify-content:space-between;  
-  border-top:1px solid var(--border);background:var(--surface);  
-  padding:0 16px;height:32px;min-height:32px;flex-shrink:0;z-index:100;
+.desk-main,.desk-sidebar,.desk-vf,.desk-roll,footer{display:none;}
+@media(min-width:769px){
+  .desk-main{display:grid;}
+  .desk-sidebar,.desk-vf,.desk-roll{display:flex;}
+  footer{display:flex;}
+  .vf-panel,.bottom-bar,.roll-sheet{display:none!important;}
 }
-.ft-left, .ft-right{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-muted);letter-spacing:.03em;}
-.ft-right{display:flex;align-items:center;gap:4px;}
 </style>
 </head>
 <body>
-
 <div class="app">
-  <header>
-    <div class="logo">
-      darkroom
-      <span class="logo-sub">photobooth</span>
-    </div>
-    <div class="hdr-right">
-      <div class="pill live" id="status-pill-live">
-        <span class="live-dot"></span>
-        <span>standby</span>
-      </div>
-      <button class="icon-btn" onclick="toggleTheme()" title="Switch Aesthetics Mode" id="theme-toggle-node">✦</button>
-    </div>
-  </header>
 
-  <!-- Desktop Grid Container -->
-  <div class="desk-main">
-    <!-- Desktop Left Sidebar -->
-    <div class="desk-sidebar">
-      <div class="sb-block">
-        <span class="sb-label">hardware lens context</span>
-        <div class="desk-cam-sw" id="desk-cam-container">
-          <div class="pill">seeking active optics</div>
-        </div>
-        <div class="mirror-row" style="margin-top:2px;">
-          <span class="toggle-lbl">Mirror Viewfinder Display</span>
-          <button class="toggle-track on" id="desk-mirror-toggle" onclick="toggleMirroringMode()">
-            <span class="toggle-thumb"></span>
-          </button>
-        </div>
+<!-- ─── Header ─── -->
+<header>
+  <div class="logo">darkroom <span class="logo-sub">photobooth</span></div>
+  <div class="hdr-right">
+    <div class="pill live"><div class="live-dot"></div><span id="status-text">offline</span></div>
+    <div class="pill" id="cam-pill" style="display:none"></div>
+    <button class="icon-btn" id="mirror-btn" title="Mirror" onclick="toggleMirror()">⇆</button>
+    <button class="icon-btn" id="theme-btn"  title="Theme"  onclick="toggleTheme()">☀</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════
+     MOBILE LAYOUT
+═══════════════════════════════════════ -->
+<div class="vf-panel">
+  <div class="vf-track-wrap">
+    <div class="vf-inner-frame">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="canvas"></canvas>
+      <div class="vf-overlay">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
       </div>
-      <div class="sb-block" style="flex:1; display:flex; flex-direction:column; padding-bottom:4px;">
-        <span class="sb-label">emulation lookup look</span>
-        <div class="desk-filter-list" id="desk-filter-list"></div>
+      <div class="flash-el" id="flash"></div>
+      <div class="cd-num" id="cdnum"></div>
+      <div class="vf-tag" id="vf-tag">RAW</div>
+
+      <div class="vf-cam-row" id="vf-cam-row">
+        <button class="vf-cam-btn active" id="mob-btn-rear"  onclick="switchCam('environment')">rear</button>
+        <button class="vf-cam-btn"        id="mob-btn-front" onclick="switchCam('user')">front</button>
+        <button class="vf-cam-btn"        id="mob-btn-any"   onclick="switchCam('any')">any</button>
       </div>
-      <div class="desk-shoot-section">
-        <span class="sb-label">exposure interval</span>
-        <select class="desk-timer" id="desk-timer">
-          <option value="0">instantaneous shutter</option>
-          <option value="3">3 second countdown</option>
-          <option value="5">5 second countdown</option>
-          <option value="10">10 second countdown</option>
-        </select>
-        <button class="desk-shoot-btn" id="desk-shoot-btn" disabled onclick="capturePhoto()">Trigger Digital Capture</button>
-        <button class="desk-allow-btn" onclick="startCamera()">re-init lens architecture</button>
+
+      <div class="vf-controls">
+        <button class="vf-ctrl-btn" id="mob-mirror-btn" onclick="toggleMirror()" title="Mirror">⇆</button>
+      </div>
+
+      <div class="no-cam" id="no-cam">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        <span class="no-cam-label">camera not active</span>
+        <button class="no-cam-btn" onclick="startCamera()">allow camera</button>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- Center Viewfinder Grid -->
-    <div class="desk-vf">
-      <div class="desk-vf-wrap">
-        <video id="video-desk" autoplay playsinline class="mirrored"></video>
+<div class="bottom-bar">
+  <div class="filter-strip" id="mob-filter-list"></div>
+  <div class="shoot-row">
+    <select class="timer-sel" id="mob-timer">
+      <option value="0">now</option>
+      <option value="3">3 s</option>
+      <option value="5">5 s</option>
+      <option value="10">10 s</option>
+    </select>
+    <button class="mob-shoot-btn" id="mob-shoot-btn" disabled onclick="capturePhoto()">shoot</button>
+  </div>
+</div>
+
+<div class="roll-sheet" id="roll-sheet">
+  <div class="sheet-handle" id="sheet-handle" onclick="toggleSheet()">
+    <div class="handle-bar"></div>
+    <div class="sheet-header">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.16em;text-transform:uppercase;margin-bottom:2px">roll</div>
+        <div class="shot-ctr" id="mob-shot-ctr">0 <small>shots</small></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.14em;text-transform:uppercase">layout</div>
+        <div class="layout-picker" id="mob-layout-picker">
+          <button class="lp-btn active" data-l="1x1" onclick="setLayout('1x1',event)">1×1</button>
+          <button class="lp-btn" data-l="1x2" onclick="setLayout('1x2',event)">1×2</button>
+          <button class="lp-btn" data-l="1x4" onclick="setLayout('1x4',event)">1×4</button>
+          <button class="lp-btn" data-l="2x2" onclick="setLayout('2x2',event)">2×2</button>
+          <button class="lp-btn" data-l="2x3" onclick="setLayout('2x3',event)">2×3</button>
+          <button class="lp-btn" data-l="3x3" onclick="setLayout('3x3',event)">3×3</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pol-grid" id="mob-pol-grid">
+    <div class="empty-st"><div class="ei">📷</div><p>your shots<br>will appear<br>here</p></div>
+  </div>
+  <div class="roll-foot">
+    <button class="ft-btn"     id="mob-clear-btn" onclick="clearAll()"    disabled>clear</button>
+    <button class="ft-btn pri" id="mob-dl-btn"    onclick="downloadAll()" disabled>download</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     DESKTOP LAYOUT
+═══════════════════════════════════════ -->
+<div class="desk-main">
+
+  <aside class="desk-sidebar">
+    <div class="sb-block">
+      <div class="sb-label">camera</div>
+      <div class="desk-cam-sw">
+        <button class="desk-cam-btn active" id="desk-btn-rear"  onclick="switchCam('environment')">rear</button>
+        <button class="desk-cam-btn"        id="desk-btn-front" onclick="switchCam('user')">front</button>
+        <button class="desk-cam-btn"        id="desk-btn-any"   onclick="switchCam('any')">any</button>
+      </div>
+      <div class="mirror-row">
+        <span class="toggle-lbl">mirror</span>
+        <button class="toggle-track" id="desk-mirror-toggle" onclick="toggleMirror()">
+          <div class="toggle-thumb"></div>
+        </button>
+      </div>
+    </div>
+    <div class="sb-block" style="padding-bottom:6px;border-bottom:none;flex-shrink:0;">
+      <div class="sb-label">film stock</div>
+    </div>
+    <div class="desk-filter-list" id="desk-filter-list"></div>
+    <div class="desk-shoot-section">
+      <div class="sb-label">timer</div>
+      <select class="desk-timer" id="desk-timer">
+        <option value="0">shoot now</option>
+        <option value="3">3 second delay</option>
+        <option value="5">5 second delay</option>
+        <option value="10">10 second delay</option>
+      </select>
+      <button class="desk-shoot-btn" id="desk-shoot-btn" disabled onclick="capturePhoto()">shoot</button>
+      <button class="desk-allow-btn" id="desk-allow-btn" onclick="startCamera()">allow camera</button>
+    </div>
+  </aside>
+
+  <section class="desk-vf">
+    <div class="desk-film-housing">
+      <div class="desk-vf-wrap" id="desk-vf-wrap">
+        <video id="desk-video" autoplay playsinline muted></video>
+        <canvas id="desk-canvas"></canvas>
         <div class="desk-vf-overlay">
           <div class="corner tl"></div><div class="corner tr"></div>
           <div class="corner bl"></div><div class="corner br"></div>
         </div>
         <div class="desk-flash" id="desk-flash"></div>
-        <div class="desk-cdnum" id="desk-countdown-number">0</div>
-        <div class="desk-vf-tag">preview rendering engine active</div>
-      </div>
-    </div>
-
-    <!-- Desktop Right Sheet History Grid Recovery -->
-    <div class="desk-roll">
-      <div class="desk-roll-hdr">
-        <div class="desk-roll-title">
-          Print Registry
-          <br><small id="desk-title-count">0 snapshots</small>
-        </div>
-        <div class="desk-lp-wrapper">
-          <span class="sb-label" style="font-size:7px; letter-spacing:0.1em; margin-bottom:1px;">strip composite architecture</span>
-          <div class="desk-lp-grid" id="desk-layout-list"></div>
+        <div class="desk-cdnum" id="desk-cdnum"></div>
+        <div class="desk-vf-tag" id="desk-vf-tag">RAW</div>
+        <div class="desk-no-cam" id="desk-no-cam">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <span class="desk-no-cam-label">camera not active</span>
         </div>
       </div>
-      <div class="desk-grid-scroll" id="desk-gallery-container">
-        <div class="empty-st">
-          <div class="ei">🎞️</div>
-          <p>session asset pool empty<br>awaiting digital capture input</p>
+    </div>
+  </section>
+
+  <section class="desk-roll">
+    <div class="desk-roll-hdr">
+      <div>
+        <div class="sb-label">roll</div>
+        <div class="desk-shot-ctr" id="desk-shot-ctr">0 <small>shots</small></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        <div class="sb-label">layout</div>
+        <div class="desk-layout-picker" id="desk-layout-picker">
+          <button class="desk-lp-btn active" data-l="1x1" onclick="setLayout('1x1',event)">1×1</button>
+          <button class="desk-lp-btn" data-l="1x2" onclick="setLayout('1x2',event)">1×2</button>
+          <button class="desk-lp-btn" data-l="1x4" onclick="setLayout('1x4',event)">1×4</button>
+          <button class="desk-lp-btn" data-l="2x2" onclick="setLayout('2x2',event)">2×2</button>
+          <button class="desk-lp-btn" data-l="2x3" onclick="setLayout('2x3',event)">2×3</button>
+          <button class="desk-lp-btn" data-l="3x3" onclick="setLayout('3x3',event)">3×3</button>
         </div>
       </div>
-      <div class="desk-actions-box">
-        <button class="desk-act-btn pri" id="desk-strip-btn" disabled onclick="generateStrip()">Compile Strip</button>
-        <button class="desk-act-btn" id="desk-dl-strip-btn" disabled onclick="downloadLatestStrip()">Download Strip</button>
-        <button class="desk-act-btn" id="desk-dl-all-btn" onclick="downloadAll()">Save All Shots</button>
-        <button class="desk-act-btn" onclick="clearStrips()">Clear Strips</button>
-        <button class="desk-act-btn" style="font-size:8px; opacity:0.6;" onclick="clearAllCapturedAssets()">purge all snapshots</button>
-      </div>
     </div>
-  </div>
+    <div class="desk-pol-grid" id="desk-pol-grid">
+      <div class="desk-empty"><div class="ei">📷</div><p>your shots<br>will appear<br>here</p></div>
+    </div>
+    <div class="desk-roll-foot">
+      <button class="desk-ft-btn"     id="desk-clear-btn" onclick="clearAll()"    disabled>clear</button>
+      <button class="desk-ft-btn pri" id="desk-dl-btn"    onclick="downloadAll()" disabled>download</button>
+    </div>
+  </section>
 
-  <!-- Mobile Pipeline Controls Viewfinder Panel -->
-  <div class="vf-panel">
-    <video id="video" autoplay playsinline class="mirrored"></video>
-    <canvas id="canvas"></canvas>
-    
-    <div class="vf-overlay">
-      <div class="corner tl"></div><div class="corner tr"></div>
-      <div class="corner bl"></div><div class="corner br"></div>
-    </div>
-    
-    <div class="flash-el" id="flash"></div>
-    <div class="cd-num" id="countdown-number">0</div>
-    <div class="vf-tag">matrix viewport</div>
-    
-    <div class="vf-controls">
-      <div class="vf-controls-left">
-        <button class="vf-ctrl-btn" id="mob-mirror-btn" onclick="toggleMirroringMode()" title="Mirror Frame View">mirror</button>
-      </div>
-      <div class="vf-controls-right">
-        <button class="vf-cam-btn" onclick="cycleFacingOptics()" title="Cycle Front/Back Sensor">lens</button>
-      </div>
-    </div>
-
-    <div class="no-cam" id="no-cam">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2 2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-        <circle cx="12" cy="13" r="4"/>
-      </svg>
-      <span class="no-cam-label">camera access required</span>
-      <button class="no-cam-btn" onclick="startCamera()">allow camera</button>
-    </div>
-  </div>
-
-  <!-- Mobile Action Tray -->
-  <div class="bottom-bar">
-    <div class="filter-strip" id="mob-filter-list"></div>
-    <div class="shoot-row">
-      <div class="timer-sel-wrapper">
-        <select class="timer-sel" id="mob-timer" onchange="syncTimerUI(this.value)">
-          <option value="0">0s</option>
-          <option value="3">3s</option>
-          <option value="5">5s</option>
-          <option value="10">10s</option>
-        </select>
-        <div class="timer-trigger-btn" id="mob-timer-pill">0s</div>
-      </div>
-      
-      <div class="mob-shoot-btn-outer">
-        <button class="mob-shoot-btn" id="mob-shoot-btn" disabled onclick="capturePhoto()" title="Capture Frame"></button>
-      </div>
-      
-      <button class="mob-gal-preview-btn" onclick="openSheet()" id="mob-gallery-preview" title="Expand View History">
-        <div class="gal-icon-fallback">⊞</div>
-      </button>
-    </div>
-  </div>
-
-  <!-- Mobile Filmstrip Footbar Tray -->
-  <div class="filmstrip-bar">
-    <div class="filmstrip-thumbs" id="filmstrip-thumbs-container">
-      <div class="fs-empty">filmstrip cache index empty — snapshot items line up here</div>
-    </div>
-    <button class="gallery-open-btn" onclick="openSheet()">
-      <span>🎞️</span>
-      <span class="gal-lbl">history</span>
-    </button>
-  </div>
-
-  <!-- Drawer Modal Sheets Container -->
-  <div class="sheet-backdrop" id="sheet-backdrop" onclick="closeSheet()"></div>
-  <div class="roll-sheet" id="roll-sheet">
-    <div class="sheet-handle" onclick="closeSheet()">
-      <div class="handle-bar"></div>
-      <div class="sheet-header">
-        <div>
-          <div class="shot-ctr" id="sheet-title-count">0 <small>shots</small></div>
-        </div>
-        <div class="layout-picker" id="mob-layout-list"></div>
-      </div>
-    </div>
-    
-    <div class="pol-grid" id="gallery-container">
-      <div class="empty-st">
-        <div class="ei">🎞️</div>
-        <p>No snapshots captured yet<br>press shoot to generate prints</p>
-      </div>
-    </div>
-    
-    <div class="roll-foot">
-      <button class="ft-btn pri" id="mob-strip-btn" disabled onclick="generateStrip()">Compile Strip</button>
-      <button class="ft-btn" id="mob-dl-strip-btn" disabled onclick="downloadLatestStrip()">Download Strip</button>
-      <button class="ft-btn" id="mob-dl-all-btn" onclick="downloadAll()">Save All Shots</button>
-      <button class="ft-btn" onclick="clearStrips()">Clear Strips</button>
-      <button class="ft-btn" style="font-size:7px; min-width:44px; flex:0.4; opacity:0.5; border-color:transparent;" onclick="clearAllCapturedAssets()">purge</button>
-    </div>
-  </div>
-
-  <footer>
-    <div class="ft-left">system framework active</div>
-    <div class="ft-right">
-      <span>made by: @hustino.28 on instagram</span>
-    </div>
-  </footer>
 </div>
 
+<footer>
+  <div class="foot-txt">
+    made by <span class="foot-handle">@hustino.28</span>
+    <span class="foot-dot">✦</span>
+    darkroom photobooth
+  </div>
+</footer>
+
+</div>
+<div class="toast" id="toast"></div>
+
 <script>
-let streamInstance = null;
-let activeFacingMode = 'environment';
-let isMirrored = true;
-let capturedFramesList = [];
-let chosenFilterIndex = 0;
-let currentStripLayout = '1x4';
-
-window.stripHistoryArray = JSON.parse(sessionStorage.getItem('generated_strips') || '[]');
-
-const photoLayoutProfiles = {
-  '1x1': { label: '1×1 print', shots: 1, cols: 1 },
-  '1x2': { label: '1×2 row', shots: 2, cols: 1 },
-  '1x4': { label: '1×4 classic', shots: 4, cols: 1 },
-  '2x2': { label: '2×2 matrix', shots: 4, cols: 2 },
-  '2x3': { label: '2×3 profile', shots: 6, cols: 2 },
-  '3x3': { label: '3×3 collage', shots: 9, cols: 3 }
-};
-
-const filterMatrixLookup = [
-  { id: 'raw',   name: 'RAW',    filter: 'none' },
-  { id: 'mono',  name: 'MONO',   filter: 'grayscale(1) contrast(1.15) brightness(0.95)' },
-  { id: 'sepia', name: 'SEPIA',  filter: 'sepia(0.85) contrast(0.95)' },
-  { id: 'chrome',name: 'CHROME', filter: 'contrast(1.25) saturate(1.4) brightness(0.95)' },
-  { id: 'fade',  name: 'FADE',   filter: 'brightness(1.05) contrast(0.85) saturate(0.85)' },
-  { id: 'noir',  name: 'NOIR',   filter: 'grayscale(1) contrast(1.7) brightness(0.75)' }
+const FILTERS=[
+  {id:'normal',name:'RAW',    css:'none'},
+  {id:'kodak', name:'KODAK',  css:'sepia(0.2) contrast(1.1) saturate(1.1) brightness(1.05)'},
+  {id:'ilford',name:'ILFORD', css:'grayscale(1) contrast(1.2) brightness(1.05)'},
+  {id:'lomo',  name:'LOMO',   css:'saturate(1.6) contrast(1.25) brightness(0.88)'},
+  {id:'fade',  name:'FADE',   css:'sepia(0.4) saturate(0.8) brightness(1.12) contrast(0.82)'},
+  {id:'warm',  name:'WARM',   css:'sepia(0.5) saturate(1.2) brightness(1.1)'},
+  {id:'cool',  name:'COOL',   css:'hue-rotate(200deg) saturate(0.85) brightness(1.05)'},
+  {id:'velvia',name:'VELVIA', css:'saturate(1.9) contrast(1.18) brightness(0.93)'},
+  {id:'mist',  name:'MIST',   css:'brightness(1.22) contrast(0.78) saturate(0.55)'},
 ];
+const L_COLS={'1x1':1,'1x2':1,'1x4':1,'2x2':2,'2x3':2,'3x3':3};
+const L_TAKE={'1x1':1,'1x2':2,'1x4':4,'2x2':4,'2x3':6,'3x3':9};
 
-window.addEventListener('DOMContentLoaded', () => {
-  initializeThemeArchitecture();
-  renderControlPickers();
-  startCamera();
-  refreshGalleryUI();
-  const mobTimerSelect = document.getElementById('mob-timer');
-  if (mobTimerSelect) syncTimerUI(mobTimerSelect.value);
-});
+let stream=null,facing='environment',filterId='normal';
+let photos=[],capturing=false,layout='1x1',dark=false,mirrored=false,sheetOpen=false;
 
-function initializeThemeArchitecture() {
-  const savedThemePreference = localStorage.getItem('darkroom-theme');
-  if (savedThemePreference) {
-    document.documentElement.setAttribute('data-theme', savedThemePreference);
-    updateThemeToggleIcon(savedThemePreference);
-  } else {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    updateThemeToggleIcon('dark');
-  }
+const $=id=>document.getElementById(id);
+const isMob=()=>window.innerWidth<769;
+function mobVideo(){return $('video');}
+function deskVideo(){return $('desk-video');}
+function allVideos(){return [mobVideo(),deskVideo()].filter(Boolean);}
+
+function toggleTheme(){
+  dark=!dark;
+  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+  $('theme-btn').textContent=dark?'☀':'☾';
 }
 
-function toggleTheme() {
-  const activeTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', activeTheme);
-  localStorage.setItem('darkroom-theme', activeTheme);
-  updateThemeToggleIcon(activeTheme);
+function toggleMirror(){
+  mirrored=!mirrored;
+  allVideos().forEach(v=>v.classList.toggle('mirrored',mirrored));
+  $('mirror-btn').classList.toggle('on',mirrored);
+  const mob=$('mob-mirror-btn'); if(mob) mob.classList.toggle('on',mirrored);
+  const dt=$('desk-mirror-toggle'); if(dt) dt.classList.toggle('on',mirrored);
+  showToast(mirrored?'mirror on':'mirror off');
 }
 
-function updateThemeToggleIcon(themeStr) {
-  const node = document.getElementById('theme-toggle-node');
-  if (node) {
-    node.textContent = themeStr === 'light' ? '☼' : '✦';
-    node.classList.toggle('on', themeStr === 'light');
-  }
+function toggleSheet(){
+  sheetOpen=!sheetOpen;
+  $('roll-sheet').classList.toggle('open',sheetOpen);
 }
 
-function updateHardwareStatusPills(isLive) {
-  const node = document.getElementById('status-pill-live');
-  if (!node) return;
-  if (isLive) {
-    node.className = "pill live";
-    node.querySelector('span:not(.live-dot)').textContent = activeFacingMode === 'user' ? "optics: front" : "optics: rear";
-  } else {
-    node.className = "pill";
-    node.querySelector('span:not(.live-dot)').textContent = "no optics";
-  }
+(function(){
+  let sy=0,drag=false;
+  document.addEventListener('touchstart',e=>{const s=$('roll-sheet');if(!s.contains(e.target))return;sy=e.touches[0].clientY;drag=true;},{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!drag)return;drag=false;
+    const dy=e.changedTouches[0].clientY-sy;
+    if(dy>55&&sheetOpen){sheetOpen=false;$('roll-sheet').classList.remove('open');}
+    else if(dy<-55&&!sheetOpen){sheetOpen=true;$('roll-sheet').classList.add('open');}
+  },{passive:true});
+})();
+
+function buildFilters(){
+  const ml=$('mob-filter-list'), dl=$('desk-filter-list');
+  FILTERS.forEach(f=>{
+    const mc=document.createElement('div');
+    mc.className='fchip'+(f.id==='normal'?' active':'');
+    mc.dataset.fid=f.id;
+    mc.onclick=()=>applyFilter(f.id);
+    mc.innerHTML=`<div class="fthumb"><div class="fthumb-inner" style="filter:${f.css==='none'?'none':f.css}"></div></div><div class="fchip-name">${f.name}</div>`;
+    ml.appendChild(mc);
+
+    const dc=document.createElement('div');
+    dc.className='desk-fchip'+(f.id==='normal'?' active':'');
+    dc.dataset.fid=f.id;
+    dc.onclick=()=>applyFilter(f.id);
+    dc.innerHTML=`<div class="desk-fthumb"><div class="desk-fthumb-inner" style="filter:${f.css==='none'?'none':f.css}"></div></div><div class="desk-fchip-name">${f.name}</div>`;
+    dl.appendChild(dc);
+  });
 }
 
-async function startCamera() {
-  if (streamInstance) {
-    streamInstance.getTracks().forEach(t => t.stop());
-  }
-  const captureConstraints = {
-    audio: false,
-    video: {
-      facingMode: activeFacingMode,
-      width: { ideal: 4096 },
-      height: { ideal: 2160 }
-    }
-  };
-  try {
-    streamInstance = await navigator.mediaDevices.getUserMedia(captureConstraints);
-    const vElMob = document.getElementById('video');
-    const vElDesk = document.getElementById('video-desk');
-    if (vElMob) vElMob.srcObject = streamInstance;
-    if (vElDesk) vElDesk.srcObject = streamInstance;
-    
-    document.getElementById('no-cam').style.display = 'none';
-    const deskNoCam = document.querySelector('.desk-no-cam');
-    if (deskNoCam) deskNoCam.style.display = 'none';
-    
-    document.getElementById('mob-shoot-btn').disabled = false;
-    const dBtn = document.getElementById('desk-shoot-btn');
-    if (dBtn) dBtn.disabled = false;
-    
-    updateHardwareStatusPills(true);
-    discoverDeviceVideoInputs();
-  } catch (err) {
-    console.error("Camera hardware matrix setup err:", err);
-    document.getElementById('no-cam').style.display = 'flex';
-    const deskNoCam = document.querySelector('.desk-no-cam');
-    if (deskNoCam) deskNoCam.style.display = 'flex';
-    updateHardwareStatusPills(false);
-  }
+function applyFilter(id){
+  filterId=id;
+  const f=FILTERS.find(x=>x.id===id);
+  const fv=f.css==='none'?'':f.css;
+  allVideos().forEach(v=>v.style.filter=fv);
+  ['vf-tag','desk-vf-tag'].forEach(tid=>{const el=$(tid);if(el)el.textContent=f.name;});
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.toggle('active',c.dataset.fid===id));
+  document.querySelectorAll('.desk-fchip').forEach(c=>c.classList.toggle('active',c.dataset.fid===id));
 }
 
-async function discoverDeviceVideoInputs() {
-  try {
-    const structuralDevices = await navigator.mediaDevices.enumerateDevices();
-    const cleanVideoStreams = structuralDevices.filter(d => d.kind === 'videoinput');
-    const container = document.getElementById('desk-cam-container');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    if (cleanVideoStreams.length === 0) {
-      container.innerHTML = `<div class="pill">No available lens detected</div>`;
-      return;
-    }
-    
-    cleanVideoStreams.forEach((dev, idx) => {
-      const btn = document.createElement('button');
-      btn.className = 'desk-cam-btn';
-      btn.textContent = dev.label ? dev.label.substring(0, 16) : `Camera Lens ${idx + 1}`;
-      btn.onclick = () => {
-        document.querySelectorAll('.desk-cam-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        switchCamId(dev.deviceId);
-      };
-      container.appendChild(btn);
+async function startCamera(){
+  try{await reqCam(facing);}catch(e){showToast('camera access denied');}
+}
+
+async function reqCam(fc){
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  const c=fc==='any'
+    ?{video:{width:{ideal:1920},height:{ideal:1080}},audio:false}
+    :{video:{facingMode:fc,width:{ideal:1920},height:{ideal:1080}},audio:false};
+  stream=await navigator.mediaDevices.getUserMedia(c);
+  allVideos().forEach(v=>{v.srcObject=stream;});
+  const label=stream.getVideoTracks()[0].label||'camera';
+  ['no-cam','desk-no-cam'].forEach(id=>{const el=$(id);if(el)el.style.display='none';});
+  ['mob-shoot-btn','desk-shoot-btn'].forEach(id=>{const el=$(id);if(el)el.disabled=false;});
+  const da=$('desk-allow-btn');if(da)da.style.display='none';
+  $('status-text').textContent='live';
+  const cp=$('cam-pill');
+  cp.textContent=label.length>18?label.slice(0,18)+'…':label;cp.style.display='';
+  const f=FILTERS.find(x=>x.id===filterId);
+  const fv=f.css==='none'?'':f.css;
+  allVideos().forEach(v=>v.style.filter=fv);
+  if(mirrored)allVideos().forEach(v=>v.classList.add('mirrored'));
+  showToast('camera active');
+}
+
+async function switchCam(fc){
+  facing=fc;
+  const mobMap={environment:'mob-btn-rear',user:'mob-btn-front',any:'mob-btn-any'};
+  const deskMap={environment:'desk-btn-rear',user:'desk-btn-front',any:'desk-btn-any'};
+  Object.values(mobMap).concat(Object.values(deskMap)).forEach(id=>{const el=$(id);if(el)el.classList.remove('active');});
+  [mobMap[fc],deskMap[fc]].forEach(id=>{const el=$(id);if(el)el.classList.add('active');});
+  if(stream)try{await reqCam(fc);}catch(e){showToast('switch failed');}
+}
+
+async function capturePhoto(){
+  if(capturing)return;
+  capturing=true;
+  ['mob-shoot-btn','desk-shoot-btn'].forEach(id=>{const el=$(id);if(el)el.disabled=true;});
+  const timerVal=parseInt((isMob()?$('mob-timer'):$('desk-timer')).value);
+  if(timerVal>0)await runCd(timerVal);
+  doCapture();
+  capturing=false;
+  ['mob-shoot-btn','desk-shoot-btn'].forEach(id=>{const el=$(id);if(el)el.disabled=false;});
+}
+
+function runCd(s){
+  return new Promise(res=>{
+    let n=s;
+    const els=['cdnum','desk-cdnum'].map($).filter(Boolean);
+    els.forEach(el=>{el.textContent=n;el.classList.add('show');});
+    const t=setInterval(()=>{
+      n--;
+      if(n<=0){clearInterval(t);els.forEach(el=>el.classList.remove('show'));res();}
+      else els.forEach(el=>el.textContent=n);
+    },1000);
+  });
+}
+
+/* Multi-stage non-linear vintage exposure flash */
+function fireFlash() {
+  const flashElements = ['flash', 'desk-flash'].map($).filter(Boolean);
+  
+  flashElements.forEach(el => {
+    el.style.transition = 'none';
+    el.style.opacity = '1';
+    el.style.background = '#ffffff';
+  });
+
+  setTimeout(() => {
+    flashElements.forEach(el => {
+      el.style.transition = 'opacity 0.45s cubic-bezier(0.1, 0.8, 0.25, 1)';
+      el.style.opacity = '0';
     });
-  } catch (e) {
-    console.warn("Lens enumeration matrix blocked", e);
-  }
+  }, 12);
 }
 
-async function switchCamId(id) {
-  if (streamInstance) streamInstance.getTracks().forEach(t => t.stop());
-  try {
-    streamInstance = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: { deviceId: { exact: id }, width: { ideal: 4096 }, height: { ideal: 2160 } }
-    });
-    const vElMob = document.getElementById('video');
-    const vElDesk = document.getElementById('video-desk');
-    if (vElMob) vElMob.srcObject = streamInstance;
-    if (vElDesk) vElDesk.srcObject = streamInstance;
-    updateHardwareStatusPills(true);
-  } catch (e) {
-    console.error("Lens hardware toggle failure:", e);
-  }
-}
-
-function cycleFacingOptics() {
-  activeFacingMode = activeFacingMode === 'user' ? 'environment' : 'user';
-  startCamera();
-}
-
-function toggleMirroringMode() {
-  isMirrored = !isMirrored;
-  const vMob = document.getElementById('video');
-  const vDesk = document.getElementById('video-desk');
-  const dTrack = document.getElementById('desk-mirror-toggle');
-  const mBtn = document.getElementById('mob-mirror-btn');
+function doCapture(){
+  fireFlash();
+  const vid=isMob()?mobVideo():deskVideo();
+  const cnv=isMob()?$('canvas'):$('desk-canvas');
+  const vw=vid.videoWidth||1280,vh=vid.videoHeight||720;
+  cnv.width=vw;cnv.height=vh;
+  const ctx=cnv.getContext('2d');
+  const f=FILTERS.find(x=>x.id===filterId);
+  ctx.filter=f.css==='none'?'none':f.css;
+  if(mirrored){ctx.save();ctx.translate(vw,0);ctx.scale(-1,1);ctx.drawImage(vid,0,0,vw,vh);ctx.restore();}
+  else ctx.drawImage(vid,0,0,vw,vh);
+  ctx.filter='none';
   
-  if (vMob) vMob.classList.toggle('mirrored', isMirrored);
-  if (vDesk) vDesk.classList.toggle('mirrored', isMirrored);
-  if (dTrack) dTrack.classList.toggle('on', isMirrored);
-  if (mBtn) mBtn.classList.toggle('on', isMirrored);
-}
-
-function syncTimerUI(val) {
-  const pill = document.getElementById('mob-timer-pill');
-  if (pill) {
-    pill.textContent = `${val}s`;
-    pill.classList.toggle('active', parseInt(val) > 0);
-  }
-}
-
-function renderControlPickers() {
-  const mobFilters = document.getElementById('mob-filter-list');
-  const deskFilters = document.getElementById('desk-filter-list');
-  
-  filterMatrixLookup.forEach((f, i) => {
-    if (mobFilters) {
-      const mChip = document.createElement('div');
-      mChip.className = `fchip ${i === chosenFilterIndex ? 'active' : ''}`;
-      mChip.id = `mob-filter-${f.id}`;
-      mChip.onclick = () => setFilterStyle(i);
-      
-      const thumb = document.createElement('div');
-      thumb.className = 'fthumb';
-      const innerThumb = document.createElement('div');
-      innerThumb.className = 'fthumb-inner';
-      innerThumb.style.filter = f.filter;
-      thumb.appendChild(innerThumb);
-      
-      const label = document.createElement('div');
-      label.className = 'fchip-name';
-      label.textContent = f.name;
-      
-      mChip.appendChild(thumb);
-      mChip.appendChild(label);
-      mobFilters.appendChild(mChip);
-    }
-    
-    if (deskFilters) {
-      const dChip = document.createElement('div');
-      dChip.className = `desk-fchip ${i === chosenFilterIndex ? 'active' : ''}`;
-      dChip.id = `desk-filter-${f.id}`;
-      dChip.onclick = () => setFilterStyle(i);
-      
-      const dThumb = document.createElement('div');
-      dThumb.className = 'desk-fthumb';
-      const dInnerThumb = document.createElement('div');
-      dInnerThumb.className = 'desk-fthumb-inner';
-      dInnerThumb.style.filter = f.filter;
-      dThumb.appendChild(dInnerThumb);
-      
-      const dLabel = document.createElement('span');
-      dLabel.className = 'desk-fchip-name';
-      dLabel.textContent = f.name;
-      
-      dChip.appendChild(dThumb);
-      dChip.appendChild(dLabel);
-      deskFilters.appendChild(dChip);
-    }
-  });
-
-  const mobLayouts = document.getElementById('mob-layout-list');
-  const deskLayouts = document.getElementById('desk-layout-list');
-  
-  Object.keys(photoLayoutProfiles).forEach(key => {
-    if (mobLayouts) {
-      const btn = document.createElement('button');
-      btn.className = `lp-btn ${key === currentStripLayout ? 'active' : ''}`;
-      btn.id = `mob-lp-${key}`;
-      btn.textContent = key;
-      btn.onclick = () => setLayoutProfile(key);
-      mobLayouts.appendChild(btn);
-    }
-    if (deskLayouts) {
-      const btn = document.createElement('button');
-      btn.className = `desk-lp-btn ${key === currentStripLayout ? 'active' : ''}`;
-      btn.id = `desk-lp-${key}`;
-      btn.textContent = key;
-      btn.onclick = () => setLayoutProfile(key);
-      deskLayouts.appendChild(btn);
-    }
-  });
-}
-
-function fritzFilterHelper(ctx, filterStr, w, h) {
-  if (!filterStr || filterStr === 'none') return;
-  ctx.filter = filterStr;
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = w; tempCanvas.height = h;
-  const tempCtx = tempCanvas.getContext('2d');
-  tempCtx.drawImage(ctx.canvas, 0, 0);
-  ctx.clearRect(0, 0, w, h);
-  ctx.drawImage(tempCanvas, 0, 0);
-  ctx.filter = 'none';
-}
-
-function setFilterStyle(idx) {
-  chosenFilterIndex = idx;
-  document.querySelectorAll('.fchip, .desk-fchip').forEach(el => el.classList.remove('active'));
-  
-  const mTarget = document.getElementById(`mob-filter-${filterMatrixLookup[idx].id}`);
-  const dTarget = document.getElementById(`desk-filter-${filterMatrixLookup[idx].id}`);
-  if (mTarget) mTarget.classList.add('active');
-  if (dTarget) dTarget.classList.add('active');
-}
-
-function setLayoutProfile(key) {
-  currentStripLayout = key;
-  document.querySelectorAll('.lp-btn, .desk-lp-btn').forEach(b => b.classList.remove('active'));
-  const mBtn = document.getElementById(`mob-lp-${key}`);
-  const dBtn = document.getElementById(`desk-lp-${key}`);
-  if (mBtn) mBtn.classList.add('active');
-  if (dBtn) dBtn.classList.add('active');
-  refreshGalleryUI();
-}
-
-function capturePhoto() {
-  const isDesktopViewport = window.innerWidth >= 769;
-  const timerSelectId = isDesktopViewport ? 'desk-timer' : 'mob-timer';
-  const rawCountdownDelay = parseInt(document.getElementById(timerSelectId).value) || 0;
-  
-  const triggerShutterAction = () => {
-    const videoSource = isDesktopViewport ? document.getElementById('video-desk') : document.getElementById('video');
-    const displayFlashEl = isDesktopViewport ? document.getElementById('desk-flash') : document.getElementById('flash');
-    
-    if (!videoSource) return;
-    
-    if (displayFlashEl) {
-      displayFlashEl.classList.add('on');
-      setTimeout(() => displayFlashEl.classList.remove('on'), 50);
-    }
-    
-    const shadowCanvas = document.createElement('canvas');
-    shadowCanvas.width = videoSource.videoWidth || 1920;
-    shadowCanvas.height = videoSource.videoHeight || 1080;
-    const context = shadowCanvas.getContext('2d');
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = 'high';
-    
-    if (isMirrored) {
-      context.translate(shadowCanvas.width, 0);
-      context.scale(-1, 1);
-    }
-    context.drawImage(videoSource, 0, 0, shadowCanvas.width, shadowCanvas.height);
-    if (isMirrored) {
-      context.setTransform(1, 0, 0, 1, 0, 0);
-    }
-    
-    const currentActiveFilterStyle = filterMatrixLookup[chosenFilterIndex].filter;
-    if (currentActiveFilterStyle !== 'none') {
-      try {
-        const dynamicFilterProcessorCanvas = document.createElement('canvas');
-        dynamicFilterProcessorCanvas.width = shadowCanvas.width;
-        dynamicFilterProcessorCanvas.height = shadowCanvas.height;
-        const proxyCtx = dynamicFilterProcessorCanvas.getContext('2d');
-        proxyCtx.imageSmoothingEnabled = true;
-        proxyCtx.imageSmoothingQuality = 'high';
-        proxyCtx.filter = currentActiveFilterStyle;
-        proxyCtx.drawImage(shadowCanvas, 0, 0);
-        commitFrameToHistory(dynamicFilterProcessorCanvas.toDataURL('image/png'));
-      } catch (e) {
-        const dynamicContext2D = shadowCanvas.getContext('2d');
-        fritzFilterHelper(dynamicContext2D, currentActiveFilterStyle, shadowCanvas.width, shadowCanvas.height);
-        commitFrameToHistory(shadowCanvas.toDataURL('image/png'));
-      }
-    } else {
-      commitFrameToHistory(shadowCanvas.toDataURL('image/png'));
-    }
+  const photo={
+    id:Date.now(),data:cnv.toDataURL('image/jpeg',0.94),
+    w:vw,h:vh,ar:vw/vh,filter:f.name,
+    ts:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    tilt:(Math.random()*2-1).toFixed(2), 
   };
-
-  if (rawCountdownDelay > 0) {
-    let internalCounterValue = rawCountdownDelay;
-    const countDisplayNode = isDesktopViewport ? document.getElementById('desk-countdown-number') : document.getElementById('countdown-number');
-    
-    if (countDisplayNode) {
-      countDisplayNode.textContent = internalCounterValue;
-      countDisplayNode.classList.add('show');
-    }
-    
-    const loopIntervalInstance = setInterval(() => {
-      internalCounterValue--;
-      if (internalCounterValue <= 0) {
-        clearInterval(loopIntervalInstance);
-        if (countDisplayNode) countDisplayNode.classList.remove('show');
-        triggerShutterAction();
-      } else {
-        if (countDisplayNode) countDisplayNode.textContent = internalCounterValue;
-      }
-    }, 1000);
-  } else {
-    triggerShutterAction();
-  }
+  photos.unshift(photo);
+  updateCounters();rebuildGrids();updateFoot();
+  showToast('shot taken ✦');
+  if(isMob()&&!sheetOpen&&photos.length===1)setTimeout(()=>{sheetOpen=true;$('roll-sheet').classList.add('open');},450);
 }
 
-function commitFrameToHistory(dataUrlString) {
-  const structuralItem = {
-    id: `snapshot-${Date.now()}`,
-    src: dataUrlString,
-    timestamp: new Date().toLocaleTimeString(),
-    tilt: (Math.random() * 3.5 - 1.75).toFixed(2)
-  };
-  capturedFramesList.push(structuralItem);
-  refreshGalleryUI();
+function updateCounters(){
+  const h=`${photos.length} <small>shots</small>`;
+  ['mob-shot-ctr','desk-shot-ctr'].forEach(id=>{const el=$(id);if(el)el.innerHTML=h;});
 }
 
-function deleteSnapshotRecord(id) {
-  capturedFramesList = capturedFramesList.filter(f => f.id !== id);
-  refreshGalleryUI();
-}
-
-function downloadSingleFrameBlob(id) {
-  const record = capturedFramesList.find(f => f.id === id);
-  if (!record) return;
+/* Film Strip Photo Container Card Component */
+function makeFilmStripFrame(photo, index){
+  const div=document.createElement('div');
+  div.className='film-strip-item';
+  div.id='ph-'+photo.id;
+  div.style.transform=`rotate(${photo.tilt}deg)`;
   
-  const memoryImg = new Image();
-  memoryImg.onload = () => {
-    const exportCanvas = document.createElement('canvas');
-    exportCanvas.width = 1080;
-    exportCanvas.height = 1080;
-    const ctx = exportCanvas.getContext('2d');
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 1080, 1080);
-    
-    const marginSide = 64;
-    const marginTop = 64;
-    const innerWidth = 1080 - (marginSide * 2);
-    const innerHeight = 1080 - 240;
-    
-    ctx.fillStyle = '#fdfaf4';
-    ctx.fillRect(marginSide - 8, marginTop - 8, innerWidth + 16, innerHeight + 110);
-    
-    const sourceWidth = memoryImg.width;
-    const sourceHeight = memoryImg.height;
-    let targetCropW = sourceWidth;
-    let targetCropH = sourceHeight;
-    let offsetX = 0;
-    let offsetY = 0;
-    
-    const targetRatio = innerWidth / innerHeight;
-    const imageRatio = sourceWidth / sourceHeight;
-    if (imageRatio > targetRatio) {
-      targetCropW = sourceHeight * targetRatio;
-      offsetX = (sourceWidth - targetCropW) / 2;
-    } else {
-      targetCropH = sourceWidth / targetRatio;
-      offsetY = (sourceHeight - targetCropH) / 2;
-    }
-    
-    ctx.drawImage(
-      memoryImg, offsetX, offsetY, targetCropW, targetCropH,
-      marginSide, marginTop, innerWidth, innerHeight
-    );
-    
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
-    ctx.strokeRect(marginSide, marginTop, innerWidth, innerHeight);
-    
-    ctx.font = "italic 500 16px 'DM Mono', monospace";
-    ctx.fillStyle = "#6b6158";
-    ctx.fillText(`${record.timestamp} - LOOK: ${filterMatrixLookup[chosenFilterIndex].name}`, marginSide + 4, 1080 - 100);
-    
-    exportCanvas.toBlob((blob) => {
-      if (!blob) return;
-      const localBlobUrl = URL.createObjectURL(blob);
-      const targetLink = document.createElement('a');
-      targetLink.href = localBlobUrl;
-      targetLink.download = `darkroom-shot-1080x1080-${Date.now()}.png`;
-      document.body.appendChild(targetLink);
-      targetLink.click();
-      document.body.removeChild(targetLink);
-      URL.revokeObjectURL(localBlobUrl);
-    }, 'image/png');
-  };
-  memoryImg.src = record.src;
-}
-
-function downloadLatestStrip() {
-  if (window.stripHistoryArray.length === 0) {
-    alert('No photostrip available in this session to download.');
-    return;
-  }
-  const latestStripDataUrl = window.stripHistoryArray[window.stripHistoryArray.length - 1];
-  const downloadLink = document.createElement('a');
-  downloadLink.href = latestStripDataUrl;
-  downloadLink.download = `photostrip-${Date.now()}.png`;
-  document.body.appendChild(downloadLink);
-  downloadLink.click();
-  document.body.removeChild(downloadLink);
-}
-
-function clearStrips() {
-  window.stripHistoryArray = [];
-  sessionStorage.removeItem('generated_strips');
-  refreshGalleryUI();
-}
-
-function clearAllCapturedAssets() {
-  capturedFramesList = [];
-  refreshGalleryUI();
-}
-
-function refreshGalleryUI() {
-  const mGrid = document.getElementById('gallery-container');
-  const dGrid = document.getElementById('desk-gallery-container');
-  const mCounter = document.getElementById('sheet-title-count');
-  const dCounter = document.getElementById('desk-title-count');
-  const quickPreviewButton = document.getElementById('mob-gallery-preview');
-  
-  if (quickPreviewButton) {
-    if (capturedFramesList.length > 0) {
-      quickPreviewButton.innerHTML = `<img src="${capturedFramesList[capturedFramesList.length - 1].src}" alt="Last Shot">`;
-    } else {
-      quickPreviewButton.innerHTML = `<div class="gal-icon-fallback">⊞</div>`;
-    }
-  }
-  
-  [mCounter, dCounter].forEach(node => {
-    if (node) node.innerHTML = `${capturedFramesList.length} <small>shots</small>`;
-  });
-
-  const layoutParams = photoLayoutProfiles[currentStripLayout];
-  const canCompileFilmstrip = capturedFramesList.length >= layoutParams.shots;
-  
-  const mobCompileBtn = document.getElementById('mob-strip-btn');
-  const deskCompileBtn = document.getElementById('desk-strip-btn');
-  if (mobCompileBtn) mobCompileBtn.disabled = !canCompileFilmstrip;
-  if (deskCompileBtn) deskCompileBtn.disabled = !canCompileFilmstrip;
-  
-  const mobDlStripBtn = document.getElementById('mob-dl-strip-btn');
-  const deskDlStripBtn = document.getElementById('desk-dl-strip-btn');
-  const checkHistoryLength = window.stripHistoryArray.length > 0;
-  if (mobDlStripBtn) mobDlStripBtn.disabled = !checkHistoryLength;
-  if (deskDlStripBtn) deskDlStripBtn.disabled = !checkHistoryLength;
-  
-  if (mGrid) mGrid.innerHTML = '';
-  if (dGrid) dGrid.innerHTML = '';
-  
-  if (capturedFramesList.length === 0) {
-    const fallbackMessageMarkup = `<div class="empty-st"><div class="ei">🎞️</div><p>session asset pool empty<br>awaiting digital capture input</p></div>`;
-    if (mGrid) mGrid.innerHTML = fallbackMessageMarkup;
-    if (dGrid) dGrid.innerHTML = fallbackMessageMarkup;
-    
-    const filmstripThumbsContainer = document.getElementById('filmstrip-thumbs-container');
-    if (filmstripThumbsContainer) {
-      filmstripThumbsContainer.innerHTML = `<div class="fs-empty">filmstrip cache index empty — snapshot items line up here</div>`;
-    }
-    return;
-  }
-  
-  capturedFramesList.forEach(item => {
-    const frameMarkup = document.createElement('div');
-    frameMarkup.className = 'pol';
-    frameMarkup.style.setProperty('--tilt', `${item.tilt}deg`);
-    
-    const imageElement = document.createElement('img');
-    imageElement.className = 'pol-img';
-    imageElement.src = item.src;
-    imageElement.alt = "Snapshot Element Asset";
-    
-    const baseFooter = document.createElement('div');
-    baseFooter.className = 'pol-foot';
-    baseFooter.innerHTML = `
-      <div class="p-meta">${item.timestamp}<br>LOOK: ${filterMatrixLookup[chosenFilterIndex].name}</div>
-      <div class="p-acts">
-        <button class="p-btn" title="Download Frame PNG" onclick="downloadSingleFrameBlob('${item.id}')">↓</button>
-        <button class="p-btn" title="Purge Asset Frame" style="color:#a84848;" onclick="deleteSnapshotRecord('${item.id}')">×</button>
+  // Enforcing strict matching 4:5 camera frame aspect ratios 
+  div.innerHTML=`
+    <div class="strip-frame-wrap">
+      <img class="strip-img" src="${photo.data}" style="aspect-ratio:4/5" alt="">
+    </div>
+    <div class="strip-meta">
+      <div class="strip-info">
+        <div style="color:#e0981c; font-weight:500;">FN-${String(index).padStart(2, '0')}</div>
+        <div>${photo.filter} // ${photo.ts}</div>
       </div>
-    `;
-    
-    frameMarkup.appendChild(imageElement);
-    frameMarkup.appendChild(baseFooter);
-    
-    if (mGrid) mGrid.appendChild(frameMarkup.cloneNode(true));
-    if (dGrid) dGrid.appendChild(frameMarkup);
-  });
+      <div class="strip-acts">
+        <button class="strip-btn" title="Download" onclick="downloadOne(${photo.id})">↓</button>
+        <button class="strip-btn" title="Delete"   onclick="deleteOne(${photo.id})">✕</button>
+      </div>
+    </div>`;
+  return div;
+}
 
-  const filmstripThumbsContainer = document.getElementById('filmstrip-thumbs-container');
-  if (filmstripThumbsContainer) {
-    filmstripThumbsContainer.innerHTML = '';
-    capturedFramesList.forEach(item => {
-      const smallThumbNode = document.createElement('div');
-      smallThumbNode.className = 'fs-thumb';
-      smallThumbNode.onclick = () => openSheet();
-      const img = document.createElement('img');
-      img.src = item.src;
-      smallThumbNode.appendChild(img);
-      filmstripThumbsContainer.appendChild(smallThumbNode);
+function buildGridContent(container,emptyClass){
+  container.innerHTML='';
+  if(!photos.length){
+    const e=document.createElement('div');
+    e.className=emptyClass;
+    e.innerHTML='<div class="ei">📷</div><p>your shots<br>will appear<br>here</p>';
+    container.appendChild(e);return;
+  }
+  const cols=L_COLS[layout]||1;
+  let frameCounter = photos.length;
+
+  if(cols===1){
+    photos.forEach((p, idx)=>{
+      container.appendChild(makeFilmStripFrame(p, frameCounter - idx));
     });
+    return;
+  }
+  for(let i=0;i<photos.length;i+=cols){
+    const row=document.createElement('div');
+    row.className=`prow c${cols}`;
+    for(let j=0;j<cols;j++) {
+      const targetIndex = i + j;
+      if(photos[targetIndex]) {
+        row.appendChild(makeFilmStripFrame(photos[targetIndex], frameCounter - targetIndex));
+      }
+    }
+    container.appendChild(row);
   }
 }
 
-function generateStrip() {
-  const blueprint = photoLayoutProfiles[currentStripLayout];
-  if (capturedFramesList.length < blueprint.shots) {
-    alert(`Insufficient items. Please snap at least ${blueprint.shots} frames.`);
-    return;
-  }
-  
-  const basePhotoWidth = 460;
-  const basePhotoHeight = 345;
-  const outerBorderPadding = 36;
-  const horizontalColumnSpacing = 20;
-  const verticalRowSpacing = 20;
-  const bottomFooterAllocation = 110;
-  
-  const structuralRowsCount = Math.ceil(blueprint.shots / blueprint.cols);
-  const evaluatedStripWidth = (outerBorderPadding * 2) + (basePhotoWidth * blueprint.cols) + (horizontalColumnSpacing * (blueprint.cols - 1));
-  const evaluatedStripHeight = (outerBorderPadding * 2) + (basePhotoHeight * structuralRowsCount) + (verticalRowSpacing * (structuralRowsCount - 1)) + bottomFooterAllocation;
-  
-  const compilationCanvas = document.createElement('canvas');
-  compilationCanvas.width = evaluatedStripWidth;
-  compilationCanvas.height = evaluatedStripHeight;
-  const ctx = compilationCanvas.getContext('2d');
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  
-  const currentActiveTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-  ctx.fillStyle = currentActiveTheme === 'light' ? '#fffef9' : '#f5f0e8';
-  ctx.fillRect(0, 0, evaluatedStripWidth, evaluatedStripHeight);
-  
-  let targetedAssetsLoaded = 0;
-  const renderingPoolList = capturedFramesList.slice(0, blueprint.shots);
-  
-  renderingPoolList.forEach((photo, positionIndex) => {
-    const memoryImg = new Image();
-    memoryImg.onload = () => {
-      const calculatedColIndex = positionIndex % blueprint.cols;
-      const calculatedRowIndex = Math.floor(positionIndex / blueprint.cols);
-      
-      const renderTargetX = outerBorderPadding + calculatedColIndex * (basePhotoWidth + horizontalColumnSpacing);
-      const renderTargetY = outerBorderPadding + calculatedRowIndex * (basePhotoHeight + verticalRowSpacing);
-      
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(renderTargetX - 4, renderTargetY - 4, basePhotoWidth + 8, basePhotoHeight + 8);
-      ctx.drawImage(memoryImg, renderTargetX, renderTargetY, basePhotoWidth, basePhotoHeight);
-      
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-      ctx.strokeRect(renderTargetX, renderTargetY, basePhotoWidth, basePhotoHeight);
-      
-      targetedAssetsLoaded++;
-      if (targetedAssetsLoaded === blueprint.shots) {
-        finalizeStripHeaderAndFooterDecoration(compilationCanvas, ctx, blueprint, evaluatedStripWidth, evaluatedStripHeight, currentActiveTheme);
-      }
+function rebuildGrids(){
+  buildGridContent($('mob-pol-grid'),'empty-st');
+  buildGridContent($('desk-pol-grid'),'desk-empty');
+}
+
+function setLayout(mode,event){
+  if(event)event.stopPropagation();
+  layout=mode;
+  document.querySelectorAll('.lp-btn').forEach(b=>b.classList.toggle('active',b.dataset.l===mode));
+  document.querySelectorAll('.desk-lp-btn').forEach(b=>b.classList.toggle('active',b.dataset.l===mode));
+  rebuildGrids();
+}
+
+function framePolaroid(photo){
+  return new Promise(res=>{
+    const scale=Math.min(800/photo.w,600/photo.h,1);
+    const imgW=Math.round(photo.w*scale),imgH=Math.round(photo.h*scale);
+    const padS=24,padT=24,padB=88;
+    const fc=document.createElement('canvas');
+    fc.width=imgW+padS*2;fc.height=imgH+padT+padB;
+    const ctx=fc.getContext('2d');
+    ctx.fillStyle='#fdfaf4';ctx.fillRect(0,0,fc.width,fc.height);
+    const img=new Image();
+    img.onload=()=>{
+      ctx.drawImage(img,padS,padT,imgW,imgH);
+      ctx.strokeStyle='#e0d8cc';ctx.lineWidth=1;ctx.strokeRect(padS,padT,imgW,imgH);
+      ctx.fillStyle='#8a7060';ctx.font='500 12px "DM Mono",monospace';ctx.textAlign='left';
+      ctx.fillText(photo.filter,padS+4,fc.height-56);
+      ctx.fillStyle='#b0a090';ctx.font='11px "DM Mono",monospace';
+      ctx.fillText(photo.ts,padS+4,fc.height-36);
+      ctx.fillStyle='#c8a070';ctx.font='italic 10px Georgia,serif';ctx.textAlign='right';
+      ctx.fillText('darkroom ✦ @hustino.28',fc.width-padS,fc.height-16);
+      res(fc.toDataURL('image/jpeg',0.94));
     };
-    memoryImg.src = photo.src;
+    img.src=photo.data;
   });
 }
 
-function finalizeStripHeaderAndFooterDecoration(canvas, ctx, blueprint, w, h, themeStr) {
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  
-  const baselineFooterY = h - 65;
-  
-  ctx.fillStyle = '#1c1a17';
-  ctx.font = 'normal 500 13px "DM Mono", monospace';
-  ctx.letterSpacing = "2px";
-  ctx.fillText('DARKROOM STUDIO', w / 2, baselineFooterY);
-  
-  ctx.font = 'italic 400 17px "Georgia", serif';
-  ctx.fillStyle = '#e0981c';
-  ctx.letterSpacing = "0px";
-  ctx.fillText('made by: @hustino.28 on instagram', w / 2, baselineFooterY + 28);
-  
-  ctx.font = 'normal 400 10px "DM Mono", monospace';
-  ctx.fillStyle = '#8a7a68';
-  ctx.fillText(`LAYOUT CONFIG: ${currentStripLayout} PRINT  ✦  ${new Date().toLocaleDateString()}`, w / 2, baselineFooterY + 48);
-  
-  const finalPipelineUrl = canvas.toDataURL('image/png');
-  window.stripHistoryArray.push(finalPipelineUrl);
-  sessionStorage.setItem('generated_strips', JSON.stringify(window.stripHistoryArray));
-  
-  refreshGalleryUI();
-  
-  const silentTriggerLink = document.createElement('a');
-  silentTriggerLink.href = finalPipelineUrl;
-  silentTriggerLink.download = `darkroom-strip-${Date.now()}.png`;
-  document.body.appendChild(silentTriggerLink);
-  silentTriggerLink.click();
-  document.body.removeChild(silentTriggerLink);
+function drawCover(ctx,img,x,y,w,h){
+  const sa=img.naturalWidth/img.naturalHeight,da=w/h;
+  let sx=0,sy=0,sw=img.naturalWidth,sh=img.naturalHeight;
+  if(sa>da){sw=Math.round(sh*da);sx=Math.round((img.naturalWidth-sw)/2);}
+  else{sh=Math.round(sw/da);sy=Math.round((img.naturalHeight-sh)/2);}
+  ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);
 }
 
-async function downloadAll() {
-  const blueprint = photoLayoutProfiles[currentStripLayout];
-  const rows = Math.ceil(blueprint.shots / blueprint.cols);
+async function downloadOne(id){
+  const p=photos.find(x=>x.id===id);if(!p)return;
+  showToast('framing…');
+  const url=await framePolaroid(p);
+  const a=document.createElement('a');a.href=url;a.download=`darkroom_${p.id}.jpg`;a.click();
+  showToast('downloaded ✦');
+}
+
+async function downloadAll(){
+  if(!photos.length)return;
+  if(photos.length===1){downloadOne(photos[0].id);return;}
+  showToast('building strip…');
+  const cols=L_COLS[layout]||1;
+  const take=Math.min(photos.length,L_TAKE[layout]||photos.length);
+  const sub=photos.slice(0,take);
+  const rows=Math.ceil(sub.length/cols);
+  const cW=400,cH=500,padS=40,padT=24,capH=56,gap=20,hdrH=80,ftrH=40;
+  const sW=cols*cW+(cols-1)*gap+padS*2;
+  const sH=rows*(cH+capH)+(rows-1)*gap+padS*2+hdrH+ftrH;
+  const sheet=document.createElement('canvas');sheet.width=sW;sheet.height=sH;
+  const ctx=sheet.getContext('2d');
   
-  const cW = 460;
-  const cH = 345;
-  const padS = 36;
-  const gap = 20;
-  const ftrH = 110;
+  ctx.fillStyle='#11110f';ctx.fillRect(0,0,sW,sH);
   
-  const sW = (blueprint.cols * cW) + ((blueprint.cols - 1) * gap) + (padS * 2);
-  const sH = (rows * cH) + ((rows - 1) * gap) + (padS * 2) + ftrH;
+  // Draw perforated holes side tracks onto compilation sheets
+  const drawSprockets = (offsetX) => {
+    for(let y=10; y<sH; y+=16){
+      ctx.fillStyle='#000000';
+      ctx.beginPath();
+      ctx.arc(offsetX, y, 4, 0, Math.PI*2);
+      ctx.fill();
+    }
+  };
+  drawSprockets(14);
+  drawSprockets(sW-14);
+
+  ctx.fillStyle='#e0981c';ctx.font='italic bold 26px Georgia,serif';ctx.textAlign='center';
+  ctx.fillText('darkroom — photobooth',sW/2,padT+30);
+  ctx.font='11px monospace';ctx.fillStyle='#7a7060';
+  ctx.fillText(`${layout} layout  ✦  ${new Date().toLocaleDateString()}`,sW/2,padT+50);
   
-  const sheet = document.createElement('canvas');
-  sheet.width = sW;
-  sheet.height = sH;
-  const ctx = sheet.getContext('2d');
-  
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  
-  const currentActiveTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-  ctx.fillStyle = currentActiveTheme === 'light' ? '#fffef9' : '#f5f0e8';
-  ctx.fillRect(0, 0, sW, sH);
-  
-  const totalPhotosToDraw = Math.min(capturedFramesList.length, blueprint.shots);
-  if (totalPhotosToDraw === 0) {
-    alert("Registry empty. No snaps to build into print composites.");
-    return;
+  const loadImg=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});
+  let totalPhotos = photos.length;
+
+  for(let i=0; i<sub.length; i++){
+    const col=i%cols,row=Math.floor(i/cols);
+    const x=padS+col*(cW+gap),y=padS+hdrH+row*(cH+capH+gap);
+    
+    ctx.fillStyle='#000000';
+    ctx.fillRect(x-4,y-4,cW+8,cH+capH+8);
+    
+    const img=await loadImg(sub[i].data);
+    ctx.save();ctx.beginPath();ctx.rect(x,y,cW,cH);ctx.clip();
+    drawCover(ctx,img,x,y,cW,cH);ctx.restore();
+    
+    ctx.strokeStyle='#221f1a';ctx.lineWidth=1;ctx.strokeRect(x,y,cW,cH);
+    
+    ctx.fillStyle='#e0981c';ctx.font='500 11px monospace';ctx.textAlign='left';
+    ctx.fillText(`FN-${String(totalPhotos - i).padStart(2,'0')}`, x+4, y+cH+20);
+    
+    ctx.fillStyle='#8a7060';ctx.font='10px monospace';
+    ctx.fillText(`${sub[i].filter} // ${sub[i].ts}`,x+4,y+cH+38);
   }
   
-  let componentsLoadedCounter = 0;
+  ctx.fillStyle='#4a4540';ctx.font='italic 10px Georgia,serif';ctx.textAlign='center';
+  ctx.fillText('made by @hustino.28  ✦  darkroom photobooth',sW/2,sH-16);
   
-  for (let i = 0; i < totalPhotosToDraw; i++) {
-    const item = capturedFramesList[i];
-    const colIndex = i % blueprint.cols;
-    const rowIndex = Math.floor(i / blueprint.cols);
-    
-    const x = padS + colIndex * (cW + gap);
-    const y = padS + rowIndex * (cH + gap);
-    
-    const memoryImg = new Image();
-    memoryImg.onload = function() {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(x - 4, y - 4, cW + 8, cH + 8);
-      ctx.drawImage(memoryImg, x, y, cW, cH);
-      
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-      ctx.strokeRect(x, y, cW, cH);
-      
-      componentsLoadedCounter++;
-      if (componentsLoadedCounter === totalPhotosToDraw) {
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        const footerY = sH - 65;
-        
-        ctx.fillStyle = '#1c1a17';
-        ctx.font = 'normal 500 13px "DM Mono", monospace';
-        ctx.letterSpacing = "2px";
-        ctx.fillText('DARKROOM STUDIO', sW / 2, footerY);
-        
-        ctx.font = 'italic 400 17px "Georgia", serif';
-        ctx.fillStyle = '#e0981c';
-        ctx.letterSpacing = "0px";
-        ctx.fillText('made by: @hustino.28 on instagram', sW / 2, footerY + 28);
-        
-        ctx.font = 'normal 400 10px "DM Mono", monospace';
-        ctx.fillStyle = '#8a7a68';
-        ctx.fillText(`LAYOUT CONFIG: ${currentStripLayout} PRINT  ✦  ${new Date().toLocaleDateString()}`, sW / 2, footerY + 48);
-        
-        const pipelineDataUrl = sheet.toDataURL('image/png');
-        window.stripHistoryArray.push(pipelineDataUrl);
-        sessionStorage.setItem('generated_strips', JSON.stringify(window.stripHistoryArray));
-        
-        const triggerLink = document.createElement('a');
-        triggerLink.href = pipelineDataUrl;
-        triggerLink.download = `darkroom-strip-${Date.now()}.png`;
-        document.body.appendChild(triggerLink);
-        triggerLink.click();
-        document.body.removeChild(triggerLink);
-        
-        refreshGalleryUI();
-      }
-    };
-    memoryImg.src = item.src;
-  }
+  const a=document.createElement('a');
+  a.href=sheet.toDataURL('image/jpeg',0.94);
+  a.download=`darkroom_strip_${Date.now()}.jpg`;a.click();
+  showToast('strip downloaded ✦');
 }
 
-function openSheet() {
-  const rSheet = document.getElementById('roll-sheet');
-  const rBack = document.getElementById('sheet-backdrop');
-  if (rSheet) rSheet.classList.add('open');
-  if (rBack) rBack.classList.add('show');
+function deleteOne(id){photos=photos.filter(p=>p.id!==id);updateCounters();rebuildGrids();updateFoot();}
+function clearAll(){if(!photos.length)return;photos=[];updateCounters();rebuildGrids();updateFoot();showToast('roll cleared');}
+
+function updateFoot(){
+  ['mob-clear-btn','desk-clear-btn'].forEach(id=>{const el=$(id);if(el)el.disabled=!photos.length;});
+  ['mob-dl-btn','desk-dl-btn'].forEach(id=>{const el=$(id);if(el){el.disabled=!photos.length;el.textContent=photos.length>1?'download strip':'download';}});
 }
 
-function closeSheet() {
-  const rSheet = document.getElementById('roll-sheet');
-  const rBack = document.getElementById('sheet-backdrop');
-  if (rSheet) rSheet.classList.remove('open');
-  if (rBack) rBack.classList.remove('show');
+let toastT;
+function showToast(msg){
+  const t=$('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);
 }
+
+buildFilters();
+navigator.mediaDevices.enumerateDevices()
+  .then(devs=>{if(devs.some(d=>d.kind==='videoinput'&&d.label))startCamera();})
+  .catch(()=>{});
 </script>
 </body>
 </html>
