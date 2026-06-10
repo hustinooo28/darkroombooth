@@ -104,11 +104,6 @@ header{
 }
 .p-btn:hover,.p-btn:active{background:var(--bg);border-color:var(--amber);color:var(--amber);}
 
-.prow{display:grid;gap:7px;}
-.prow.c2{grid-template-columns:repeat(2,1fr);}
-.prow.c3{grid-template-columns:repeat(3,1fr);}
-.prow.c4{grid-template-columns:repeat(4,1fr);}
-
 /* ── MOBILE VIEWFINDER ── */
 .vf-panel{  
   flex:1;position:relative;overflow:hidden;  
@@ -370,23 +365,29 @@ header{
 }
 .sheet-backdrop.show{opacity:1;pointer-events:auto;}
 
-/* ── DESKTOP RECOVERY MATRIX (>= 769px) ── */
+/* Hide desktop engine views layout arrays on mobile viewports */
+.desk-main { display: none !important; }
+
+/* ── DESKTOP SCREEN ARCHITECTURE RECOVERY ENGINE (>= 769px) ── */
 @media(min-width:769px){  
   .vf-panel,.bottom-bar,.filmstrip-bar,.roll-sheet,.sheet-backdrop,.vf-controls{display:none!important;}  
+  
+  .desk-main{    
+    display:grid !important;    
+    grid-template-columns:256px 1fr 320px;    
+    overflow:hidden;  
+    flex:1;
+  }  
   .app{    
     height:100vh;    
-    display:grid;    
-    grid-template-rows:52px 1fr 34px;  
+    display:flex;
+    flex-direction:column;
   }  
   header{height:52px;padding:0 24px;}  
   .logo{font-size:19px;}  
   .pill{font-size:10px;padding:4px 10px;}  
   .icon-btn{width:30px;height:30px;}  
-  .desk-main{    
-    display:grid;    
-    grid-template-columns:256px 1fr 320px;    
-    overflow:hidden;  
-  }  
+  
   .desk-sidebar{    
     display:flex;flex-direction:column;    
     border-right:1px solid var(--border);    
@@ -535,7 +536,6 @@ header{
   .desk-act-btn.pri{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}  
   .desk-act-btn.pri:hover:not(:disabled){filter:brightness(1.05);}  
   .desk-act-btn:disabled{opacity:.25;cursor:not-allowed;}  
-  footer{height:34px;padding:0 24px;}
 }
 
 footer{  
@@ -564,7 +564,9 @@ footer{
     </div>
   </header>
 
+  <!-- Desktop Grid Container -->
   <div class="desk-main">
+    <!-- Desktop Left Sidebar -->
     <div class="desk-sidebar">
       <div class="sb-block">
         <span class="sb-label">hardware lens context</span>
@@ -595,6 +597,7 @@ footer{
       </div>
     </div>
 
+    <!-- Center Viewfinder Grid -->
     <div class="desk-vf">
       <div class="desk-vf-wrap">
         <video id="video-desk" autoplay playsinline class="mirrored"></video>
@@ -608,6 +611,7 @@ footer{
       </div>
     </div>
 
+    <!-- Desktop Right Sheet History Grid Recovery -->
     <div class="desk-roll">
       <div class="desk-roll-hdr">
         <div class="desk-roll-title">
@@ -635,6 +639,7 @@ footer{
     </div>
   </div>
 
+  <!-- Mobile Pipeline Controls Viewfinder Panel -->
   <div class="vf-panel">
     <video id="video" autoplay playsinline class="mirrored"></video>
     <canvas id="canvas"></canvas>
@@ -667,6 +672,7 @@ footer{
     </div>
   </div>
 
+  <!-- Mobile Action Tray -->
   <div class="bottom-bar">
     <div class="filter-strip" id="mob-filter-list"></div>
     <div class="shoot-row">
@@ -690,6 +696,7 @@ footer{
     </div>
   </div>
 
+  <!-- Mobile Filmstrip Footbar Tray -->
   <div class="filmstrip-bar">
     <div class="filmstrip-thumbs" id="filmstrip-thumbs-container">
       <div class="fs-empty">filmstrip cache index empty — snapshot items line up here</div>
@@ -700,6 +707,7 @@ footer{
     </button>
   </div>
 
+  <!-- Drawer Modal Sheets Container -->
   <div class="sheet-backdrop" id="sheet-backdrop" onclick="closeSheet()"></div>
   <div class="roll-sheet" id="roll-sheet">
     <div class="sheet-handle" onclick="closeSheet()">
@@ -737,7 +745,6 @@ footer{
 </div>
 
 <script>
-// Global State Framework
 let streamInstance = null;
 let activeFacingMode = 'environment';
 let isMirrored = true;
@@ -745,7 +752,6 @@ let capturedFramesList = [];
 let chosenFilterIndex = 0;
 let currentStripLayout = '1x4';
 
-// Session tracking cache specifically for filmstrips
 window.stripHistoryArray = JSON.parse(sessionStorage.getItem('generated_strips') || '[]');
 
 const photoLayoutProfiles = {
@@ -766,7 +772,6 @@ const filterMatrixLookup = [
   { id: 'noir',  name: 'NOIR',   filter: 'grayscale(1) contrast(1.7) brightness(0.75)' }
 ];
 
-// Initialize Active Interface Pipeline
 window.addEventListener('DOMContentLoaded', () => {
   initializeThemeArchitecture();
   renderControlPickers();
@@ -776,7 +781,6 @@ window.addEventListener('DOMContentLoaded', () => {
   if (mobTimerSelect) syncTimerUI(mobTimerSelect.value);
 });
 
-// Theme System Architecture Look Setup
 function initializeThemeArchitecture() {
   const savedThemePreference = localStorage.getItem('darkroom-theme');
   if (savedThemePreference) {
@@ -815,7 +819,6 @@ function updateHardwareStatusPills(isLive) {
   }
 }
 
-// Media Stream Access Methods
 async function startCamera() {
   if (streamInstance) {
     streamInstance.getTracks().forEach(t => t.stop());
@@ -846,7 +849,7 @@ async function startCamera() {
     updateHardwareStatusPills(true);
     discoverDeviceVideoInputs();
   } catch (err) {
-    console.error("Camera access failure matrix:", err);
+    console.error("Camera hardware matrix setup err:", err);
     document.getElementById('no-cam').style.display = 'flex';
     const deskNoCam = document.querySelector('.desk-no-cam');
     if (deskNoCam) deskNoCam.style.display = 'flex';
@@ -926,7 +929,6 @@ function syncTimerUI(val) {
   }
 }
 
-// Render Controllers
 function renderControlPickers() {
   const mobFilters = document.getElementById('mob-filter-list');
   const deskFilters = document.getElementById('desk-filter-list');
@@ -1032,12 +1034,6 @@ function setLayoutProfile(key) {
   refreshGalleryUI();
 }
 
-// Neutralized Toast Trigger Hook (Toast System Completely Removed)
-function showToast(msg) {
-  // Pop-up bubble actions removed cleanly.
-}
-
-// Core Capture Processing Block Execution
 function capturePhoto() {
   const isDesktopViewport = window.innerWidth >= 769;
   const timerSelectId = isDesktopViewport ? 'desk-timer' : 'mob-timer';
@@ -1083,7 +1079,6 @@ function capturePhoto() {
         proxyCtx.drawImage(shadowCanvas, 0, 0);
         commitFrameToHistory(dynamicFilterProcessorCanvas.toDataURL('image/png'));
       } catch (e) {
-        console.warn("Native inline CSS canvas filter execution exception fallback strategy implemented:", e);
         const dynamicContext2D = shadowCanvas.getContext('2d');
         fritzFilterHelper(dynamicContext2D, currentActiveFilterStyle, shadowCanvas.width, shadowCanvas.height);
         commitFrameToHistory(shadowCanvas.toDataURL('image/png'));
@@ -1360,7 +1355,6 @@ function generateStrip() {
       
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(renderTargetX - 4, renderTargetY - 4, basePhotoWidth + 8, basePhotoHeight + 8);
-      
       ctx.drawImage(memoryImg, renderTargetX, renderTargetY, basePhotoWidth, basePhotoHeight);
       
       ctx.lineWidth = 1;
@@ -1410,7 +1404,6 @@ function finalizeStripHeaderAndFooterDecoration(canvas, ctx, blueprint, w, h, th
   document.body.removeChild(silentTriggerLink);
 }
 
-// Redesigned Export Canvas Frame logic for Save All Shots function
 async function downloadAll() {
   const blueprint = photoLayoutProfiles[currentStripLayout];
   const rows = Math.ceil(blueprint.shots / blueprint.cols);
@@ -1456,7 +1449,6 @@ async function downloadAll() {
     memoryImg.onload = function() {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(x - 4, y - 4, cW + 8, cH + 8);
-      
       ctx.drawImage(memoryImg, x, y, cW, cH);
       
       ctx.lineWidth = 1;
@@ -1502,7 +1494,6 @@ async function downloadAll() {
   }
 }
 
-// Sheet Animation Drawer Triggers (HCI Progressive Disclosure Mechanics)
 function openSheet() {
   const rSheet = document.getElementById('roll-sheet');
   const rBack = document.getElementById('sheet-backdrop');
