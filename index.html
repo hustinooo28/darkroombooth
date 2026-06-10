@@ -100,7 +100,7 @@ header{
 .prow.c3{grid-template-columns:repeat(3,1fr);}
 .prow.c4{grid-template-columns:repeat(4,1fr);}
 
-/* ── VIEWFINDER GENERAL OVERLAY CAPTURE BUTTON ── */
+/* ── VIEWFINDER GENERAL OVERLAY CAPTURE BUTTON (ONLY DESKTOP RETAINED) ── */
 .vf-snap-overlay-btn {
   position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
   width:64px;height:64px;border-radius:50%;background:#ffffff;
@@ -362,7 +362,6 @@ header{
   .desk-fchip-name{font-family:'DM Mono',monospace;font-size:9.5px;color:var(--text-dim);letter-spacing:.04em;}
   .desk-fchip.active .desk-fchip-name{color:var(--amber);}
   
-  /* Cleaned and guaranteed visibility Desktop Action Tray Frame */
   .desk-shoot-section{
     padding:10px 12px;border-top:1px solid var(--border);display:flex!important;flex-direction:column;gap:6px;flex-shrink:0;background:var(--surface);
   }
@@ -399,7 +398,7 @@ header{
   .desk-cdnum{
     position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
     font-family:'DM Serif Display',serif;font-size:88px;color:#fff;
-    text-shadow:0 4px 28px rgba(0,0,0,.75);opacity:0;transition:opacity .18s;z-index:10;line-height:1;
+    text-shadow:0 4px 28px rgba(0,0,0,.76);opacity:0;transition:opacity .18s;z-index:10;line-height:1;
   }
   .desk-cdnum.show{opacity:1;}
   .desk-vf-tag{
@@ -474,7 +473,7 @@ header{
       <div class="corner bl"></div><div class="corner br"></div>
     </div>
     
-    <button class="vf-snap-overlay-btn" id="mob-overlay-snap-btn" disabled onclick="capturePhoto()" title="Capture Snapshot"></button>
+    <!-- MOBILE CAPTURE BUTTON REMOVED: No extra overlay capture button on mobile viewfinder -->
     
     <div class="flash-el" id="flash"></div>
     <div class="cd-num" id="cdnum"></div>
@@ -609,6 +608,7 @@ header{
           <div class="corner bl"></div><div class="corner br"></div>
         </div>
         
+        <!-- SINGLE DESKTOP CAPTURE BUTTON: ONLY ONE RETAINED -->
         <button class="vf-snap-overlay-btn" id="desk-overlay-snap-btn" disabled onclick="capturePhoto()" title="Capture Snapshot"></button>
         
         <div class="desk-flash" id="desk-flash"></div>
@@ -787,7 +787,7 @@ async function reqCam(fc){
   allVideos().forEach(v=>{v.srcObject=stream;});
   ['no-cam','desk-no-cam'].forEach(id=>{const el=$(id);if(el)el.style.display='none';});
   
-  ['mob-overlay-snap-btn','desk-overlay-snap-btn'].forEach(id=>{
+  ['desk-overlay-snap-btn'].forEach(id=>{
     const el=$(id); if(el) el.disabled=false;
   });
   
@@ -822,7 +822,7 @@ async function capturePhoto(){
   if(capturing)return;
   capturing=true;
   
-  const targetButtons = ['mob-overlay-snap-btn','desk-overlay-snap-btn'];
+  const targetButtons = ['desk-overlay-snap-btn'];
   targetButtons.forEach(id=>{const el=$(id); if(el)el.disabled=true;});
   
   const timerVal=parseInt((isMob()?$('mob-timer'):$('desk-timer')).value);
