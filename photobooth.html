@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>darkroom — photobooth</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Themes ── */
+[data-theme="light"] {
+  --bg:          #f5f1eb;
+  --surface:     #ffffff;
+  --surface2:    #f0ece4;
+  --border:      #ddd5c8;
+  --text:        #1a1612;
+  --text-dim:    #6b6158;
+  --text-muted:  #a09488;
+  --amber:       #c07810;
+  --amber-bg:    rgba(192,120,16,.10);
+  --amber-glow:  rgba(192,120,16,.20);
+  --pol-paper:   #fffef9;
+  --pol-border:  #ede5d8;
+  --pol-shadow:  0 3px 16px rgba(0,0,0,.12), 0 1px 4px rgba(0,0,0,.07);
+  --pol-hover:   0 10px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.10);
+  --meta-col:    #8a7a68;
+  --act-border:  #c8b8a8;
+  --grain-op:    .14;
+  --vig:         rgba(205,196,182,.5);
+  --vf-bg:       #ddd8d0;
+  --foot-bg:     #ede8e0;
+  --scrollbar:   #c8bfb4;
+}
+[data-theme="dark"] {
+  --bg:          #0c0b09;
+  --surface:     #131210;
+  --surface2:    #1c1a17;
+  --border:      #2d2a24;
+  --text:        #e6ddd0;
+  --text-dim:    #7a7060;
+  --text-muted:  #4e4840;
+  --amber:       #e0981c;
+  --amber-bg:    rgba(224,152,28,.10);
+  --amber-glow:  rgba(224,152,28,.18);
+  --pol-paper:   #f5f0e8;
+  --pol-border:  #ede5d8;
+  --pol-shadow:  0 4px 20px rgba(0,0,0,.55), 0 1px 4px rgba(0,0,0,.30);
+  --pol-hover:   0 12px 36px rgba(0,0,0,.65), 0 2px 8px rgba(0,0,0,.40);
+  --meta-col:    #8a7060;
+  --act-border:  #c0ae98;
+  --grain-op:    .30;
+  --vig:         rgba(8,6,4,.65);
+  --vf-bg:       #0c0b09;
+  --foot-bg:     #0d0c0a;
+  --scrollbar:   #2d2a24;
+}
+
+/* ── Shell: full viewport, zero page scroll ── */
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; transition: background .25s, color .25s; }
+
+/* Grain */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  background-size:200px 200px; opacity:var(--grain-op); mix-blend-mode:multiply;
+}
+body::after {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:9998;
+  background:radial-gradient(ellipse at center, transparent 40%, var(--vig) 100%);
+}
+
+/* ── App layout ── */
+.app {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 52px 1fr 36px;  /* header | main | footer */
+  overflow: hidden;
+}
+
+/* ── Header ── */
+header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  position:relative; z-index:100;
+  flex-shrink:0;
+}
+.logo { font-family:'DM Serif Display',serif; font-size:19px; color:var(--amber); letter-spacing:-.3px; display:flex; align-items:baseline; gap:7px; }
+.logo-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--text-muted); font-style:italic; letter-spacing:.06em; }
+.hdr-right { display:flex; gap:7px; align-items:center; }
+
+.pill { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; padding:4px 10px; border-radius:100px; border:1px solid var(--border); color:var(--text-dim); white-space:nowrap; }
+.pill.live { border-color:var(--amber); color:var(--amber); background:var(--amber-bg); display:flex; align-items:center; gap:5px; }
+.live-dot { width:5px; height:5px; border-radius:50%; background:var(--amber); animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.icon-btn {
+  width:30px; height:30px; border-radius:50%;
+  border:1px solid var(--border); background:var(--surface2);
+  color:var(--text-dim); cursor:pointer; font-size:14px;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .15s;
+}
+.icon-btn:hover { border-color:var(--amber); color:var(--amber); }
+.icon-btn.on   { border-color:var(--amber); color:var(--amber); background:var(--amber-bg); }
+
+/* ── Main: 3-column ── */
+main {
+  display:grid;
+  grid-template-columns: 280px 1fr 340px;
+  overflow:hidden;
+  position:relative; z-index:1;
+}
+
+/* ── Left sidebar: filters + controls ── */
+.sidebar {
+  display:flex; flex-direction:column;
+  border-right:1px solid var(--border);
+  background:var(--surface);
+  overflow:hidden;
+}
+
+.sb-section {
+  padding:14px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex; flex-direction:column; gap:10px;
+  flex-shrink:0;
+}
+
+.sec-label { font-family:'DM Mono',monospace; font-size:9px; color:var(--text-muted); letter-spacing:.18em; text-transform:uppercase; }
+
+/* Camera source */
+.cam-switcher { display:flex; gap:4px; }
+.cam-btn {
+  flex:1; font-family:'DM Mono',monospace; font-size:10px;
+  padding:6px 4px; border-radius:4px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--text-dim); cursor:pointer; transition:all .15s; text-align:center;
+}
+.cam-btn:hover { border-color:var(--amber); color:var(--amber); }
+.cam-btn.active { background:var(--amber-bg); border-color:var(--amber); color:var(--amber); }
+
+/* Mirror toggle row */
+.mirror-row { display:flex; align-items:center; justify-content:space-between; }
+.toggle-track {
+  width:36px; height:20px; border-radius:10px;
+  background:var(--border); cursor:pointer; position:relative;
+  transition:background .2s; border:none; flex-shrink:0;
+}
+.toggle-track.on { background:var(--amber); }
+.toggle-thumb {
+  position:absolute; top:3px; left:3px;
+  width:14px; height:14px; border-radius:50%;
+  background:#fff; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.toggle-track.on .toggle-thumb { left:19px; }
+.toggle-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim); }
+
+/* Film stock chips — vertical scrollable list */
+.filter-list {
+  flex:1; overflow-y:auto; padding:8px 12px; display:flex; flex-direction:column; gap:4px;
+}
+.filter-list::-webkit-scrollbar { width:3px; }
+.filter-list::-webkit-scrollbar-thumb { background:var(--scrollbar); border-radius:2px; }
+
+.fchip {
+  display:flex; align-items:center; gap:10px;
+  padding:7px 9px; border-radius:5px; cursor:pointer;
+  border:1px solid transparent; transition:all .15s;
+}
+.fchip:hover { background:var(--surface2); border-color:var(--border); }
+.fchip.active { background:var(--amber-bg); border-color:var(--amber); }
+
+.fthumb {
+  width:38px; height:28px; border-radius:3px;
+  overflow:hidden; flex-shrink:0; border:1px solid var(--border);
+}
+.fthumb-inner {
+  width:100%; height:100%;
+  background:linear-gradient(135deg,#c8b090,#907060,#604030);
+}
+.fchip-name { font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim); letter-spacing:.06em; }
+.fchip.active .fchip-name { color:var(--amber); }
+
+/* Timer + Shoot */
+.shoot-section { padding:12px 16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px; flex-shrink:0; }
+.timer-sel {
+  font-family:'DM Mono',monospace; font-size:11px;
+  background:var(--surface2); border:1px solid var(--border);
+  color:var(--text); padding:8px 12px; border-radius:5px;
+  cursor:pointer; outline:none; width:100%; transition:border-color .15s;
+}
+.timer-sel:hover { border-color:var(--amber); }
+.shoot-btn {
+  width:100%; padding:13px;
+  background:var(--amber); border:none; border-radius:6px;
+  color:#fff; font-family:'DM Serif Display',serif; font-size:17px;
+  cursor:pointer; transition:all .15s; letter-spacing:.02em;
+}
+.shoot-btn:hover { filter:brightness(1.08); transform:translateY(-1px); box-shadow:0 4px 18px var(--amber-glow); }
+.shoot-btn:active { transform:none; filter:none; box-shadow:none; }
+.shoot-btn:disabled { opacity:.32; cursor:not-allowed; transform:none; filter:none; box-shadow:none; }
+.allow-btn {
+  width:100%; padding:10px;
+  background:transparent; border:1px solid var(--amber); border-radius:5px;
+  color:var(--amber); font-family:'DM Mono',monospace; font-size:11px;
+  letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:all .15s;
+}
+.allow-btn:hover { background:var(--amber-bg); }
+
+/* ── Center: viewfinder ── */
+.vf-panel {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:24px; background:var(--bg); overflow:hidden;
+}
+
+.vf-wrap {
+  position:relative; width:100%; max-width:660px;
+  background:var(--vf-bg); border-radius:8px; overflow:hidden;
+  border:1px solid var(--border);
+  /* height driven by aspect-ratio so it fits the column */
+  aspect-ratio:4/3;
+  max-height:calc(100vh - 52px - 36px - 48px); /* viewport - header - footer - padding */
+}
+#video { width:100%; height:100%; object-fit:cover; display:block; }
+#canvas { display:none; }
+#video.mirrored { transform:scaleX(-1); }
+
+.vf-overlay { position:absolute; inset:0; pointer-events:none; }
+.corner { position:absolute; width:20px; height:20px; border-color:var(--amber); border-style:solid; opacity:.65; }
+.corner.tl { top:14px; left:14px; border-width:2px 0 0 2px; }
+.corner.tr { top:14px; right:14px; border-width:2px 2px 0 0; }
+.corner.bl { bottom:14px; left:14px; border-width:0 0 2px 2px; }
+.corner.br { bottom:14px; right:14px; border-width:0 2px 2px 0; }
+
+.flash-el { position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; transition:opacity .04s; }
+.flash-el.on { opacity:1; }
+
+.cd-num {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  font-family:'DM Serif Display',serif; font-size:96px; color:#fff;
+  text-shadow:0 4px 28px rgba(0,0,0,.75); opacity:0; transition:opacity .18s; z-index:10; line-height:1;
+}
+.cd-num.show { opacity:1; }
+
+.vf-tag {
+  position:absolute; bottom:10px; left:10px;
+  font-family:'DM Mono',monospace; font-size:9px; color:var(--amber);
+  letter-spacing:.15em; text-transform:uppercase;
+  background:rgba(0,0,0,.55); padding:3px 8px; border-radius:2px;
+  border:1px solid rgba(180,110,10,.4);
+}
+
+.no-cam {
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:10px; background:var(--vf-bg);
+}
+.no-cam svg { opacity:.18; }
+.no-cam p { font-family:'DM Mono',monospace; font-size:11px; color:var(--text-muted); letter-spacing:.1em; text-transform:uppercase; }
+
+/* ── Right: roll panel ── */
+.roll-panel {
+  display:flex; flex-direction:column;
+  border-left:1px solid var(--border);
+  background:var(--surface);
+  overflow:hidden;
+}
+
+.roll-header {
+  padding:12px 16px 10px;
+  border-bottom:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  flex-shrink:0; gap:8px; flex-wrap:wrap;
+}
+.roll-left { display:flex; flex-direction:column; gap:1px; }
+.shot-ctr { font-family:'DM Serif Display',serif; font-size:26px; color:var(--amber); line-height:1; }
+.shot-ctr small { font-family:'DM Mono',monospace; font-size:10px; color:var(--text-muted); margin-left:2px; }
+
+.layout-picker { display:flex; gap:3px; flex-wrap:wrap; }
+.lp-btn {
+  font-family:'DM Mono',monospace; font-size:9px;
+  padding:4px 8px; border-radius:4px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--text-dim); cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.lp-btn:hover { border-color:var(--amber); color:var(--amber); }
+.lp-btn.active { background:var(--amber-bg); border-color:var(--amber); color:var(--amber); }
+
+/* Polaroid grid */
+.pol-grid {
+  flex:1; padding:14px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:14px;
+}
+.pol-grid::-webkit-scrollbar { width:3px; }
+.pol-grid::-webkit-scrollbar-thumb { background:var(--scrollbar); border-radius:2px; }
+
+.empty-st {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:8px; text-align:center;
+}
+.empty-st .ei { font-size:28px; opacity:.2; filter:grayscale(1); }
+.empty-st p { font-family:'DM Mono',monospace; font-size:9px; color:var(--text-muted); letter-spacing:.14em; text-transform:uppercase; line-height:2; }
+
+/* Polaroid card */
+.pol {
+  background:var(--pol-paper);
+  padding:8px 8px 34px;
+  box-shadow:var(--pol-shadow);
+  position:relative; flex-shrink:0;
+  animation:slideUp .28s ease forwards;
+  transition:transform .22s ease, box-shadow .22s ease;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(8px) rotate(var(--tilt,0deg))} to{opacity:1;transform:translateY(0) rotate(var(--tilt,0deg))} }
+.pol:hover { transform:translateY(-4px) rotate(var(--tilt,0deg)) scale(1.03) !important; box-shadow:var(--pol-hover) !important; z-index:10; }
+
+.pol-img { width:100%; display:block; border:1px solid var(--pol-border); object-fit:cover; }
+/* aspect-ratio set inline per-photo based on actual captured dimensions */
+
+.pol-foot {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:0 8px 6px;
+  display:flex; justify-content:space-between; align-items:flex-end;
+}
+.p-meta { font-family:'DM Mono',monospace; font-size:7px; color:var(--meta-col); line-height:1.7; }
+.p-acts { display:flex; gap:3px; }
+.p-btn {
+  width:22px; height:22px; border-radius:50%;
+  border:1px solid var(--act-border); background:transparent;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:11px; color:var(--meta-col); transition:all .15s;
+}
+.p-btn:hover { background:var(--bg); border-color:var(--amber); color:var(--amber); }
+
+/* Grid rows */
+.prow { display:grid; gap:8px; }
+.prow.c2 { grid-template-columns:repeat(2,1fr); }
+.prow.c3 { grid-template-columns:repeat(3,1fr); }
+.prow.c4 { grid-template-columns:repeat(4,1fr); }
+
+/* Roll footer */
+.roll-foot {
+  padding:10px 14px; border-top:1px solid var(--border);
+  display:flex; gap:7px; background:var(--surface); flex-shrink:0;
+}
+.ft-btn {
+  flex:1; padding:9px 6px;
+  font-family:'DM Mono',monospace; font-size:9px;
+  letter-spacing:.08em; text-transform:uppercase;
+  border-radius:5px; border:1px solid var(--border);
+  background:transparent; color:var(--text-dim);
+  cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.ft-btn:hover { border-color:var(--amber); color:var(--amber); background:var(--amber-bg); }
+.ft-btn.pri { border-color:var(--amber); color:var(--amber); background:var(--amber-bg); }
+.ft-btn.pri:hover { background:var(--amber-glow); }
+.ft-btn:disabled { opacity:.28; cursor:not-allowed; }
+
+/* ── Footer ── */
+footer {
+  display:flex; align-items:center; justify-content:center;
+  border-top:1px solid var(--border); background:var(--foot-bg);
+  position:relative; z-index:1; flex-shrink:0;
+}
+.foot-txt { font-family:'DM Mono',monospace; font-size:9px; color:var(--text-muted); letter-spacing:.12em; display:flex; align-items:center; gap:7px; }
+.foot-handle { color:var(--amber); }
+.foot-dot { color:var(--amber); }
+
+/* Toast */
+.toast {
+  position:fixed; bottom:24px; left:50%;
+  transform:translateX(-50%) translateY(60px);
+  background:var(--text); color:var(--bg);
+  font-family:'DM Mono',monospace; font-size:11px;
+  letter-spacing:.07em; padding:8px 18px;
+  border-radius:100px; z-index:9997;
+  transition:transform .25s ease; white-space:nowrap; pointer-events:none;
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* ── Mobile fallback: stacked ── */
+@media (max-width:820px) {
+  html, body { overflow:auto; }
+  .app { height:auto; grid-template-rows:auto 1fr auto; }
+  main { grid-template-columns:1fr; grid-template-rows:auto; }
+  .sidebar { border-right:none; border-bottom:1px solid var(--border); }
+  .filter-list { flex-direction:row; flex-wrap:wrap; overflow-y:visible; max-height:none; padding:8px 12px; }
+  .fchip { flex-direction:column; align-items:center; width:60px; }
+  .fchip-name { font-size:8px; }
+  .vf-panel { padding:16px; }
+  .vf-wrap { max-height:56vw; }
+  .roll-panel { border-left:none; border-top:1px solid var(--border); }
+  .pol-grid { max-height:50vh; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Header -->
+<header>
+  <div class="logo">darkroom <span class="logo-sub">photobooth</span></div>
+  <div class="hdr-right">
+    <div class="pill live"><div class="live-dot"></div><span id="status-text">offline</span></div>
+    <div class="pill" id="cam-pill" style="display:none"></div>
+    <button class="icon-btn" id="mirror-btn" title="Mirror" onclick="toggleMirror()">⇆</button>
+    <button class="icon-btn" id="theme-btn"  title="Theme"  onclick="toggleTheme()">☀</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── Left sidebar ── -->
+  <aside class="sidebar">
+
+    <!-- Camera source -->
+    <div class="sb-section">
+      <div class="sec-label">camera</div>
+      <div class="cam-switcher">
+        <button class="cam-btn active" id="btn-rear"  onclick="switchCam('environment')">rear</button>
+        <button class="cam-btn"        id="btn-front" onclick="switchCam('user')">front</button>
+        <button class="cam-btn"        id="btn-any"   onclick="switchCam('any')">any</button>
+      </div>
+    </div>
+
+    <!-- Film stock — scrollable list -->
+    <div class="sb-section" style="padding-bottom:0;border-bottom:none;flex-shrink:0;">
+      <div class="sec-label">film stock</div>
+    </div>
+    <div class="filter-list" id="filter-list"><!-- chips built by JS --></div>
+
+    <!-- Timer + Shoot -->
+    <div class="shoot-section">
+      <div class="sec-label">timer</div>
+      <select class="timer-sel" id="timer-sel">
+        <option value="0">shoot now</option>
+        <option value="3">3 second delay</option>
+        <option value="5">5 second delay</option>
+        <option value="10">10 second delay</option>
+      </select>
+      <button class="shoot-btn" id="shoot-btn" disabled onclick="capturePhoto()">shoot</button>
+      <button class="allow-btn" id="allow-btn" onclick="startCamera()">allow camera</button>
+    </div>
+
+  </aside>
+
+  <!-- ── Viewfinder ── -->
+  <section class="vf-panel">
+    <div class="vf-wrap" id="vf-wrap">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="canvas"></canvas>
+      <div class="vf-overlay">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+      </div>
+      <div class="flash-el" id="flash"></div>
+      <div class="cd-num"   id="cdnum"></div>
+      <div class="vf-tag"   id="vf-tag">RAW</div>
+      <div class="no-cam"   id="no-cam">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        <p>camera not active</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Roll panel ── -->
+  <section class="roll-panel">
+
+    <div class="roll-header">
+      <div class="roll-left">
+        <div class="sec-label">roll</div>
+        <div class="shot-ctr" id="shot-ctr">0 <small>shots</small></div>
+      </div>
+      <div>
+        <div class="sec-label" style="margin-bottom:5px;text-align:right">layout</div>
+        <div class="layout-picker">
+          <button class="lp-btn active" data-l="1x1" onclick="setLayout('1x1')">1×1</button>
+          <button class="lp-btn"        data-l="1x2" onclick="setLayout('1x2')">1×2</button>
+          <button class="lp-btn"        data-l="1x4" onclick="setLayout('1x4')">1×4</button>
+          <button class="lp-btn"        data-l="2x2" onclick="setLayout('2x2')">2×2</button>
+          <button class="lp-btn"        data-l="2x3" onclick="setLayout('2x3')">2×3</button>
+          <button class="lp-btn"        data-l="3x3" onclick="setLayout('3x3')">3×3</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pol-grid" id="pol-grid">
+      <div class="empty-st" id="empty-st">
+        <div class="ei">📷</div>
+        <p>your shots<br>will appear<br>here</p>
+      </div>
+    </div>
+
+    <div class="roll-foot">
+      <button class="ft-btn"     id="clear-btn" onclick="clearAll()"   disabled>clear</button>
+      <button class="ft-btn pri" id="dl-btn"    onclick="downloadAll()" disabled>download</button>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="foot-txt">
+    made by <span class="foot-handle">@hustino.28</span>
+    <span class="foot-dot">✦</span>
+    darkroom photobooth
+  </div>
+</footer>
+
+</div><!-- .app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Filters ──
+const FILTERS = [
+  { id:'normal', name:'RAW',    css:'none' },
+  { id:'kodak',  name:'KODAK',  css:'sepia(0.2) contrast(1.1) saturate(1.1) brightness(1.05)' },
+  { id:'ilford', name:'ILFORD', css:'grayscale(1) contrast(1.2) brightness(1.05)' },
+  { id:'lomo',   name:'LOMO',   css:'saturate(1.6) contrast(1.25) brightness(0.88)' },
+  { id:'fade',   name:'FADE',   css:'sepia(0.4) saturate(0.8) brightness(1.12) contrast(0.82)' },
+  { id:'warm',   name:'WARM',   css:'sepia(0.5) saturate(1.2) brightness(1.1)' },
+  { id:'cool',   name:'COOL',   css:'hue-rotate(200deg) saturate(0.85) brightness(1.05)' },
+  { id:'velvia', name:'VELVIA', css:'saturate(1.9) contrast(1.18) brightness(0.93)' },
+  { id:'mist',   name:'MIST',   css:'brightness(1.22) contrast(0.78) saturate(0.55)' },
+];
+
+const L_COLS  = { '1x1':1,'1x2':1,'1x4':1,'2x2':2,'2x3':2,'3x3':3 };
+const L_TAKE  = { '1x1':1,'1x2':2,'1x4':4,'2x2':4,'2x3':6,'3x3':9 };
+
+// ── State ──
+let stream=null, facing='environment', filterId='normal';
+let photos=[], capturing=false, layout='1x1', dark=false, mirrored=false;
+
+// ── DOM ──
+const video    = document.getElementById('video');
+const canvas   = document.getElementById('canvas');
+const shootBtn = document.getElementById('shoot-btn');
+const allowBtn = document.getElementById('allow-btn');
+const noCam    = document.getElementById('no-cam');
+const flashEl  = document.getElementById('flash');
+const cdNum    = document.getElementById('cdnum');
+const vfTag    = document.getElementById('vf-tag');
+const shotCtr  = document.getElementById('shot-ctr');
+const polGrid  = document.getElementById('pol-grid');
+const emptyEl  = document.getElementById('empty-st');
+const clearBtn = document.getElementById('clear-btn');
+const dlBtn    = document.getElementById('dl-btn');
+
+// ── Theme ──
+function toggleTheme(){
+  dark=!dark;
+  document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+  document.getElementById('theme-btn').textContent = dark?'☀':'☾';
+}
+
+// ── Mirror ──
+function toggleMirror(){
+  mirrored=!mirrored;
+  video.classList.toggle('mirrored', mirrored);
+  document.getElementById('mirror-btn').classList.toggle('on', mirrored);
+  showToast(mirrored?'mirror on':'mirror off');
+}
+
+// ── Filter chips ──
+function buildFilters(){
+  const list = document.getElementById('filter-list');
+  FILTERS.forEach(f=>{
+    const c = document.createElement('div');
+    c.className = 'fchip'+(f.id==='normal'?' active':'');
+    c.dataset.fid = f.id;
+    c.onclick = ()=>applyFilter(f.id);
+    c.innerHTML=`
+      <div class="fthumb"><div class="fthumb-inner" style="filter:${f.css==='none'?'none':f.css}"></div></div>
+      <div class="fchip-name">${f.name}</div>`;
+    list.appendChild(c);
+  });
+}
+
+function applyFilter(id){
+  filterId=id;
+  const f=FILTERS.find(x=>x.id===id);
+  video.style.filter = f.css==='none'?'':f.css;
+  vfTag.textContent = f.name;
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.toggle('active',c.dataset.fid===id));
+}
+
+// ── Camera ──
+async function startCamera(){
+  try { await reqCam(facing); } catch(e){ showToast('camera access denied'); }
+}
+
+async function reqCam(fc){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  const c = fc==='any'
+    ? {video:{width:{ideal:1920},height:{ideal:1080}},audio:false}
+    : {video:{facingMode:fc,width:{ideal:1920},height:{ideal:1080}},audio:false};
+  stream = await navigator.mediaDevices.getUserMedia(c);
+  video.srcObject = stream;
+  const label = stream.getVideoTracks()[0].label||'camera';
+  noCam.style.display='none';
+  shootBtn.disabled=false; allowBtn.style.display='none';
+  document.getElementById('status-text').textContent='live';
+  const cp=document.getElementById('cam-pill');
+  cp.textContent=label.length>16?label.slice(0,16)+'…':label; cp.style.display='';
+  const f=FILTERS.find(x=>x.id===filterId);
+  video.style.filter=f.css==='none'?'':f.css;
+  showToast('camera active');
+}
+
+async function switchCam(fc){
+  facing=fc;
+  document.querySelectorAll('.cam-btn').forEach(b=>b.classList.remove('active'));
+  ({environment:'btn-rear',user:'btn-front',any:'btn-any'});
+  const map={environment:'btn-rear',user:'btn-front',any:'btn-any'};
+  document.getElementById(map[fc]).classList.add('active');
+  if(stream) try{ await reqCam(fc); } catch(e){ showToast('switch failed'); }
+}
+
+// ── Capture ──
+async function capturePhoto(){
+  if(capturing) return;
+  capturing=true; shootBtn.disabled=true;
+  const d=parseInt(document.getElementById('timer-sel').value);
+  if(d>0) await runCd(d);
+  doCapture();
+  capturing=false; shootBtn.disabled=false;
+}
+
+function runCd(s){
+  return new Promise(res=>{
+    let n=s; cdNum.textContent=n; cdNum.classList.add('show');
+    const t=setInterval(()=>{ n--; if(n<=0){clearInterval(t);cdNum.classList.remove('show');res();}else cdNum.textContent=n; },1000);
+  });
+}
+
+function doCapture(){
+  flashEl.classList.add('on'); setTimeout(()=>flashEl.classList.remove('on'),150);
+
+  // Capture at actual video resolution — no hardcoded dimensions
+  const vw=video.videoWidth||1280, vh=video.videoHeight||720;
+  canvas.width=vw; canvas.height=vh;
+  const ctx=canvas.getContext('2d');
+  const f=FILTERS.find(x=>x.id===filterId);
+  ctx.filter = f.css==='none'?'none':f.css;
+  if(mirrored){ ctx.save(); ctx.translate(vw,0); ctx.scale(-1,1); ctx.drawImage(video,0,0,vw,vh); ctx.restore(); }
+  else ctx.drawImage(video,0,0,vw,vh);
+  ctx.filter='none';
+
+  const photo={
+    id:   Date.now(),
+    data: canvas.toDataURL('image/jpeg',0.94),
+    w:    vw, h: vh,           // store real dimensions for correct aspect ratio
+    ar:   vw/vh,               // aspect ratio
+    filter: f.name,
+    ts:   new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    tilt: (Math.random()*4-2).toFixed(2),
+  };
+  photos.unshift(photo);
+  shotCtr.innerHTML=`${photos.length} <small>shots</small>`;
+  rebuildGrid(); updateFoot();
+  showToast('shot taken ✦');
+}
+
+// ── Polaroid element ──
+function makePol(photo){
+  const div=document.createElement('div');
+  div.className='pol'; div.id='ph-'+photo.id;
+  div.style.setProperty('--tilt',photo.tilt+'deg');
+  div.style.transform=`rotate(${photo.tilt}deg)`;
+  // Use real aspect ratio so the image is never stretched
+  const arStyle=`aspect-ratio:${photo.w}/${photo.h};`;
+  div.innerHTML=`
+    <img class="pol-img" src="${photo.data}" style="${arStyle}" alt="">
+    <div class="pol-foot">
+      <div class="p-meta"><div>${photo.filter}</div><div>${photo.ts}</div></div>
+      <div class="p-acts">
+        <button class="p-btn" title="Download" onclick="downloadOne(${photo.id})">↓</button>
+        <button class="p-btn" title="Delete"   onclick="deleteOne(${photo.id})">✕</button>
+      </div>
+    </div>`;
+  return div;
+}
+
+function rebuildGrid(){
+  polGrid.innerHTML='';
+  if(!photos.length){ polGrid.appendChild(emptyEl); return; }
+  const cols=L_COLS[layout]||1;
+  if(cols===1){ photos.forEach(p=>polGrid.appendChild(makePol(p))); return; }
+  for(let i=0;i<photos.length;i+=cols){
+    const row=document.createElement('div');
+    row.className=`prow c${cols}`;
+    for(let j=0;j<cols;j++) if(photos[i+j]) row.appendChild(makePol(photos[i+j]));
+    polGrid.appendChild(row);
+  }
+}
+
+function setLayout(mode){
+  layout=mode;
+  document.querySelectorAll('.lp-btn').forEach(b=>b.classList.toggle('active',b.dataset.l===mode));
+  rebuildGrid();
+}
+
+// ── framePolaroid: correct aspect ratio, no stretching ──
+function framePolaroid(photo){
+  return new Promise(res=>{
+    // Use the real photo dimensions
+    const srcW = photo.w, srcH = photo.h;
+    const scale = Math.min(800/srcW, 600/srcH, 1); // fit within 800×600 max
+    const imgW = Math.round(srcW * scale);
+    const imgH = Math.round(srcH * scale);
+
+    const padSide=24, padTop=24, padBottom=88;
+    const totalW=imgW+padSide*2;
+    const totalH=imgH+padTop+padBottom;
+
+    const fc=document.createElement('canvas');
+    fc.width=totalW; fc.height=totalH;
+    const ctx=fc.getContext('2d');
+
+    // Paper
+    ctx.fillStyle='#fdfaf4'; ctx.fillRect(0,0,totalW,totalH);
+    // Top shadow
+    const sh=ctx.createLinearGradient(0,0,0,16);
+    sh.addColorStop(0,'rgba(0,0,0,0.07)'); sh.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=sh; ctx.fillRect(0,0,totalW,16);
+
+    const img=new Image();
+    img.onload=()=>{
+      // drawImage with exact scaled dimensions — no stretching
+      ctx.drawImage(img, padSide, padTop, imgW, imgH);
+
+      // Photo border
+      ctx.strokeStyle='#e0d8cc'; ctx.lineWidth=1;
+      ctx.strokeRect(padSide,padTop,imgW,imgH);
+
+      // Caption
+      ctx.fillStyle='#8a7060'; ctx.font='500 12px "DM Mono",monospace';
+      ctx.textAlign='left';
+      ctx.fillText(photo.filter, padSide+4, totalH-56);
+      ctx.fillStyle='#b0a090'; ctx.font='11px "DM Mono",monospace';
+      ctx.fillText(photo.ts, padSide+4, totalH-36);
+      ctx.fillStyle='#c8a070'; ctx.font='italic 10px Georgia,serif';
+      ctx.textAlign='right';
+      ctx.fillText('darkroom ✦ @hustino.28', totalW-padSide, totalH-16);
+
+      res(fc.toDataURL('image/jpeg',0.94));
+    };
+    img.src=photo.data;
+  });
+}
+
+// ── drawImageCover: draw image into a rect without stretching (cover semantics) ──
+function drawImgCover(ctx, img, x, y, w, h){
+  const srcAr = img.naturalWidth/img.naturalHeight;
+  const dstAr = w/h;
+  let sx=0,sy=0,sw=img.naturalWidth,sh=img.naturalHeight;
+  if(srcAr>dstAr){ sw=Math.round(img.naturalHeight*dstAr); sx=Math.round((img.naturalWidth-sw)/2); }
+  else            { sh=Math.round(img.naturalWidth/dstAr);  sy=Math.round((img.naturalHeight-sh)/2); }
+  ctx.drawImage(img, sx,sy,sw,sh, x,y,w,h);
+}
+
+// ── Downloads ──
+async function downloadOne(id){
+  const p=photos.find(x=>x.id===id); if(!p) return;
+  showToast('framing…');
+  const url=await framePolaroid(p);
+  const a=document.createElement('a'); a.href=url; a.download=`darkroom_${p.id}.jpg`; a.click();
+  showToast('downloaded ✦');
+}
+
+async function downloadAll(){
+  if(!photos.length) return;
+  if(photos.length===1){ downloadOne(photos[0].id); return; }
+  showToast('building strip…');
+
+  const cols=L_COLS[layout]||1;
+  const take=Math.min(photos.length,L_TAKE[layout]||photos.length);
+  const sub=photos.slice(0,take);
+  const rows=Math.ceil(sub.length/cols);
+
+  // Cell uses 4:3 regardless of source (cover crop) — consistent sheet look
+  const cellW=400, cellH=300;
+  const padS=20, padT=20, capH=66, gap=14;
+  const headerH=68, footerH=32;
+  const sheetW=cols*cellW+(cols-1)*gap+padS*2;
+  const sheetH=rows*(cellH+capH)+(rows-1)*gap+padS*2+headerH+footerH;
+
+  const sheet=document.createElement('canvas');
+  sheet.width=sheetW; sheet.height=sheetH;
+  const ctx=sheet.getContext('2d');
+
+  const isDk=document.documentElement.getAttribute('data-theme')==='dark';
+  ctx.fillStyle=isDk?'#0c0b09':'#f5f1eb';
+  ctx.fillRect(0,0,sheetW,sheetH);
+
+  ctx.fillStyle='#c07810';
+  ctx.font='italic bold 26px Georgia,serif';
+  ctx.textAlign='center';
+  ctx.fillText('darkroom — photobooth', sheetW/2, padT+30);
+  ctx.font='11px monospace';
+  ctx.fillStyle=isDk?'#7a7060':'#9e9488';
+  ctx.fillText(`${layout} layout  ✦  ${new Date().toLocaleDateString()}`, sheetW/2, padT+50);
+
+  const loadImg=src=>new Promise(r=>{ const i=new Image(); i.onload=()=>r(i); i.src=src; });
+
+  for(let i=0;i<sub.length;i++){
+    const col=i%cols, row=Math.floor(i/cols);
+    const x=padS+col*(cellW+gap);
+    const y=padS+headerH+row*(cellH+capH+gap);
+    const bdr=9;
+
+    // Polaroid paper
+    ctx.fillStyle='#fdfaf4';
+    ctx.fillRect(x-bdr, y-bdr, cellW+bdr*2, cellH+capH+bdr*2);
+
+    // Photo — cover crop so it fills the cell exactly
+    const img=await loadImg(sub[i].data);
+    ctx.save(); ctx.beginPath(); ctx.rect(x,y,cellW,cellH); ctx.clip();
+    drawImgCover(ctx, img, x, y, cellW, cellH);
+    ctx.restore();
+
+    ctx.strokeStyle='#e0d8cc'; ctx.lineWidth=1;
+    ctx.strokeRect(x,y,cellW,cellH);
+
+    // Caption
+    ctx.fillStyle='#7a6a58'; ctx.font='500 10px monospace'; ctx.textAlign='left';
+    ctx.fillText(sub[i].filter, x+4, y+cellH+20);
+    ctx.fillStyle='#a09080'; ctx.font='9px monospace';
+    ctx.fillText(sub[i].ts, x+4, y+cellH+36);
+
+    // Paper shadow
+    ctx.strokeStyle='rgba(0,0,0,0.06)'; ctx.lineWidth=4;
+    ctx.strokeRect(x-bdr+4, y-bdr+4, cellW+bdr*2, cellH+capH+bdr*2);
+  }
+
+  ctx.fillStyle=isDk?'#4a4540':'#b0a090';
+  ctx.font='italic 10px Georgia,serif'; ctx.textAlign='center';
+  ctx.fillText('made by @hustino.28  ✦  darkroom photobooth', sheetW/2, sheetH-10);
+
+  const a=document.createElement('a');
+  a.href=sheet.toDataURL('image/jpeg',0.94);
+  a.download=`darkroom_strip_${Date.now()}.jpg`;
+  a.click();
+  showToast('strip downloaded ✦');
+}
+
+function deleteOne(id){ photos=photos.filter(p=>p.id!==id); shotCtr.innerHTML=`${photos.length} <small>shots</small>`; rebuildGrid(); updateFoot(); }
+function clearAll(){ if(!photos.length) return; photos=[]; shotCtr.innerHTML=`0 <small>shots</small>`; rebuildGrid(); updateFoot(); showToast('roll cleared'); }
+function updateFoot(){ clearBtn.disabled=!photos.length; dlBtn.disabled=!photos.length; dlBtn.textContent=photos.length>1?'download strip':'download'; }
+
+// ── Toast ──
+let toastT;
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200); }
+
+// ── Init ──
+buildFilters();
+navigator.mediaDevices.enumerateDevices().then(devs=>{ if(devs.some(d=>d.kind==='videoinput'&&d.label)) startCamera(); }).catch(()=>{});
+</script>
+</body>
+</html>
