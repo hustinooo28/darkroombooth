@@ -100,6 +100,19 @@ header{
 .prow.c3{grid-template-columns:repeat(3,1fr);}
 .prow.c4{grid-template-columns:repeat(4,1fr);}
 
+/* ── VIEWFINDER GENERAL OVERLAY CAPTURE BUTTON ── */
+.vf-snap-overlay-btn {
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  width:64px;height:64px;border-radius:50%;background:#ffffff;
+  border:4px solid rgba(0,0,0,0.4);box-shadow:0 0 0 2px var(--amber),0 4px 14px rgba(0,0,0,0.5);
+  cursor:pointer;z-index:25;pointer-events:auto;transition:all .15s ease;
+}
+.vf-snap-overlay-btn::after {
+  content:'';position:absolute;inset:3px;border-radius:50%;background:var(--amber);transition:all .15s ease;
+}
+.vf-snap-overlay-btn:active {transform:translateX(-50%) scale(0.90);}
+.vf-snap-overlay-btn:disabled {opacity:0.3;cursor:not-allowed;transform:translateX(-50%) none;}
+
 /* ── MOBILE VIEWFINDER ── */
 .vf-panel{
   flex:1;position:relative;overflow:hidden;
@@ -167,14 +180,8 @@ header{
 .vf-ctrl-btn:active, .vf-cam-btn:active{transform:scale(.88);}
 .vf-ctrl-btn.on, .vf-cam-btn.active{border-color:var(--amber);color:var(--amber);}
 
-.flash-toggle-btn {
-  font-weight: bold;
-}
-.flash-toggle-btn.on {
-  border-color: var(--amber) !important;
-  color: var(--amber) !important;
-  background: var(--amber-bg) !important;
-}
+.flash-toggle-btn {font-weight: bold;}
+.flash-toggle-btn.on {border-color: var(--amber) !important; color: var(--amber) !important; background: var(--amber-bg) !important;}
 
 /* ── MOBILE ACTIONS INTERFACE PANEL ── */
 .bottom-bar{
@@ -325,81 +332,84 @@ header{
 /* ── DESKTOP LAYOUT (≥ 769px) ── */
 @media(min-width:769px){
   .vf-panel,.bottom-bar,.filmstrip-bar,.roll-sheet,.sheet-backdrop,.vf-controls{display:none!important;}
-  .app{height:100vh;display:grid;grid-template-rows:52px 1fr 34px;}
-  header{height:52px;padding:0 24px;}
-  .logo{font-size:19px;}
-  .pill{font-size:10px;padding:4px 10px;}
-  .icon-btn{width:30px;height:30px;}
+  .app{height:100vh;display:grid;grid-template-rows:48px 1fr 30px;}
+  header{height:48px;padding:0 20px;}
+  .logo{font-size:18px;}
+  .pill{font-size:9px;padding:3px 8px;}
+  .icon-btn{width:28px;height:28px;}
   
-  .desk-main{display:grid;grid-template-columns:260px 1fr 320px;overflow:hidden;}
+  .desk-main{display:grid;grid-template-columns:250px 1fr 300px;overflow:hidden;}
   .desk-sidebar{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface);overflow:hidden;}
-  .sb-block{padding:13px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:9px;flex-shrink:0;}
-  .sb-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.18em;text-transform:uppercase;}
+  
+  /* Highly Compressed Configuration Blocks to Prevent Overflow Layout Pushing */
+  .sb-block{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+  .sb-label{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--text-muted);letter-spacing:.14em;text-transform:uppercase;}
   
   .desk-cam-sw{display:flex;gap:3px;}
   .desk-cam-btn{
-    flex:1;font-family:'DM Mono',monospace;font-size:10px;
-    padding:6px 4px;border-radius:4px;border:1px solid var(--border);
+    flex:1;font-family:'DM Mono',monospace;font-size:9px;
+    padding:4px;border-radius:4px;border:1px solid var(--border);
     background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;text-align:center;
   }
   .desk-cam-btn:hover{border-color:var(--amber);color:var(--amber);}
   .desk-cam-btn.active{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
   
-  .mirror-row{display:flex;align-items:center;justify-content:space-between;}
+  .mirror-row{display:flex;align-items:center;justify-content:space-between;margin-top:2px;}
   .toggle-track{
-    width:34px;height:19px;border-radius:10px;background:var(--border);
+    width:30px;height:16px;border-radius:10px;background:var(--border);
     cursor:pointer;position:relative;transition:background .2s;border:none;flex-shrink:0;
   }
   .toggle-track.on{background:var(--amber);}
   .toggle-thumb{
-    position:absolute;top:2.5px;left:2.5px;width:14px;height:14px;border-radius:50%;
+    position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;
     background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);
   }
-  .toggle-track.on .toggle-thumb{left:18px;}
-  .toggle-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);}
+  .toggle-track.on .toggle-thumb{left:16px;}
+  .toggle-lbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);}
   
-  .desk-filter-list{flex:1;overflow-y:auto;padding:7px 10px;display:flex;flex-direction:column;gap:3px;}
+  /* Compressed Filter Look Emulator Container Layout */
+  .desk-filter-list{flex:1;overflow-y:auto;padding:4px 8px;display:flex;flex-direction:column;gap:2px;}
   .desk-filter-list::-webkit-scrollbar{width:3px;}
   .desk-filter-list::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px;}
-  .desk-fchip{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:5px;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+  .desk-fchip{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:4px;cursor:pointer;border:1px solid transparent;transition:all .15s;}
   .desk-fchip:hover{background:var(--surface2);border-color:var(--border);}
   .desk-fchip.active{background:var(--amber-bg);border-color:var(--amber);}
-  .desk-fthumb{width:36px;height:26px;border-radius:3px;overflow:hidden;flex-shrink:0;border:1px solid var(--border);}
+  .desk-fthumb{width:30px;height:22px;border-radius:2px;overflow:hidden;flex-shrink:0;border:1px solid var(--border);}
   .desk-fthumb-inner{width:100%;height:100%;background:linear-gradient(135deg,#c8b090,#907060,#604030);}
-  .desk-fchip-name{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:.05em;}
+  .desk-fchip-name{font-family:'DM Mono',monospace;font-size:9.5px;color:var(--text-dim);letter-spacing:.04em;}
   .desk-fchip.active .desk-fchip-name{color:var(--amber);}
   
-  /* Fixed Action Section Layout Constraints */
+  /* Cleaned and guaranteed visibility Desktop Action Tray Frame */
   .desk-shoot-section{
-    padding:14px;border-top:1px solid var(--border);display:flex!important;flex-direction:column;gap:10px;flex-shrink:0;background:var(--surface);
+    padding:10px 12px;border-top:1px solid var(--border);display:flex!important;flex-direction:column;gap:6px;flex-shrink:0;background:var(--surface);
   }
   .desk-timer{
-    font-family:'DM Mono',monospace;font-size:11px;
+    font-family:'DM Mono',monospace;font-size:10px;
     background:var(--surface2);border:1px solid var(--border);
-    color:var(--text);padding:8px 10px;border-radius:5px;
+    color:var(--text);padding:6px 8px;border-radius:4px;
     cursor:pointer;outline:none;width:100%;transition:border-color .15s;
   }
   .desk-timer:hover{border-color:var(--amber);}
   .desk-shoot-btn{
-    width:100%;padding:14px;display:block!important;visibility:visible!important;opacity:1!important;
-    background:var(--amber);border:none;border-radius:6px;
-    color:#fff;font-family:'DM Serif Display',serif;font-size:16px;
-    cursor:pointer;transition:all .15s;letter-spacing:.02em;box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    width:100%;padding:10px;display:block!important;visibility:visible!important;opacity:1!important;
+    background:var(--amber);border:none;border-radius:5px;
+    color:#fff;font-family:'DM Serif Display',serif;font-size:14px;
+    cursor:pointer;transition:all .15s;letter-spacing:.02em;box-shadow:0 3px 10px rgba(0,0,0,0.15);
   }
   .desk-shoot-btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px);}
   .desk-shoot-btn:active:not(:disabled){transform:none;filter:none;}
   .desk-shoot-btn:disabled{opacity:.32;cursor:not-allowed;transform:none;box-shadow:none;}
   .desk-allow-btn{
-    width:100%;padding:9px;background:transparent;border:1px solid var(--amber);border-radius:5px;
-    color:var(--amber);font-family:'DM Mono',monospace;font-size:10px;
-    letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s;
+    width:100%;padding:6px;background:transparent;border:1px solid var(--amber);border-radius:4px;
+    color:var(--amber);font-family:'DM Mono',monospace;font-size:9px;
+    letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s;text-align:center;
   }
   .desk-allow-btn:hover{background:var(--amber-bg);}
   
-  .desk-vf{display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg);overflow:hidden;position:relative;}
+  .desk-vf{display:flex;align-items:center;justify-content:center;padding:16px;background:var(--bg);overflow:hidden;position:relative;}
   .desk-vf-wrap{
-    position:relative;width:100%;max-width:640px;background:var(--vf-bg);border-radius:8px;overflow:hidden;
-    border:1px solid var(--border);aspect-ratio:4/3;max-height:calc(100vh - 52px - 34px - 40px);
+    position:relative;width:100%;max-width:600px;background:var(--vf-bg);border-radius:6px;overflow:hidden;
+    border:1px solid var(--border);aspect-ratio:4/3;max-height:calc(100vh - 48px - 30px - 32px);
   }
   .desk-vf-wrap video{width:100%;height:100%;object-fit:cover;display:block;}
   .desk-vf-wrap video.mirrored{transform:scaleX(-1);}
@@ -425,12 +435,12 @@ header{
   }
   
   .desk-roll{display:flex;flex-direction:column;border-left:1px solid var(--border);background:var(--surface);overflow:hidden;}
-  .desk-roll-hdr{padding:11px 14px 9px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;gap:8px;}
-  .desk-shot-ctr{font-family:'DM Serif Display',serif;font-size:24px;color:var(--amber);line-height:1;}
+  .desk-roll-hdr{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;gap:8px;}
+  .desk-shot-ctr{font-family:'DM Serif Display',serif;font-size:22px;color:var(--amber);line-height:1;}
   .desk-shot-ctr small{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-left:2px;}
   .desk-layout-picker{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;}
   .desk-lp-btn{
-    font-family:'DM Mono',monospace;font-size:9px;padding:4px 7px;border-radius:4px;border:1px solid var(--border);
+    font-family:'DM Mono',monospace;font-size:9px;padding:4px 6px;border-radius:4px;border:1px solid var(--border);
     background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;
   }
   .desk-lp-btn:hover{border-color:var(--amber);color:var(--amber);}
@@ -444,10 +454,10 @@ header{
   .desk-empty .ei{font-size:28px;opacity:.18;filter:grayscale(1);}
   .desk-empty p{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.14em;text-transform:uppercase;line-height:2;}
   
-  .desk-roll-foot{padding:9px 12px;border-top:1px solid var(--border);display:flex;gap:6px;background:var(--surface);flex-shrink:0;flex-wrap:wrap;}
+  .desk-roll-foot{padding:8px 10px;border-top:1px solid var(--border);display:flex;gap:6px;background:var(--surface);flex-shrink:0;flex-wrap:wrap;}
   .desk-ft-btn{
-    flex:1;min-width:70px;padding:9px 6px;font-family:'DM Mono',monospace;font-size:9px;
-    letter-spacing:.07em;text-transform:uppercase;border-radius:5px;border:1px solid var(--border);
+    flex:1;min-width:70px;padding:8px 4px;font-family:'DM Mono',monospace;font-size:9px;
+    letter-spacing:.07em;text-transform:uppercase;border-radius:4px;border:1px solid var(--border);
     background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;
   }
   .desk-ft-btn:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}
@@ -455,7 +465,7 @@ header{
   .desk-ft-btn.pri:hover{background:var(--amber-glow);}
   .desk-ft-btn:disabled{opacity:.28;cursor:not-allowed;}
   
-  footer{display:flex;align-items:center;justify-content:center;border-top:1px solid var(--border);background:var(--bg);position:relative;z-index:1;flex-shrink:0;height:34px;}
+  footer{display:flex;align-items:center;justify-content:center;border-top:1px solid var(--border);background:var(--bg);position:relative;z-index:1;flex-shrink:0;height:30px;}
   .foot-txt{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.12em;display:flex;align-items:center;gap:7px;}
   .foot-handle{color:var(--amber);}
   .foot-dot{color:var(--amber);}
@@ -489,6 +499,9 @@ header{
       <div class="corner tl"></div><div class="corner tr"></div>
       <div class="corner bl"></div><div class="corner br"></div>
     </div>
+    
+    <button class="vf-snap-overlay-btn" id="mob-overlay-snap-btn" disabled onclick="capturePhoto()" title="Capture Snapshot"></button>
+    
     <div class="flash-el" id="flash"></div>
     <div class="cd-num" id="cdnum"></div>
     <div class="vf-tag" id="vf-tag">RAW</div>
@@ -626,6 +639,9 @@ header{
           <div class="corner tl"></div><div class="corner tr"></div>
           <div class="corner bl"></div><div class="corner br"></div>
         </div>
+        
+        <button class="vf-snap-overlay-btn" id="desk-overlay-snap-btn" disabled onclick="capturePhoto()" title="Capture Snapshot"></button>
+        
         <div class="desk-flash" id="desk-flash"></div>
         <div class="desk-cdnum" id="desk-cdnum"></div>
         <div class="desk-vf-tag" id="desk-vf-tag">RAW</div>
@@ -718,10 +734,28 @@ function toggleMirror(){
   const dt=$('desk-mirror-toggle'); if(dt) dt.classList.toggle('on',mirrored);
 }
 
-function toggleFlash() {
+// Fixed Mobile Hardware Flash Support Handler
+async function toggleFlash() {
   flashEnabled = !flashEnabled;
   const mobBtn = $('mob-flash-btn'); if(mobBtn) mobBtn.classList.toggle('on', flashEnabled);
   const deskTgl = $('desk-flash-toggle'); if(deskTgl) deskTgl.classList.toggle('on', flashEnabled);
+  
+  // Directly interface track constraints if available on device hardware
+  if(stream) {
+    const track = stream.getVideoTracks()[0];
+    if(track) {
+      try {
+        const capabilities = track.getCapabilities();
+        if(capabilities.torch) {
+          await track.applyConstraints({
+            advanced: [{ torch: flashEnabled && facing === 'environment' }]
+          });
+        }
+      } catch(e) {
+        console.warn("Hardware torch control restricted or unsupported on this specific device browser combination.", e);
+      }
+    }
+  }
 }
 
 function openSheet() {
@@ -785,12 +819,29 @@ async function reqCam(fc){
   stream=await navigator.mediaDevices.getUserMedia(c);
   allVideos().forEach(v=>{v.srcObject=stream;});
   ['no-cam','desk-no-cam'].forEach(id=>{const el=$(id);if(el)el.style.display='none';});
-  ['mob-shoot-btn','desk-shoot-btn'].forEach(id=>{const el=$(id);if(el)el.disabled=false;});
+  
+  // Enable all persistent control triggers across user layouts
+  ['mob-shoot-btn','desk-shoot-btn','mob-overlay-snap-btn','desk-overlay-snap-btn'].forEach(id=>{
+    const el=$(id); if(el) el.disabled=false;
+  });
+  
   const da=$('desk-allow-btn');if(da)da.style.display='none';
   $('status-text').textContent='live';
   const f=FILTERS.find(x=>x.id===filterId);
   allVideos().forEach(v=>v.style.filter=f.css==='none'?'':f.css);
   if(mirrored)allVideos().forEach(v=>v.classList.add('mirrored'));
+  
+  // Re-verify torch track state requirements if preset active
+  if(flashEnabled && fc === 'environment') {
+    setTimeout(async () => {
+      try {
+        const track = stream.getVideoTracks()[0];
+        if(track && track.getCapabilities().torch) {
+          await track.applyConstraints({ advanced: [{ torch: true }] });
+        }
+      } catch(e){}
+    }, 500);
+  }
 }
 
 async function switchCam(fc){
@@ -805,12 +856,16 @@ async function switchCam(fc){
 async function capturePhoto(){
   if(capturing)return;
   capturing=true;
-  ['mob-shoot-btn','desk-shoot-btn'].forEach(id=>{const el=$(id);if(el)el.disabled=true;});
+  
+  const targetButtons = ['mob-shoot-btn','desk-shoot-btn','mob-overlay-snap-btn','desk-overlay-snap-btn'];
+  targetButtons.forEach(id=>{const el=$(id); if(el)el.disabled=true;});
+  
   const timerVal=parseInt((isMob()?$('mob-timer'):$('desk-timer')).value);
   if(timerVal>0)await runCd(timerVal);
   doCapture();
   capturing=false;
-  ['mob-shoot-btn','desk-shoot-btn'].forEach(id=>{const el=$(id);if(el)el.disabled=false;});
+  
+  targetButtons.forEach(id=>{const el=$(id); if(el)el.disabled=false;});
 }
 
 function runCd(s){
