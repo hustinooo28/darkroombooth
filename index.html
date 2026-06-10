@@ -100,17 +100,6 @@ header{
 .prow.c3{grid-template-columns:repeat(3,1fr);}
 .prow.c4{grid-template-columns:repeat(4,1fr);}
 
-.toast{
-  position:fixed;bottom:120px;left:50%;
-  transform:translateX(-50%) translateY(60px);
-  background:var(--text);color:var(--bg);
-  font-family:'DM Mono',monospace;font-size:11px;
-  letter-spacing:.07em;padding:8px 18px;
-  border-radius:100px;z-index:10000;
-  transition:transform .25s ease;white-space:nowrap;pointer-events:none;
-}
-.toast.show{transform:translateX(-50%) translateY(0);}
-
 /* ── MOBILE VIEWFINDER ── */
 .vf-panel{
   flex:1;position:relative;overflow:hidden;
@@ -178,7 +167,6 @@ header{
 .vf-ctrl-btn:active, .vf-cam-btn:active{transform:scale(.88);}
 .vf-ctrl-btn.on, .vf-cam-btn.active{border-color:var(--amber);color:var(--amber);}
 
-/* Flash Feature Button Styling */
 .flash-toggle-btn {
   font-weight: bold;
 }
@@ -337,14 +325,13 @@ header{
 /* ── DESKTOP LAYOUT (≥ 769px) ── */
 @media(min-width:769px){
   .vf-panel,.bottom-bar,.filmstrip-bar,.roll-sheet,.sheet-backdrop,.vf-controls{display:none!important;}
-  .toast{bottom:28px;}
   .app{height:100vh;display:grid;grid-template-rows:52px 1fr 34px;}
   header{height:52px;padding:0 24px;}
   .logo{font-size:19px;}
   .pill{font-size:10px;padding:4px 10px;}
   .icon-btn{width:30px;height:30px;}
   
-  .desk-main{display:grid;grid-template-columns:256px 1fr 320px;overflow:hidden;}
+  .desk-main{display:grid;grid-template-columns:260px 1fr 320px;overflow:hidden;}
   .desk-sidebar{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface);overflow:hidden;}
   .sb-block{padding:13px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:9px;flex-shrink:0;}
   .sb-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.18em;text-transform:uppercase;}
@@ -382,7 +369,10 @@ header{
   .desk-fchip-name{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:.05em;}
   .desk-fchip.active .desk-fchip-name{color:var(--amber);}
   
-  .desk-shoot-section{padding:11px 14px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:7px;flex-shrink:0;}
+  /* Fixed Action Section Layout Constraints */
+  .desk-shoot-section{
+    padding:14px;border-top:1px solid var(--border);display:flex!important;flex-direction:column;gap:10px;flex-shrink:0;background:var(--surface);
+  }
   .desk-timer{
     font-family:'DM Mono',monospace;font-size:11px;
     background:var(--surface2);border:1px solid var(--border);
@@ -391,14 +381,14 @@ header{
   }
   .desk-timer:hover{border-color:var(--amber);}
   .desk-shoot-btn{
-    width:100%;padding:12px;
+    width:100%;padding:14px;display:block!important;visibility:visible!important;opacity:1!important;
     background:var(--amber);border:none;border-radius:6px;
     color:#fff;font-family:'DM Serif Display',serif;font-size:16px;
-    cursor:pointer;transition:all .15s;letter-spacing:.02em;
+    cursor:pointer;transition:all .15s;letter-spacing:.02em;box-shadow:0 4px 12px rgba(0,0,0,0.15);
   }
   .desk-shoot-btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px);}
   .desk-shoot-btn:active:not(:disabled){transform:none;filter:none;}
-  .desk-shoot-btn:disabled{opacity:.32;cursor:not-allowed;transform:none;}
+  .desk-shoot-btn:disabled{opacity:.32;cursor:not-allowed;transform:none;box-shadow:none;}
   .desk-allow-btn{
     width:100%;padding:9px;background:transparent;border:1px solid var(--amber);border-radius:5px;
     color:var(--amber);font-family:'DM Mono',monospace;font-size:10px;
@@ -689,7 +679,6 @@ header{
   </footer>
 
 </div>
-<div class="toast" id="toast"></div>
 
 <script>
 const FILTERS=[
@@ -785,7 +774,7 @@ function applyFilter(id){
 }
 
 async function startCamera(){
-  try{await reqCam(facing);}catch(e){showToast('camera hardware access failure');}
+  try{await reqCam(facing);}catch(e){}
 }
 
 async function reqCam(fc){
@@ -810,7 +799,7 @@ async function switchCam(fc){
   const deskMap={environment:'desk-btn-rear',user:'desk-btn-front',any:'desk-btn-any'};
   Object.values(mobMap).concat(Object.values(deskMap)).forEach(id=>{const el=$(id);if(el)el.classList.remove('active');});
   [mobMap[fc],deskMap[fc]].forEach(id=>{const el=$(id);if(el)el.classList.add('active');});
-  if(stream)try{await reqCam(fc);}catch(e){showToast('failed to link profile input');}
+  if(stream)try{await reqCam(fc);}catch(e){}
 }
 
 async function capturePhoto(){
@@ -856,7 +845,6 @@ function doCapture(){
   const vid=isMob()?mobVideo():deskVideo();
   const cnv=isMob()?$('canvas'):$('desk-canvas');
   
-  // Enforce absolute high-fidelity square constraints
   const outputSize = 1080;
   cnv.width = outputSize;
   cnv.height = outputSize;
@@ -865,7 +853,6 @@ function doCapture(){
   const f=FILTERS.find(x=>x.id===filterId);
   ctx.filter=f.css==='none'?'none':f.css;
   
-  // High-performance centered square crop math
   const vW = vid.videoWidth || 1280;
   const vH = vid.videoHeight || 720;
   const minDim = Math.min(vW, vH);
@@ -883,7 +870,6 @@ function doCapture(){
   }
   ctx.filter='none';
   
-  // Flash filter baked directly into output pixels
   if(flashEnabled) {
     ctx.save();
     ctx.globalCompositeMode = 'source-over';
@@ -1017,7 +1003,6 @@ function drawCover(ctx,img,x,y,w,h){
 
 async function downloadOne(id){
   const p=photos.find(x=>x.id===id);if(!p)return;
-  showToast('framing high fidelity print assets…');
   const url=await framePolaroid(p);
   const a=document.createElement('a');a.href=url;a.download=`darkroom_${p.id}.jpg`;a.click();
 }
@@ -1025,7 +1010,6 @@ async function downloadOne(id){
 async function downloadAll(){
   if(!photos.length)return;
   if(photos.length===1){downloadOne(photos[0].id);return;}
-  showToast('compiling multi-strip asset matrix…');
   const cols=L_COLS[layout]||1;
   const take=Math.min(photos.length,L_TAKE[layout]||photos.length);
   const sub=photos.slice(0,take);
@@ -1075,12 +1059,6 @@ function clearAll(){if(!photos.length)return;photos=[];updateCounters();rebuildG
 function updateFoot(){
   ['mob-clear-btn','desk-clear-btn'].forEach(id=>{const el=$(id);if(el)el.disabled=!photos.length;});
   ['mob-strip-btn','desk-dl-btn'].forEach(id=>{const el=$(id);if(el){el.disabled=!photos.length;el.textContent=photos.length>1?'compile strip':'download snapshot';}});
-}
-
-let toastT;
-function showToast(msg){
-  const t=$('toast');t.textContent=msg;t.classList.add('show');
-  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);
 }
 
 buildFilters();
