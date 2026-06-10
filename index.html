@@ -127,8 +127,10 @@ header{
 .corner.bl{bottom:12px;left:12px;border-width:0 0 2px 2px;}
 .corner.br{bottom:12px;right:12px;border-width:0 2px 2px 0;}
 
-.flash-el{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .04s;}
-.flash-el.on{opacity:1;}
+.flash-el{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:5;}
+.flash-el.on{opacity:1;transition:none;}
+.flash-el.fade-out{opacity:0;transition:opacity 0.4s ease-out;}
+
 .cd-num{
   position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   font-family:'DM Serif Display',serif;font-size:88px;color:#fff;
@@ -175,6 +177,16 @@ header{
 }
 .vf-ctrl-btn:active, .vf-cam-btn:active{transform:scale(.88);}
 .vf-ctrl-btn.on, .vf-cam-btn.active{border-color:var(--amber);color:var(--amber);}
+
+/* Flash Feature Button Styling */
+.flash-toggle-btn {
+  font-weight: bold;
+}
+.flash-toggle-btn.on {
+  border-color: var(--amber) !important;
+  color: var(--amber) !important;
+  background: var(--amber-bg) !important;
+}
 
 /* ── MOBILE ACTIONS INTERFACE PANEL ── */
 .bottom-bar{
@@ -384,8 +396,8 @@ header{
     color:#fff;font-family:'DM Serif Display',serif;font-size:16px;
     cursor:pointer;transition:all .15s;letter-spacing:.02em;
   }
-  .desk-shoot-btn:hover{filter:brightness(1.08);transform:translateY(-1px);}
-  .desk-shoot-btn:active{transform:none;filter:none;}
+  .desk-shoot-btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px);}
+  .desk-shoot-btn:active:not(:disabled){transform:none;filter:none;}
   .desk-shoot-btn:disabled{opacity:.32;cursor:not-allowed;transform:none;}
   .desk-allow-btn{
     width:100%;padding:9px;background:transparent;border:1px solid var(--amber);border-radius:5px;
@@ -406,8 +418,10 @@ header{
   .desk-no-cam-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;}
   
   .desk-vf-overlay{position:absolute;inset:0;pointer-events:none;}
-  .desk-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .04s;}
-  .desk-flash.on{opacity:1;}
+  .desk-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:5;}
+  .desk-flash.on{opacity:1;transition:none;}
+  .desk-flash.fade-out{opacity:0;transition:opacity 0.4s ease-out;}
+
   .desk-cdnum{
     position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
     font-family:'DM Serif Display',serif;font-size:88px;color:#fff;
@@ -468,7 +482,6 @@ header{
 <body>
 <div class="app">
 
-  <!-- ── Header ── -->
   <header>
     <div class="logo">darkroom <span class="logo-sub">photobooth</span></div>
     <div class="hdr-right">
@@ -479,7 +492,6 @@ header{
     </div>
   </header>
 
-  <!-- ── MOBILE VIEWPORT PANEL ── -->
   <div class="vf-panel">
     <video id="video" autoplay playsinline muted></video>
     <canvas id="canvas"></canvas>
@@ -494,6 +506,7 @@ header{
     <div class="vf-controls">
       <div class="vf-controls-left">
         <button class="vf-ctrl-btn" id="mob-mirror-btn" onclick="toggleMirror()" title="Toggle Canvas Flip">⇆</button>
+        <button class="vf-ctrl-btn flash-toggle-btn on" id="mob-flash-btn" onclick="toggleFlash()" title="Toggle Flash Mode">⚡</button>
       </div>
       <div class="vf-controls-right">
         <button class="vf-cam-btn active" id="mob-btn-rear" onclick="switchCam('environment')">rear</button>
@@ -512,7 +525,6 @@ header{
     </div>
   </div>
 
-  <!-- ── COMPACT FILMSTRIP PREVIEW TRACK ── -->
   <div class="filmstrip-bar" id="mob-filmstrip-bar">
     <div class="filmstrip-thumbs" id="mob-filmstrip-thumbs">
       <div class="fs-empty">no assets captured in active roll pool</div>
@@ -523,7 +535,6 @@ header{
     </button>
   </div>
 
-  <!-- ── MOBILE ACTIONS CONTROL STRIP ── -->
   <div class="bottom-bar">
     <div class="filter-strip" id="mob-filter-list"></div>
     <div class="shoot-row">
@@ -547,7 +558,6 @@ header{
     </div>
   </div>
 
-  <!-- ── PROGRESSIVE EXPANSION ARCHIVE DRAWER ── -->
   <div class="sheet-backdrop" id="sheet-backdrop" onclick="closeSheet()"></div>
   <div class="roll-sheet" id="roll-sheet">
     <div class="sheet-handle">
@@ -579,7 +589,6 @@ header{
     </div>
   </div>
 
-  <!-- ── DESKTOP MATRIX LAYOUT ── -->
   <div class="desk-main">
     <aside class="desk-sidebar">
       <div class="sb-block">
@@ -592,6 +601,12 @@ header{
         <div class="mirror-row">
           <span class="toggle-lbl">mirror viewport frame</span>
           <button class="toggle-track" id="desk-mirror-toggle" onclick="toggleMirror()">
+            <div class="toggle-thumb"></div>
+          </button>
+        </div>
+        <div class="mirror-row">
+          <span class="toggle-lbl">hardware exposure flash</span>
+          <button class="toggle-track on" id="desk-flash-toggle" onclick="toggleFlash()">
             <div class="toggle-thumb"></div>
           </button>
         </div>
@@ -692,7 +707,7 @@ const L_COLS={'1x1':1,'1x2':1,'1x4':1,'2x2':2,'2x3':2,'3x3':3};
 const L_TAKE={'1x1':1,'1x2':2,'1x4':4,'2x2':4,'2x3':6,'3x3':9};
 
 let stream=null,facing='environment',filterId='normal';
-let photos=[],capturing=false,layout='1x1',dark=true,mirrored=false,sheetOpen=false;
+let photos=[],capturing=false,layout='1x1',dark=true,mirrored=false,sheetOpen=false,flashEnabled=true;
 
 const $=id=>document.getElementById(id);
 const isMob=()=>window.innerWidth<769;
@@ -712,7 +727,12 @@ function toggleMirror(){
   $('mirror-btn').classList.toggle('on',mirrored);
   const mob=$('mob-mirror-btn'); if(mob) mob.classList.toggle('on',mirrored);
   const dt=$('desk-mirror-toggle'); if(dt) dt.classList.toggle('on',mirrored);
-  showToast(mirrored?'mirror transform active':'mirror fallback idle');
+}
+
+function toggleFlash() {
+  flashEnabled = !flashEnabled;
+  const mobBtn = $('mob-flash-btn'); if(mobBtn) mobBtn.classList.toggle('on', flashEnabled);
+  const deskTgl = $('desk-flash-toggle'); if(deskTgl) deskTgl.classList.toggle('on', flashEnabled);
 }
 
 function openSheet() {
@@ -818,33 +838,74 @@ function runCd(s){
 }
 
 function fireFlash() {
+  if(!flashEnabled) return;
   const flashElements = ['flash', 'desk-flash'].map($).filter(Boolean);
-  flashElements.forEach(el => { el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); });
-  setTimeout(() => { flashElements.forEach(el => el.classList.remove('on')); }, 50);
+  flashElements.forEach(el => { 
+    el.classList.remove('fade-out');
+    el.classList.add('on'); 
+    void el.offsetWidth;
+    setTimeout(() => {
+      el.classList.remove('on');
+      el.classList.add('fade-out');
+    }, 40);
+  });
 }
 
 function doCapture(){
   fireFlash();
   const vid=isMob()?mobVideo():deskVideo();
   const cnv=isMob()?$('canvas'):$('desk-canvas');
-  const vw=vid.videoWidth||1280,vh=vid.videoHeight||720;
-  cnv.width=vw;cnv.height=vh;
+  
+  // Enforce absolute high-fidelity square constraints
+  const outputSize = 1080;
+  cnv.width = outputSize;
+  cnv.height = outputSize;
+  
   const ctx=cnv.getContext('2d');
   const f=FILTERS.find(x=>x.id===filterId);
   ctx.filter=f.css==='none'?'none':f.css;
-  if(mirrored){ctx.save();ctx.translate(vw,0);ctx.scale(-1,1);ctx.drawImage(vid,0,0,vw,vh);ctx.restore();}
-  else ctx.drawImage(vid,0,0,vw,vh);
+  
+  // High-performance centered square crop math
+  const vW = vid.videoWidth || 1280;
+  const vH = vid.videoHeight || 720;
+  const minDim = Math.min(vW, vH);
+  const sx = (vW - minDim) / 2;
+  const sy = (vH - minDim) / 2;
+
+  if(mirrored){
+    ctx.save();
+    ctx.translate(outputSize, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(vid, sx, sy, minDim, minDim, 0, 0, outputSize, outputSize);
+    ctx.restore();
+  } else {
+    ctx.drawImage(vid, sx, sy, minDim, minDim, 0, 0, outputSize, outputSize);
+  }
   ctx.filter='none';
+  
+  // Flash filter baked directly into output pixels
+  if(flashEnabled) {
+    ctx.save();
+    ctx.globalCompositeMode = 'source-over';
+    let gradient = ctx.createRadialGradient(outputSize/2, outputSize/2, outputSize*0.05, outputSize/2, outputSize/2, outputSize*0.7);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+    gradient.addColorStop(0.2, 'rgba(255, 253, 245, 0.18)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, outputSize, outputSize);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.fillRect(0, 0, outputSize, outputSize);
+    ctx.restore();
+  }
   
   const photo={
     id:Date.now(),data:cnv.toDataURL('image/jpeg',0.94),
-    w:vw,h:vh,ar:vw/vh,filter:f.name,
+    w:outputSize,h:outputSize,ar:1,filter:f.name + (flashEnabled?' + FLASH':''),
     ts:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
     tilt:(Math.random()*4-2).toFixed(2), 
   };
   photos.unshift(photo);
   updateCounters();rebuildGrids();updateFoot();
-  showToast('snapshot captured into pool');
 }
 
 function updateCounters(){
@@ -876,7 +937,6 @@ function makePolaroidCard(photo, index){
 function rebuildGrids(){
   const mg=$('mob-pol-grid'), dg=$('desk-pol-grid'), mt=$('mob-filmstrip-thumbs'), gp=$('mob-gallery-preview');
   
-  // Track bar thumbs assembly
   mt.innerHTML='';
   if(!photos.length) {
     mt.innerHTML='<div class="fs-empty">no assets captured in active roll pool</div>';
@@ -890,7 +950,6 @@ function rebuildGrids(){
     if(gp) gp.innerHTML=`<img src="${photos[0].data}">`;
   }
 
-  // Master grids assembly
   [mg, dg].forEach((g, idx) => {
     g.innerHTML='';
     const fallbackClass = idx===0 ? 'empty-st':'desk-empty';
@@ -905,7 +964,7 @@ function rebuildGrids(){
       photos.forEach((p, idx)=>{ g.appendChild(makePolaroidCard(p, totalItems - idx)); });
       return;
     }
-    for(let i=0;i<photos.length;i+=cols){
+    for(let i=0; i<photos.length; i+=cols){
       const row=document.createElement('div'); row.className=`prow c${cols}`;
       for(let j=0;j<cols;j++) {
         const targetIndex = i + j;
@@ -933,7 +992,7 @@ function framePolaroid(photo){
     fc.width=imgW+padS*2;fc.height=imgH+padT+padB;
     const ctx=fc.getContext('2d');
     ctx.fillStyle='#fdfaf4';ctx.fillRect(0,0,fc.width,fc.height);
-    const img=new Image();
+    const img = new Image();
     img.onload=()=>{
       ctx.drawImage(img,padS,padT,imgW,imgH);
       ctx.strokeStyle='#e0d8cc';ctx.lineWidth=1;ctx.strokeRect(padS,padT,imgW,imgH);
@@ -1011,7 +1070,7 @@ async function downloadAll(){
 }
 
 function deleteOne(id){photos=photos.filter(p=>p.id!==id);updateCounters();rebuildGrids();updateFoot();}
-function clearAll(){if(!photos.length)return;photos=[];updateCounters();rebuildGrids();updateFoot();closeSheet();showToast('session logs cleared');}
+function clearAll(){if(!photos.length)return;photos=[];updateCounters();rebuildGrids();updateFoot();closeSheet();}
 
 function updateFoot(){
   ['mob-clear-btn','desk-clear-btn'].forEach(id=>{const el=$(id);if(el)el.disabled=!photos.length;});
