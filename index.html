@@ -122,12 +122,8 @@ header{
 
 /* Viewfinder — fills all remaining height */
 .vf-panel{
-  position:relative;
-  overflow:hidden;
-  background:var(--vf-bg);
-  height:calc(100dvh - 250px);
-  min-height:320px;
-  flex:none;
+  flex:1;position:relative;overflow:hidden;
+  background:var(--vf-bg);min-height:0;
 }
 #video{width:100%;height:100%;object-fit:cover;display:block;}
 #canvas{display:none;}
@@ -210,9 +206,7 @@ header{
   flex-shrink:0;
   background:var(--surface);
   border-top:1px solid var(--border);
-  position:relative;
-  z-index:500;
-  padding-bottom:env(safe-area-inset-bottom);
+  position:relative;z-index:50;
 }
 
 /* Filter strip */
@@ -236,12 +230,8 @@ header{
 
 /* Shoot row */
 .shoot-row{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  position:relative;
-  z-index:501;
-  padding:10px 14px calc(16px + env(safe-area-inset-bottom));
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px calc(9px + env(safe-area-inset-bottom,0px));
 }
 .timer-sel{
   font-family:'DM Mono',monospace;font-size:10px;
@@ -250,8 +240,6 @@ header{
   cursor:pointer;outline:none;flex:1;min-width:0;
 }
 .mob-shoot-btn{
-  position:relative;
-  z-index:502;
   padding:10px 22px;
   background:var(--amber);border:none;border-radius:7px;
   color:#fff;font-family:'DM Serif Display',serif;font-size:16px;
@@ -260,12 +248,18 @@ header{
 .mob-shoot-btn:active{transform:scale(.94);filter:brightness(.9);}
 .mob-shoot-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;filter:none;}
 
+
+/* Mobile filmstrip */
+.filmstrip{
+display:flex;gap:8px;overflow-x:auto;padding:8px 12px;
+background:var(--surface);border-top:1px solid var(--border);
+}
+.film-thumb{width:56px;height:56px;flex:0 0 auto;border-radius:6px;overflow:hidden;border:1px solid var(--border);}
+.film-thumb img{width:100%;height:100%;object-fit:cover;}
 /* Roll drawer */
-.roll-sheet{
-  position:fixed;
-  left:0;
-  right:0;
-  bottom:110px;
+
+.roll-sheet{display:none !important;
+  position:fixed;bottom:0;left:0;right:0;
   background:var(--sheet-bg);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border-radius:16px 16px 0 0;
@@ -273,18 +267,13 @@ header{
   z-index:200;
   transform:translateY(calc(100% - 50px));
   transition:transform .32s cubic-bezier(.32,0,.67,0);
-  max-height:70dvh;display:flex;flex-direction:column;overflow:hidden;
-  pointer-events:none;
-}
-.roll-sheet.open{
-  pointer-events:auto;
+  max-height:85dvh;display:flex;flex-direction:column;overflow:hidden;
 }
 .roll-sheet.open{
   transform:translateY(0);
   transition:transform .38s cubic-bezier(.33,1,.68,1);
 }
 .sheet-handle{
-  pointer-events:auto;
   flex-shrink:0;padding:10px 16px 8px;
   cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;user-select:none;
 }
@@ -549,7 +538,7 @@ header{
   .desk-sidebar,.desk-vf,.desk-roll{display:flex;}
   footer{display:flex;}
   /* hide mobile-only wrappers */
-  .vf-panel,.bottom-bar,.roll-sheet{display:none!important;}
+  .vf-panel,.bottom-bar,.roll-sheet{display:none !important;display:none!important;}
 }
 </style>
 </head>
@@ -590,11 +579,6 @@ header{
     <button class="vf-cam-btn"        id="mob-btn-any"   onclick="switchCam('any')">any</button>
   </div>
 
-  <!-- Top-right overlay controls: mirror -->
-  <div class="vf-controls">
-    <button class="vf-ctrl-btn" id="mob-mirror-btn" onclick="toggleMirror()" title="Mirror">⇆</button>
-  </div>
-
   <!-- No-camera state (with allow button inside viewfinder) -->
   <div class="no-cam" id="no-cam">
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
@@ -609,7 +593,7 @@ header{
 <!-- Bottom bar: filters + shoot -->
 <div class="bottom-bar">
   <div class="filter-strip" id="mob-filter-list"></div>
-  <div class="shoot-row">
+  <div class="filmstrip" id="filmstrip-items"></div><div class="shoot-row">
     <select class="timer-sel" id="mob-timer">
       <option value="0">now</option>
       <option value="3">3 s</option>
@@ -850,8 +834,8 @@ async function startCamera(){
 async function reqCam(fc){
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
   const c=fc==='any'
-    ?{video:{width:{ideal:3840},height:{ideal:2160}},audio:false}
-    :{video:{facingMode:fc,width:{ideal:3840},height:{ideal:2160}},audio:false};
+    ?{video:{width:{ideal:1920},height:{ideal:1080}},audio:false}
+    :{video:{facingMode:fc,width:{ideal:1920},height:{ideal:1080}},audio:false};
   stream=await navigator.mediaDevices.getUserMedia(c);
   allVideos().forEach(v=>{v.srcObject=stream;});
   const label=stream.getVideoTracks()[0].label||'camera';
@@ -921,7 +905,7 @@ function doCapture(){
   else ctx.drawImage(vid,0,0,vw,vh);
   ctx.filter='none';
   const photo={
-    id:Date.now(),data:cnv.toDataURL('image/png'),
+    id:Date.now(),data:cnv.toDataURL('image/jpeg',0.94),
     w:vw,h:vh,ar:vw/vh,filter:f.name,
     ts:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
     tilt:(Math.random()*4-2).toFixed(2),
@@ -1006,7 +990,7 @@ function framePolaroid(photo){
       ctx.fillText(photo.ts,padS+4,fc.height-36);
       ctx.fillStyle='#c8a070';ctx.font='italic 10px Georgia,serif';ctx.textAlign='right';
       ctx.fillText('darkroom ✦ @hustino.28',fc.width-padS,fc.height-16);
-      res(fc.toDataURL('image/png'));
+      res(fc.toDataURL('image/jpeg',0.94));
     };
     img.src=photo.data;
   });
@@ -1024,7 +1008,7 @@ async function downloadOne(id){
   const p=photos.find(x=>x.id===id);if(!p)return;
   showToast('framing…');
   const url=await framePolaroid(p);
-  const a=document.createElement('a');a.href=url;a.download=`darkroom_${p.id}.png`;a.click();
+  const a=document.createElement('a');a.href=url;a.download=`darkroom_${p.id}.jpg`;a.click();
   showToast('downloaded ✦');
 }
 
@@ -1064,8 +1048,8 @@ async function downloadAll(){
   ctx.fillStyle=dk?'#4a4540':'#b0a090';ctx.font='italic 10px Georgia,serif';ctx.textAlign='center';
   ctx.fillText('made by @hustino.28  ✦  darkroom photobooth',sW/2,sH-10);
   const a=document.createElement('a');
-  a.href=sheet.toDataURL('image/png');
-  a.download=`darkroom_strip_${Date.now()}.png`;a.click();
+  a.href=sheet.toDataURL('image/jpeg',0.94);
+  a.download=`darkroom_strip_${Date.now()}.jpg`;a.click();
   showToast('strip downloaded ✦');
 }
 
