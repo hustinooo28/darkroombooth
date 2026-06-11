@@ -224,12 +224,12 @@ header{
   border-color:var(--amber);color:var(--amber);background:var(--amber-bg);
 }
 
-/* Mobile capture button (relocated from viewfinder to bottom controls) */
+/* Mobile capture button */
 .mob-capture-btn {
   width:56px;height:56px;border-radius:50%;background:#ffffff;
   border:3px solid rgba(0,0,0,0.3);box-shadow:0 0 0 2px var(--amber),0 4px 12px rgba(0,0,0,0.4);
   cursor:pointer;transition:all .15s ease;display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
+  flex-shrink:0;position:relative;
 }
 .mob-capture-btn::after {
   content:'';position:absolute;width:46px;height:46px;border-radius:50%;background:var(--amber);transition:all .15s ease;
@@ -451,7 +451,8 @@ header{
   
   footer{display:flex;align-items:center;justify-content:center;border-top:1px solid var(--border);background:var(--bg);position:relative;z-index:1;flex-shrink:0;height:30px;}
   .foot-txt{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.12em;display:flex;align-items:center;gap:7px;}
-  .foot-handle{color:var(--amber);}
+  .foot-handle{color:var(--amber);text-decoration:none;}
+  .foot-handle:hover{text-decoration:underline;}
   .foot-dot{color:var(--amber);}
 }
 
@@ -483,9 +484,6 @@ header{
       <div class="corner tl"></div><div class="corner tr"></div>
       <div class="corner bl"></div><div class="corner br"></div>
     </div>
-    
-    <!-- MOBILE CAPTURE BUTTON REMOVED FROM VIEWFINDER OVERLAY -->
-    
     <div class="flash-el" id="flash"></div>
     <div class="cd-num" id="cdnum"></div>
     <div class="vf-tag" id="vf-tag">RAW</div>
@@ -535,7 +533,6 @@ header{
         <div class="timer-trigger-btn" id="mob-timer-pill">0s</div>
       </div>
 
-      <!-- MOBILE CAPTURE BUTTON RELOCATED HERE (bottom controls) -->
       <button class="mob-capture-btn" id="mob-capture-btn" disabled onclick="capturePhoto()" title="Capture Snapshot"></button>
 
       <button class="mob-gal-preview-btn" onclick="openSheet()" id="mob-gallery-preview" title="Expand View History">
@@ -621,10 +618,7 @@ header{
           <div class="corner tl"></div><div class="corner tr"></div>
           <div class="corner bl"></div><div class="corner br"></div>
         </div>
-        
-        <!-- SINGLE DESKTOP CAPTURE BUTTON: ONLY ONE RETAINED -->
         <button class="vf-snap-overlay-btn" id="desk-overlay-snap-btn" disabled onclick="capturePhoto()" title="Capture Snapshot"></button>
-        
         <div class="desk-flash" id="desk-flash"></div>
         <div class="desk-cdnum" id="desk-cdnum"></div>
         <div class="desk-vf-tag" id="desk-vf-tag">RAW</div>
@@ -669,9 +663,10 @@ header{
     </section>
   </div>
 
+  <!-- CHANGE 3: @hustino.28 is now a clickable link -->
   <footer>
     <div class="foot-txt">
-      made by <span class="foot-handle">@hustino.28</span>
+      made by <a class="foot-handle" href="https://www.instagram.com/hustino.28/" target="_blank" rel="noopener noreferrer">@hustino.28</a>
       <span class="foot-dot">✦</span>
       darkroom photobooth architecture
     </div>
@@ -682,14 +677,14 @@ header{
 <script>
 const FILTERS=[
   {id:'normal',name:'RAW',    css:'none'},
-  {id:'kodak', name:'KODAK',  css:'sepia(0.2) contrast(1.1) saturate(1.1) brightness(1.05)'},
-  {id:'ilford',name:'ILFORD', css:'grayscale(1) contrast(1.2) brightness(1.05)'},
+  {id:'kodak', name:'KODAKAN',  css:'sepia(0.2) contrast(1.1) saturate(1.1) brightness(1.05)'},
+  {id:'ilford',name:'HUSTINO', css:'grayscale(1) contrast(1.2) brightness(1.05)'},
   {id:'lomo',  name:'LOMO',   css:'saturate(1.6) contrast(1.25) brightness(0.88)'},
   {id:'fade',  name:'FADE',   css:'sepia(0.4) saturate(0.8) brightness(1.12) contrast(0.82)'},
   {id:'warm',  name:'WARM',   css:'sepia(0.5) saturate(1.2) brightness(1.1)'},
-  {id:'cool',  name:'COOL',   css:'hue-rotate(200deg) saturate(0.85) brightness(1.05)'},
+  {id:'cool',  name:'NAVIA',   css:'hue-rotate(200deg) saturate(0.85) brightness(1.05)'},
   {id:'velvia',name:'VELVIA', css:'saturate(1.9) contrast(1.18) brightness(0.93)'},
-  {id:'mist',  name:'MIST',   css:'brightness(1.22) contrast(0.78) saturate(0.55)'},
+  {id:'mist',  name:'BLAURED',   css:'brightness(1.22) contrast(0.78) saturate(0.55)'},
 ];
 const L_COLS={'1x1':1,'1x2':1,'1x4':1,'2x2':2,'2x3':2,'3x3':3};
 const L_TAKE={'1x1':1,'1x2':2,'1x4':4,'2x2':4,'2x3':6,'3x3':9};
@@ -903,20 +898,9 @@ function doCapture(){
     ctx.drawImage(vid, sx, sy, minDim, minDim, 0, 0, outputSize, outputSize);
   }
   ctx.filter='none';
-  
-  if(flashEnabled) {
-    ctx.save();
-    ctx.globalCompositeMode = 'source-over';
-    let gradient = ctx.createRadialGradient(outputSize/2, outputSize/2, outputSize*0.05, outputSize/2, outputSize/2, outputSize*0.7);
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
-    gradient.addColorStop(0.2, 'rgba(255, 253, 245, 0.18)');
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, outputSize, outputSize);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-    ctx.fillRect(0, 0, outputSize, outputSize);
-    ctx.restore();
-  }
+
+  // CHANGE 1: White mist/haze overlay block removed entirely.
+  // The captured image is now clean — no artificial glow is baked in.
   
   const photo={
     id:Date.now(),data:cnv.toDataURL('image/jpeg',0.94),
@@ -1054,12 +1038,24 @@ async function downloadAll(){
   const sheet=document.createElement('canvas');sheet.width=sW;sheet.height=sH;
   const ctx=sheet.getContext('2d');
   
-  ctx.fillStyle='#11110f';ctx.fillRect(0,0,sW,sH);
+  // CHANGE 2: Theme-aware strip background and colors
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   
-  ctx.fillStyle='#e0981c';ctx.font='italic bold 26px Georgia,serif';ctx.textAlign='center';
-  ctx.fillText('darkroom — photobooth',sW/2,padT+30);
-  ctx.font='11px monospace';ctx.fillStyle='#7a7060';
-  ctx.fillText(`${layout} compilation  ✦  ${new Date().toLocaleDateString()}`,sW/2,padT+50);
+  if(isDark){
+    // Dark mode: dark background, existing dark design
+    ctx.fillStyle='#11110f';ctx.fillRect(0,0,sW,sH);
+    ctx.fillStyle='#e0981c';ctx.font='italic bold 26px Georgia,serif';ctx.textAlign='center';
+    ctx.fillText('darkroom — photobooth',sW/2,padT+30);
+    ctx.font='11px monospace';ctx.fillStyle='#7a7060';
+    ctx.fillText(`${layout} compilation  ✦  ${new Date().toLocaleDateString()}`,sW/2,padT+50);
+  } else {
+    // Light mode: warm cream/ivory background matching the light theme
+    ctx.fillStyle='#f5f1eb';ctx.fillRect(0,0,sW,sH);
+    ctx.fillStyle='#c07810';ctx.font='italic bold 26px Georgia,serif';ctx.textAlign='center';
+    ctx.fillText('darkroom — photobooth',sW/2,padT+30);
+    ctx.font='11px monospace';ctx.fillStyle='#a09488';
+    ctx.fillText(`${layout} compilation  ✦  ${new Date().toLocaleDateString()}`,sW/2,padT+50);
+  }
   
   const loadImg=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});
   let totalPhotos = photos.length;
@@ -1068,19 +1064,40 @@ async function downloadAll(){
     const col=i%cols,row=Math.floor(i/cols);
     const x=padS+col*(cW+gap),y=padS+hdrH+row*(cH+capH+gap);
     
-    ctx.fillStyle='#000000';ctx.fillRect(x-4,y-4,cW+8,cH+capH+8);
+    if(isDark){
+      // Dark: black cell border
+      ctx.fillStyle='#000000';ctx.fillRect(x-4,y-4,cW+8,cH+capH+8);
+    } else {
+      // Light: warm paper polaroid backing
+      ctx.fillStyle='#fffef9';ctx.fillRect(x-4,y-4,cW+8,cH+capH+8);
+      // Light inner border
+      ctx.strokeStyle='#ede5d8';ctx.lineWidth=1;ctx.strokeRect(x-4,y-4,cW+8,cH+capH+8);
+    }
+    
     const img=await loadImg(sub[i].data);
     ctx.save();ctx.beginPath();ctx.rect(x,y,cW,cH);ctx.clip();
     drawCover(ctx,img,x,y,cW,cH);ctx.restore();
     
-    ctx.fillStyle='#e0981c';ctx.font='500 11px monospace';ctx.textAlign='left';
-    ctx.fillText(`FRAME NUM-${String(totalPhotos - i).padStart(2,'0')}`, x+4, y+cH+20);
-    ctx.fillStyle='#8a7060';ctx.font='10px monospace';
-    ctx.fillText(`${sub[i].filter} // ${sub[i].ts}`,x+4,y+cH+38);
+    if(isDark){
+      ctx.fillStyle='#e0981c';ctx.font='500 11px monospace';ctx.textAlign='left';
+      ctx.fillText(`FRAME NUM-${String(totalPhotos - i).padStart(2,'0')}`, x+4, y+cH+20);
+      ctx.fillStyle='#8a7060';ctx.font='10px monospace';
+      ctx.fillText(`${sub[i].filter} // ${sub[i].ts}`,x+4,y+cH+38);
+    } else {
+      ctx.fillStyle='#c07810';ctx.font='500 11px monospace';ctx.textAlign='left';
+      ctx.fillText(`FRAME NUM-${String(totalPhotos - i).padStart(2,'0')}`, x+4, y+cH+20);
+      ctx.fillStyle='#8a7a68';ctx.font='10px monospace';
+      ctx.fillText(`${sub[i].filter} // ${sub[i].ts}`,x+4,y+cH+38);
+    }
   }
   
-  ctx.fillStyle='#4a4540';ctx.font='italic 10px Georgia,serif';ctx.textAlign='center';
-  ctx.fillText('made by @hustino.28  ✦  matrix print core system',sW/2,sH-16);
+  if(isDark){
+    ctx.fillStyle='#4a4540';ctx.font='italic 10px Georgia,serif';ctx.textAlign='center';
+    ctx.fillText('made by @hustino.28  ✦  matrix print core system',sW/2,sH-16);
+  } else {
+    ctx.fillStyle='#a09488';ctx.font='italic 10px Georgia,serif';ctx.textAlign='center';
+    ctx.fillText('made by @hustino.28  ✦  darkroom photobooth',sW/2,sH-16);
+  }
   
   const a=document.createElement('a');
   a.href=sheet.toDataURL('image/jpeg',0.94);
