@@ -8,7 +8,6 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
-/* ── Themes ── */
 [data-theme="light"]{
   --bg:#f5f1eb; --surface:#ffffff; --surface2:#f0ece4; --border:#ddd5c8;
   --text:#1a1612; --text-dim:#6b6158; --text-muted:#a09488;
@@ -38,15 +37,19 @@
 
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;-webkit-tap-highlight-color:transparent;}
 
-/* Grain Overlays */
+/* PERF: grain uses will-change to promote to its own layer, preventing repaint on scroll/compositing */
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
-  background-size:200px 200px;opacity:var(--grain-op);mix-blend-mode:multiply;
+  background-size:200px 200px;opacity:var(--grain-op);
+  /* PERF: avoid mix-blend-mode on Android — it forces layer compositing every frame */
+  /* mix-blend-mode:multiply; -- REMOVED for Android perf */
+  will-change:opacity;
 }
 body::after{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
   background:radial-gradient(ellipse at center,transparent 40%,var(--vig) 100%);
+  will-change:opacity;
 }
 
 .app{height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
@@ -76,7 +79,6 @@ header{
 .icon-btn:hover{border-color:var(--amber);color:var(--amber);}
 .icon-btn.on{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}
 
-/* Polaroid Styles */
 .pol{
   background:var(--pol-paper);padding:7px 7px 34px;
   box-shadow:var(--pol-shadow);position:relative;flex-shrink:0;
@@ -94,33 +96,43 @@ header{
   font-size:11px;color:var(--meta-col);transition:all .15s;
 }
 .p-btn:hover,.p-btn:active{background:var(--bg);border-color:var(--amber);color:var(--amber);}
-
 .prow{display:grid;gap:7px;}
 .prow.c2{grid-template-columns:repeat(2,1fr);}
 .prow.c3{grid-template-columns:repeat(3,1fr);}
 .prow.c4{grid-template-columns:repeat(4,1fr);}
 
-/* ── VIEWFINDER GENERAL OVERLAY CAPTURE BUTTON (ONLY DESKTOP RETAINED) ── */
-.vf-snap-overlay-btn {
+.vf-snap-overlay-btn{
   position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
   width:64px;height:64px;border-radius:50%;background:#ffffff;
   border:4px solid rgba(0,0,0,0.4);box-shadow:0 0 0 2px var(--amber),0 4px 14px rgba(0,0,0,0.5);
   cursor:pointer;z-index:25;pointer-events:auto;transition:all .15s ease;
 }
-.vf-snap-overlay-btn::after {
-  content:'';position:absolute;inset:3px;border-radius:50%;background:var(--amber);transition:all .15s ease;
-}
-.vf-snap-overlay-btn:active {transform:translateX(-50%) scale(0.90);}
-.vf-snap-overlay-btn:disabled {opacity:0.3;cursor:not-allowed;transform:translateX(-50%) none;}
+.vf-snap-overlay-btn::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--amber);transition:all .15s ease;}
+.vf-snap-overlay-btn:active{transform:translateX(-50%) scale(0.90);}
+.vf-snap-overlay-btn:disabled{opacity:0.3;cursor:not-allowed;}
 
-/* ── MOBILE VIEWFINDER ── */
+/* PERF: vf-panel uses transform:translateZ(0) to force GPU compositing layer for video */
 .vf-panel{
-  flex:1;position:relative;overflow:hidden;
-  background:var(--vf-bg);min-height:0;
+  flex:1;position:relative;overflow:hidden;background:var(--vf-bg);min-height:0;
+  transform:translateZ(0);
 }
-#video{width:100%;height:100%;object-fit:cover;display:block;}
+#video{
+  width:100%;height:100%;object-fit:cover;display:block;
+  /* PERF: promote video to own compositing layer */
+  will-change:transform;
+  transform:translateZ(0);
+}
 #canvas{display:none;}
-#video.mirrored{transform:scaleX(-1);}
+#video.mirrored{transform:translateZ(0) scaleX(-1);}
+
+/* AR overlay canvas sits on top of video, pointer-events none */
+#ar-canvas{
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;z-index:8;
+  /* PERF: own compositing layer */
+  will-change:transform;
+  transform:translateZ(0);
+}
 
 .vf-overlay{position:absolute;inset:0;pointer-events:none;}
 .corner{position:absolute;width:18px;height:18px;border-color:var(--amber);border-style:solid;opacity:.6;}
@@ -149,8 +161,7 @@ header{
 
 .no-cam{
   position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:14px;background:var(--vf-bg);
-  z-index:5;
+  align-items:center;justify-content:center;gap:14px;background:var(--vf-bg);z-index:5;
 }
 .no-cam svg{opacity:.15;}
 .no-cam-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;}
@@ -163,27 +174,38 @@ header{
 
 .vf-controls{
   position:absolute;bottom:12px;left:12px;right:12px;
-  display:flex;justify-content:space-between;align-items:center;z-index:20;
-  pointer-events:none;
+  display:flex;justify-content:space-between;align-items:center;z-index:20;pointer-events:none;
 }
-.vf-controls-left, .vf-controls-right {
-  display:flex;gap:6px;pointer-events:auto;
-}
-.vf-ctrl-btn, .vf-cam-btn{
+.vf-controls-left,.vf-controls-right{display:flex;gap:6px;pointer-events:auto;}
+.vf-ctrl-btn,.vf-cam-btn{
   width:36px;height:36px;border-radius:50%;
   background:var(--overlay-btn);border:1px solid var(--overlay-btn-border);
-  color:#fff;font-size:13px;cursor:pointer;
+  color:#fff;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   transition:all .15s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   font-family:'DM Mono',monospace;text-transform:uppercase;font-size:9px;
 }
-.vf-ctrl-btn:active, .vf-cam-btn:active{transform:scale(.88);}
-.vf-ctrl-btn.on, .vf-cam-btn.active{border-color:var(--amber);color:var(--amber);}
+.vf-ctrl-btn:active,.vf-cam-btn:active{transform:scale(.88);}
+.vf-ctrl-btn.on,.vf-cam-btn.active{border-color:var(--amber);color:var(--amber);}
+.flash-toggle-btn{font-weight:bold;}
+.flash-toggle-btn.on{border-color:var(--amber)!important;color:var(--amber)!important;background:var(--amber-bg)!important;}
 
-.flash-toggle-btn {font-weight: bold;}
-.flash-toggle-btn.on {border-color: var(--amber) !important; color: var(--amber) !important; background: var(--amber-bg) !important;}
+/* AR overlay picker row — shown above vf-controls on mobile */
+.ar-picker-row{
+  position:absolute;top:10px;right:10px;
+  display:flex;flex-direction:column;gap:5px;z-index:20;pointer-events:auto;
+}
+.ar-btn{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--overlay-btn);border:1px solid var(--overlay-btn-border);
+  color:#fff;font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  line-height:1;
+}
+.ar-btn:active{transform:scale(.88);}
+.ar-btn.active{border-color:var(--amber);background:var(--amber-bg);}
 
-/* ── MOBILE ACTIONS INTERFACE PANEL ── */
 .bottom-bar{
   flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);position:relative;z-index:300;
 }
@@ -209,52 +231,37 @@ header{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px));
 }
-.timer-sel-wrapper {
-  position:relative;display:flex;align-items:center;justify-content:center;
-}
-.timer-sel{
-  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2;
-}
-.timer-trigger-btn {
+.timer-sel-wrapper{position:relative;display:flex;align-items:center;justify-content:center;}
+.timer-sel{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2;}
+.timer-trigger-btn{
   width:44px;height:44px;border-radius:50%;background:var(--surface2);
   border:1px solid var(--border);color:var(--text-dim);font-family:'DM Mono',monospace;
   font-size:12px;display:flex;align-items:center;justify-content:center;pointer-events:none;
 }
-.timer-sel:focus + .timer-trigger-btn, .timer-trigger-btn.active {
-  border-color:var(--amber);color:var(--amber);background:var(--amber-bg);
-}
+.timer-sel:focus + .timer-trigger-btn,.timer-trigger-btn.active{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}
 
-/* Mobile capture button */
-.mob-capture-btn {
+.mob-capture-btn{
   width:56px;height:56px;border-radius:50%;background:#ffffff;
   border:3px solid rgba(0,0,0,0.3);box-shadow:0 0 0 2px var(--amber),0 4px 12px rgba(0,0,0,0.4);
   cursor:pointer;transition:all .15s ease;display:flex;align-items:center;justify-content:center;
   flex-shrink:0;position:relative;
 }
-.mob-capture-btn::after {
-  content:'';position:absolute;width:46px;height:46px;border-radius:50%;background:var(--amber);transition:all .15s ease;
-}
-.mob-capture-btn:active {transform:scale(0.92);}
-.mob-capture-btn:disabled {opacity:0.3;cursor:not-allowed;transform:none;}
+.mob-capture-btn::after{content:'';position:absolute;width:46px;height:46px;border-radius:50%;background:var(--amber);transition:all .15s ease;}
+.mob-capture-btn:active{transform:scale(0.92);}
+.mob-capture-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;}
 
-.mob-gal-preview-btn {
+.mob-gal-preview-btn{
   width:44px;height:44px;border-radius:8px;background:var(--surface2);
   border:1px solid var(--border);overflow:hidden;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all 0.15s;
-  padding:2px;
+  display:flex;align-items:center;justify-content:center;transition:all 0.15s;padding:2px;
 }
-.mob-gal-preview-btn:active {transform:scale(0.92);}
-.mob-gal-preview-btn .gal-icon-fallback {
-  font-size:18px;color:var(--text-dim);
-}
-.mob-gal-preview-btn img {
-  width:100%;height:100%;object-fit:cover;border-radius:5px;
-}
+.mob-gal-preview-btn:active{transform:scale(0.92);}
+.mob-gal-preview-btn .gal-icon-fallback{font-size:18px;color:var(--text-dim);}
+.mob-gal-preview-btn img{width:100%;height:100%;object-fit:cover;border-radius:5px;}
 
-/* ── COMPACT FILMSTRIP BAR ── */
 .filmstrip-bar{
   flex-shrink:0;background:var(--filmstrip-bg);border-top:1px solid var(--border);
-  display:flex;align-items:center;gap:0;height:62px;position:relative;z-index:290;overflow:hidden;
+  display:flex;align-items:center;height:62px;position:relative;z-index:290;overflow:hidden;
 }
 .filmstrip-thumbs{
   flex:1;display:flex;gap:5px;overflow-x:auto;overflow-y:hidden;padding:7px 10px;
@@ -268,10 +275,7 @@ header{
 }
 @keyframes fsIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
 .fs-thumb img{width:100%;height:26px;object-fit:cover;display:block;border:1px solid var(--pol-border);}
-.fs-empty{
-  font-family:'DM Mono',monospace;font-size:9px;
-  color:var(--text-muted);letter-spacing:.1em;padding:0 14px;opacity:.7;
-}
+.fs-empty{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.1em;padding:0 14px;opacity:.7;}
 .gallery-open-btn{
   flex-shrink:0;width:52px;height:62px;
   background:transparent;border:none;border-left:1px solid var(--border);
@@ -283,7 +287,6 @@ header{
 .gallery-open-btn span:first-child{font-size:16px;}
 .gallery-open-btn .gal-lbl{font-family:'DM Mono',monospace;font-size:7px;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;}
 
-/* ── PROGRESSIVE DISCLOSURE ARCHIVE DRAWER ── */
 .roll-sheet{
   position:fixed;bottom:0;left:0;right:0;background:var(--sheet-bg);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
@@ -301,67 +304,44 @@ header{
 .lp-btn{font-family:'DM Mono',monospace;font-size:9px;padding:4px 7px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;}
 .lp-btn:active{transform:scale(.9);}
 .lp-btn.active{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
-
 .pol-grid{flex:1;padding:10px 14px 6px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;min-height:0;}
 .pol-grid::-webkit-scrollbar{width:3px;}
 .pol-grid::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px;}
 .empty-st{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:28px 0;}
 .empty-st .ei{font-size:26px;opacity:.18;filter:grayscale(1);}
 .empty-st p{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.14em;text-transform:uppercase;line-height:2;}
-
 .roll-foot{
   padding:8px 12px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));
   border-top:1px solid var(--border);display:flex;gap:6px;background:var(--surface);flex-shrink:0;flex-wrap:wrap;
 }
-.ft-btn{
-  flex:1;min-width:70px;padding:10px 6px;font-family:'DM Mono',monospace;font-size:9px;
-  letter-spacing:.07em;text-transform:uppercase;border-radius:6px;border:1px solid var(--border);
-  background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;
-}
+.ft-btn{flex:1;min-width:70px;padding:10px 6px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.07em;text-transform:uppercase;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;}
 .ft-btn:active{transform:scale(.96);}
 .ft-btn.pri{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}
 .ft-btn:disabled{opacity:.28;cursor:not-allowed;transform:none;}
-
 .sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:399;opacity:0;pointer-events:none;transition:opacity .3s ease;}
 .sheet-backdrop.show{opacity:1;pointer-events:auto;}
 
-/* ── DESKTOP LAYOUT (≥ 769px) ── */
 @media(min-width:769px){
-  .vf-panel,.bottom-bar,.filmstrip-bar,.roll-sheet,.sheet-backdrop,.vf-controls{display:none!important;}
+  .vf-panel,.bottom-bar,.filmstrip-bar,.roll-sheet,.sheet-backdrop,.vf-controls,.ar-picker-row{display:none!important;}
   .app{height:100vh;display:grid;grid-template-rows:48px 1fr 30px;}
   header{height:48px;padding:0 20px;}
   .logo{font-size:18px;}
   .pill{font-size:9px;padding:3px 8px;}
   .icon-btn{width:28px;height:28px;}
-  
   .desk-main{display:grid;grid-template-columns:250px 1fr 300px;overflow:hidden;}
   .desk-sidebar{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface);overflow:hidden;}
-  
   .sb-block{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
   .sb-label{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--text-muted);letter-spacing:.14em;text-transform:uppercase;}
-  
   .desk-cam-sw{display:flex;gap:3px;}
-  .desk-cam-btn{
-    flex:1;font-family:'DM Mono',monospace;font-size:9px;
-    padding:4px;border-radius:4px;border:1px solid var(--border);
-    background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;text-align:center;
-  }
+  .desk-cam-btn{flex:1;font-family:'DM Mono',monospace;font-size:9px;padding:4px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;text-align:center;}
   .desk-cam-btn:hover{border-color:var(--amber);color:var(--amber);}
   .desk-cam-btn.active{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
-  
   .mirror-row{display:flex;align-items:center;justify-content:space-between;margin-top:2px;}
-  .toggle-track{
-    width:30px;height:16px;border-radius:10px;background:var(--border);
-    cursor:pointer;position:relative;transition:background .2s;border:none;flex-shrink:0;
-  }
+  .toggle-track{width:30px;height:16px;border-radius:10px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;border:none;flex-shrink:0;}
   .toggle-track.on{background:var(--amber);}
-  .toggle-thumb{
-    position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;
-    background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);
-  }
+  .toggle-thumb{position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
   .toggle-track.on .toggle-thumb{left:16px;}
   .toggle-lbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);}
-  
   .desk-filter-list{flex:1;overflow-y:auto;padding:4px 8px;display:flex;flex-direction:column;gap:2px;}
   .desk-filter-list::-webkit-scrollbar{width:3px;}
   .desk-filter-list::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px;}
@@ -372,64 +352,41 @@ header{
   .desk-fthumb-inner{width:100%;height:100%;background:linear-gradient(135deg,#c8b090,#907060,#604030);}
   .desk-fchip-name{font-family:'DM Mono',monospace;font-size:9.5px;color:var(--text-dim);letter-spacing:.04em;}
   .desk-fchip.active .desk-fchip-name{color:var(--amber);}
-  
-  .desk-shoot-section{
-    padding:10px 12px;border-top:1px solid var(--border);display:flex!important;flex-direction:column;gap:6px;flex-shrink:0;background:var(--surface);
-  }
-  .desk-timer{
-    font-family:'DM Mono',monospace;font-size:10px;
-    background:var(--surface2);border:1px solid var(--border);
-    color:var(--text);padding:6px 8px;border-radius:4px;
-    cursor:pointer;outline:none;width:100%;transition:border-color .15s;
-  }
+  .desk-shoot-section{padding:10px 12px;border-top:1px solid var(--border);display:flex!important;flex-direction:column;gap:6px;flex-shrink:0;background:var(--surface);}
+  .desk-timer{font-family:'DM Mono',monospace;font-size:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:4px;cursor:pointer;outline:none;width:100%;transition:border-color .15s;}
   .desk-timer:hover{border-color:var(--amber);}
-  .desk-allow-btn{
-    width:100%;padding:6px;background:transparent;border:1px solid var(--amber);border-radius:4px;
-    color:var(--amber);font-family:'DM Mono',monospace;font-size:9px;
-    letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s;text-align:center;
-  }
+  .desk-allow-btn{width:100%;padding:6px;background:transparent;border:1px solid var(--amber);border-radius:4px;color:var(--amber);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s;text-align:center;}
   .desk-allow-btn:hover{background:var(--amber-bg);}
-  
   .desk-vf{display:flex;align-items:center;justify-content:center;padding:16px;background:var(--bg);overflow:hidden;position:relative;}
-  .desk-vf-wrap{
-    position:relative;width:100%;max-width:600px;background:var(--vf-bg);border-radius:6px;overflow:hidden;
-    border:1px solid var(--border);aspect-ratio:4/3;max-height:calc(100vh - 48px - 30px - 32px);
-  }
-  .desk-vf-wrap video{width:100%;height:100%;object-fit:cover;display:block;}
-  .desk-vf-wrap video.mirrored{transform:scaleX(-1);}
+  .desk-vf-wrap{position:relative;width:100%;max-width:600px;background:var(--vf-bg);border-radius:6px;overflow:hidden;border:1px solid var(--border);aspect-ratio:4/3;max-height:calc(100vh - 48px - 30px - 32px);}
+  .desk-vf-wrap video{width:100%;height:100%;object-fit:cover;display:block;will-change:transform;transform:translateZ(0);}
+  .desk-vf-wrap video.mirrored{transform:translateZ(0) scaleX(-1);}
+  /* Desktop AR overlay canvas */
+  #desk-ar-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:8;will-change:transform;transform:translateZ(0);}
   .desk-no-cam{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--vf-bg);}
   .desk-no-cam svg{opacity:.15;}
   .desk-no-cam-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;}
-  
   .desk-vf-overlay{position:absolute;inset:0;pointer-events:none;}
   .desk-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:5;}
   .desk-flash.on{opacity:1;transition:none;}
   .desk-flash.fade-out{opacity:0;transition:opacity 0.4s ease-out;}
-
-  .desk-cdnum{
-    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    font-family:'DM Serif Display',serif;font-size:88px;color:#fff;
-    text-shadow:0 4px 28px rgba(0,0,0,.75);opacity:0;transition:opacity .18s;z-index:10;line-height:1;
-  }
+  .desk-cdnum{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'DM Serif Display',serif;font-size:88px;color:#fff;text-shadow:0 4px 28px rgba(0,0,0,.75);opacity:0;transition:opacity .18s;z-index:10;line-height:1;}
   .desk-cdnum.show{opacity:1;}
-  .desk-vf-tag{
-    position:absolute;bottom:10px;left:10px;font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);
-    letter-spacing:.14em;text-transform:uppercase;background:rgba(0,0,0,.55);padding:3px 7px;border-radius:2px;
-    border:1px solid rgba(180,110,10,.4);
-  }
-  
+  .desk-vf-tag{position:absolute;bottom:10px;left:10px;font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:.14em;text-transform:uppercase;background:rgba(0,0,0,.55);padding:3px 7px;border-radius:2px;border:1px solid rgba(180,110,10,.4);}
+  /* Desktop AR picker inside sidebar */
+  .desk-ar-section{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+  .desk-ar-list{display:flex;flex-wrap:wrap;gap:4px;}
+  .desk-ar-btn{font-family:'DM Mono',monospace;font-size:9px;padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap;}
+  .desk-ar-btn:hover{border-color:var(--amber);color:var(--amber);}
+  .desk-ar-btn.active{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
   .desk-roll{display:flex;flex-direction:column;border-left:1px solid var(--border);background:var(--surface);overflow:hidden;}
   .desk-roll-hdr{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;gap:8px;}
   .desk-shot-ctr{font-family:'DM Serif Display',serif;font-size:22px;color:var(--amber);line-height:1;}
   .desk-shot-ctr small{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-left:2px;}
   .desk-layout-picker{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;}
-  .desk-lp-btn{
-    font-family:'DM Mono',monospace;font-size:9px;padding:4px 6px;border-radius:4px;border:1px solid var(--border);
-    background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;
-  }
+  .desk-lp-btn{font-family:'DM Mono',monospace;font-size:9px;padding:4px 6px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;}
   .desk-lp-btn:hover{border-color:var(--amber);color:var(--amber);}
   .desk-lp-btn.active{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
-  
   .desk-pol-grid{flex:1;padding:12px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
   .desk-pol-grid::-webkit-scrollbar{width:3px;}
   .desk-pol-grid::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px;}
@@ -437,18 +394,12 @@ header{
   .desk-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;}
   .desk-empty .ei{font-size:28px;opacity:.18;filter:grayscale(1);}
   .desk-empty p{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.14em;text-transform:uppercase;line-height:2;}
-  
   .desk-roll-foot{padding:8px 10px;border-top:1px solid var(--border);display:flex;gap:6px;background:var(--surface);flex-shrink:0;flex-wrap:wrap;}
-  .desk-ft-btn{
-    flex:1;min-width:70px;padding:8px 4px;font-family:'DM Mono',monospace;font-size:9px;
-    letter-spacing:.07em;text-transform:uppercase;border-radius:4px;border:1px solid var(--border);
-    background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;
-  }
+  .desk-ft-btn{flex:1;min-width:70px;padding:8px 4px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.07em;text-transform:uppercase;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;}
   .desk-ft-btn:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}
   .desk-ft-btn.pri{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}
   .desk-ft-btn.pri:hover{background:var(--amber-glow);}
   .desk-ft-btn:disabled{opacity:.28;cursor:not-allowed;}
-  
   footer{display:flex;align-items:center;justify-content:center;border-top:1px solid var(--border);background:var(--bg);position:relative;z-index:1;flex-shrink:0;height:30px;}
   .foot-txt{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.12em;display:flex;align-items:center;gap:7px;}
   .foot-handle{color:var(--amber);text-decoration:none;}
@@ -467,421 +418,794 @@ header{
 <body>
 <div class="app">
 
-  <header>
-    <div class="logo">darkroom <span class="logo-sub">photobooth</span></div>
-    <div class="hdr-right">
-      <div class="pill live"><div class="live-dot"></div><span id="status-text">offline</span></div>
-      <div class="pill" id="cam-pill" style="display:none"></div>
-      <button class="icon-btn" id="mirror-btn" title="Mirror View" onclick="toggleMirror()">⇆</button>
-      <button class="icon-btn" id="theme-btn" title="Toggle Theme Look" onclick="toggleTheme()">☀</button>
-    </div>
-  </header>
+<header>
+  <div class="logo">darkroom <span class="logo-sub">photobooth</span></div>
+  <div class="hdr-right">
+    <div class="pill live"><div class="live-dot"></div><span id="status-text">offline</span></div>
+    <div class="pill" id="cam-pill" style="display:none"></div>
+    <button class="icon-btn" id="mirror-btn" title="Mirror View" onclick="toggleMirror()">⇆</button>
+    <button class="icon-btn" id="theme-btn" title="Toggle Theme" onclick="toggleTheme()">☀</button>
+  </div>
+</header>
 
-  <div class="vf-panel">
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="canvas"></canvas>
-    <div class="vf-overlay">
-      <div class="corner tl"></div><div class="corner tr"></div>
-      <div class="corner bl"></div><div class="corner br"></div>
+<!-- MOBILE VIEWFINDER -->
+<div class="vf-panel">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="canvas"></canvas>
+  <canvas id="ar-canvas"></canvas>
+  <div class="vf-overlay">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+  </div>
+  <div class="flash-el" id="flash"></div>
+  <div class="cd-num" id="cdnum"></div>
+  <div class="vf-tag" id="vf-tag">RAW</div>
+  <div class="vf-controls">
+    <div class="vf-controls-left">
+      <button class="vf-ctrl-btn" id="mob-mirror-btn" onclick="toggleMirror()">⇆</button>
+      <button class="vf-ctrl-btn flash-toggle-btn on" id="mob-flash-btn" onclick="toggleFlash()">⚡</button>
     </div>
-    <div class="flash-el" id="flash"></div>
-    <div class="cd-num" id="cdnum"></div>
-    <div class="vf-tag" id="vf-tag">RAW</div>
-    
-    <div class="vf-controls">
-      <div class="vf-controls-left">
-        <button class="vf-ctrl-btn" id="mob-mirror-btn" onclick="toggleMirror()" title="Toggle Canvas Flip">⇆</button>
-        <button class="vf-ctrl-btn flash-toggle-btn on" id="mob-flash-btn" onclick="toggleFlash()" title="Toggle Flash Mode">⚡</button>
-      </div>
-      <div class="vf-controls-right">
-        <button class="vf-cam-btn active" id="mob-btn-rear" onclick="switchCam('environment')">rear</button>
-        <button class="vf-cam-btn" id="mob-btn-front" onclick="switchCam('user')">front</button>
-        <button class="vf-cam-btn" id="mob-btn-any" onclick="switchCam('any')">any</button>
-      </div>
-    </div>
-
-    <div class="no-cam" id="no-cam">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-        <circle cx="12" cy="13" r="4"/>
-      </svg>
-      <span class="no-cam-label">camera access required</span>
-      <button class="no-cam-btn" onclick="startCamera()">allow camera</button>
+    <div class="vf-controls-right">
+      <button class="vf-cam-btn active" id="mob-btn-rear"  onclick="switchCam('environment')">rear</button>
+      <button class="vf-cam-btn"        id="mob-btn-front" onclick="switchCam('user')">front</button>
+      <button class="vf-cam-btn"        id="mob-btn-any"   onclick="switchCam('any')">any</button>
     </div>
   </div>
-
-  <div class="filmstrip-bar" id="mob-filmstrip-bar">
-    <div class="filmstrip-thumbs" id="mob-filmstrip-thumbs">
-      <div class="fs-empty">no assets captured in active roll pool</div>
-    </div>
-    <button class="gallery-open-btn" onclick="openSheet()">
-      <span>⊞</span>
-      <span class="gal-lbl">roll</span>
-    </button>
+  <!-- AR overlay picker: vertical column top-right -->
+  <div class="ar-picker-row" id="mob-ar-picker"></div>
+  <div class="no-cam" id="no-cam">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+    <span class="no-cam-label">camera access required</span>
+    <button class="no-cam-btn" onclick="startCamera()">allow camera</button>
   </div>
-
-  <div class="bottom-bar">
-    <div class="filter-strip" id="mob-filter-list"></div>
-    <div class="shoot-row">
-      <div class="timer-sel-wrapper">
-        <select class="timer-sel" id="mob-timer" onchange="syncTimerUI(this.value)">
-          <option value="0">0s</option>
-          <option value="3">3s</option>
-          <option value="5">5s</option>
-          <option value="10">10s</option>
-        </select>
-        <div class="timer-trigger-btn" id="mob-timer-pill">0s</div>
-      </div>
-
-      <button class="mob-capture-btn" id="mob-capture-btn" disabled onclick="capturePhoto()" title="Capture Snapshot"></button>
-
-      <button class="mob-gal-preview-btn" onclick="openSheet()" id="mob-gallery-preview" title="Expand View History">
-        <div class="gal-icon-fallback">⊞</div>
-      </button>
-    </div>
-  </div>
-
-  <div class="sheet-backdrop" id="sheet-backdrop" onclick="closeSheet()"></div>
-  <div class="roll-sheet" id="roll-sheet">
-    <div class="sheet-handle">
-      <div class="handle-bar" onclick="closeSheet()"></div>
-      <div class="sheet-header">
-        <div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.16em;text-transform:uppercase;margin-bottom:2px">roll</div>
-          <div class="shot-ctr" id="mob-shot-ctr">0 <small>shots</small></div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.14em;text-transform:uppercase">strip matrix layout</div>
-          <div class="layout-picker" id="mob-layout-picker">
-            <button class="lp-btn active" data-l="1x1" onclick="setLayout('1x1',event)">1×1</button>
-            <button class="lp-btn" data-l="1x2" onclick="setLayout('1x2',event)">1×2</button>
-            <button class="lp-btn" data-l="1x4" onclick="setLayout('1x4',event)">1×4</button>
-            <button class="lp-btn" data-l="2x2" onclick="setLayout('2x2',event)">2×2</button>
-            <button class="lp-btn" data-l="2x3" onclick="setLayout('2x3',event)">2×3</button>
-            <button class="lp-btn" data-l="3x3" onclick="setLayout('3x3',event)">3×3</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="pol-grid" id="mob-pol-grid">
-      <div class="empty-st"><div class="ei">🎞️</div><p>your snapshots<br>will populate inside<br>this layout grid</p></div>
-    </div>
-    <div class="roll-foot">
-      <button class="ft-btn pri" id="mob-strip-btn" disabled onclick="downloadAll()">compile strip</button>
-      <button class="ft-btn" id="mob-clear-btn" onclick="clearAll()" disabled>purge roll</button>
-    </div>
-  </div>
-
-  <div class="desk-main">
-    <aside class="desk-sidebar">
-      <div class="sb-block">
-        <div class="sb-label">hardware interface</div>
-        <div class="desk-cam-sw">
-          <button class="desk-cam-btn active" id="desk-btn-rear" onclick="switchCam('environment')">rear source</button>
-          <button class="desk-cam-btn" id="desk-btn-front" onclick="switchCam('user')">front mirror</button>
-          <button class="desk-cam-btn" id="desk-btn-any" onclick="switchCam('any')">any auto</button>
-        </div>
-        <div class="mirror-row">
-          <span class="toggle-lbl">mirror viewport frame</span>
-          <button class="toggle-track" id="desk-mirror-toggle" onclick="toggleMirror()">
-            <div class="toggle-thumb"></div>
-          </button>
-        </div>
-        <div class="mirror-row">
-          <span class="toggle-lbl">hardware exposure flash</span>
-          <button class="toggle-track on" id="desk-flash-toggle" onclick="toggleFlash()">
-            <div class="toggle-thumb"></div>
-          </button>
-        </div>
-      </div>
-      <div class="sb-block" style="flex:1; display:flex; flex-direction:column; padding-bottom:0;">
-        <div class="sb-label" style="margin-bottom:4px;">creative look emulation</div>
-        <div class="desk-filter-list" id="desk-filter-list"></div>
-      </div>
-      <div class="desk-shoot-section">
-        <div class="sb-label">capture delay configuration</div>
-        <select class="desk-timer" id="desk-timer">
-          <option value="0">instant capture (no delay)</option>
-          <option value="3">3 second countdown</option>
-          <option value="5">5 second countdown</option>
-          <option value="10">10 second countdown</option>
-        </select>
-        <button class="desk-allow-btn" id="desk-allow-btn" onclick="startCamera()">initialize camera hardware</button>
-      </div>
-    </aside>
-
-    <section class="desk-vf">
-      <div class="desk-vf-wrap" id="desk-vf-wrap">
-        <video id="desk-video" autoplay playsinline muted></video>
-        <canvas id="desk-canvas"></canvas>
-        <div class="desk-vf-overlay">
-          <div class="corner tl"></div><div class="corner tr"></div>
-          <div class="corner bl"></div><div class="corner br"></div>
-        </div>
-        <button class="vf-snap-overlay-btn" id="desk-overlay-snap-btn" disabled onclick="capturePhoto()" title="Capture Snapshot"></button>
-        <div class="desk-flash" id="desk-flash"></div>
-        <div class="desk-cdnum" id="desk-cdnum"></div>
-        <div class="desk-vf-tag" id="desk-vf-tag">RAW</div>
-        <div class="desk-no-cam" id="desk-no-cam">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-            <circle cx="12" cy="13" r="4"/>
-          </svg>
-          <span class="desk-no-cam-label">hardware loop disconnected</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="desk-roll">
-      <div class="desk-roll-hdr">
-        <div>
-          <div class="sb-label">asset index pool</div>
-          <div class="desk-shot-ctr" id="desk-shot-ctr">0 <small>shots</small></div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-          <div class="sb-label">strip matrix</div>
-          <div class="desk-layout-picker" id="desk-layout-picker">
-            <button class="desk-lp-btn active" data-l="1x1" onclick="setLayout('1x1',event)">1×1</button>
-            <button class="desk-lp-btn" data-l="1x2" onclick="setLayout('1x2',event)">1×2</button>
-            <button class="desk-lp-btn" data-l="1x4" onclick="setLayout('1x4',event)">1×4</button>
-            <button class="desk-lp-btn" data-l="2x2" onclick="setLayout('2x2',event)">2×2</button>
-            <button class="desk-lp-btn" data-l="2x3" onclick="setLayout('2x3',event)">2×3</button>
-            <button class="desk-lp-btn" data-l="3x3" onclick="setLayout('3x3',event)">3×3</button>
-          </div>
-        </div>
-      </div>
-      <div class="desk-pol-grid" id="desk-pol-grid">
-        <div class="desk-empty">
-          <div class="ei">🎞️</div>
-          <p>session asset pool empty<br>awaiting digital capture input</p>
-        </div>
-      </div>
-      <div class="desk-roll-foot">
-        <button class="desk-ft-btn pri" id="desk-dl-btn" onclick="downloadAll()" disabled>compile filmstrip</button>
-        <button class="desk-ft-btn" id="desk-clear-btn" onclick="clearAll()" disabled>purge cache</button>
-      </div>
-    </section>
-  </div>
-
-  <!-- CHANGE 3: @hustino.28 is now a clickable link -->
-  <footer>
-    <div class="foot-txt">
-      made by <a class="foot-handle" href="https://www.instagram.com/hustino.28/" target="_blank" rel="noopener noreferrer">@hustino.28</a>
-      <span class="foot-dot">✦</span>
-      darkroom photobooth architecture
-    </div>
-  </footer>
-
 </div>
 
+<div class="filmstrip-bar">
+  <div class="filmstrip-thumbs" id="mob-filmstrip-thumbs">
+    <div class="fs-empty">no assets captured in active roll pool</div>
+  </div>
+  <button class="gallery-open-btn" onclick="openSheet()">
+    <span>⊞</span><span class="gal-lbl">roll</span>
+  </button>
+</div>
+
+<div class="bottom-bar">
+  <div class="filter-strip" id="mob-filter-list"></div>
+  <div class="shoot-row">
+    <div class="timer-sel-wrapper">
+      <select class="timer-sel" id="mob-timer" onchange="syncTimerUI(this.value)">
+        <option value="0">0s</option><option value="3">3s</option>
+        <option value="5">5s</option><option value="10">10s</option>
+      </select>
+      <div class="timer-trigger-btn" id="mob-timer-pill">0s</div>
+    </div>
+    <button class="mob-capture-btn" id="mob-capture-btn" disabled onclick="capturePhoto()"></button>
+    <button class="mob-gal-preview-btn" onclick="openSheet()" id="mob-gallery-preview">
+      <div class="gal-icon-fallback">⊞</div>
+    </button>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="sheet-backdrop" onclick="closeSheet()"></div>
+<div class="roll-sheet" id="roll-sheet">
+  <div class="sheet-handle">
+    <div class="handle-bar" onclick="closeSheet()"></div>
+    <div class="sheet-header">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.16em;text-transform:uppercase;margin-bottom:2px">roll</div>
+        <div class="shot-ctr" id="mob-shot-ctr">0 <small>shots</small></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.14em;text-transform:uppercase">strip matrix layout</div>
+        <div class="layout-picker" id="mob-layout-picker">
+          <button class="lp-btn active" data-l="1x1" onclick="setLayout('1x1',event)">1×1</button>
+          <button class="lp-btn" data-l="1x2" onclick="setLayout('1x2',event)">1×2</button>
+          <button class="lp-btn" data-l="1x4" onclick="setLayout('1x4',event)">1×4</button>
+          <button class="lp-btn" data-l="2x2" onclick="setLayout('2x2',event)">2×2</button>
+          <button class="lp-btn" data-l="2x3" onclick="setLayout('2x3',event)">2×3</button>
+          <button class="lp-btn" data-l="3x3" onclick="setLayout('3x3',event)">3×3</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pol-grid" id="mob-pol-grid">
+    <div class="empty-st"><div class="ei">🎞️</div><p>your snapshots<br>will populate inside<br>this layout grid</p></div>
+  </div>
+  <div class="roll-foot">
+    <button class="ft-btn pri" id="mob-strip-btn" disabled onclick="downloadAll()">compile strip</button>
+    <button class="ft-btn" id="mob-clear-btn" onclick="clearAll()" disabled>purge roll</button>
+  </div>
+</div>
+
+<!-- DESKTOP -->
+<div class="desk-main">
+  <aside class="desk-sidebar">
+    <div class="sb-block">
+      <div class="sb-label">hardware interface</div>
+      <div class="desk-cam-sw">
+        <button class="desk-cam-btn active" id="desk-btn-rear"  onclick="switchCam('environment')">rear source</button>
+        <button class="desk-cam-btn"        id="desk-btn-front" onclick="switchCam('user')">front mirror</button>
+        <button class="desk-cam-btn"        id="desk-btn-any"   onclick="switchCam('any')">any auto</button>
+      </div>
+      <div class="mirror-row">
+        <span class="toggle-lbl">mirror viewport frame</span>
+        <button class="toggle-track" id="desk-mirror-toggle" onclick="toggleMirror()"><div class="toggle-thumb"></div></button>
+      </div>
+      <div class="mirror-row">
+        <span class="toggle-lbl">hardware exposure flash</span>
+        <button class="toggle-track on" id="desk-flash-toggle" onclick="toggleFlash()"><div class="toggle-thumb"></div></button>
+      </div>
+    </div>
+    <!-- Desktop AR overlay picker -->
+    <div class="desk-ar-section">
+      <div class="sb-label">ar overlays</div>
+      <div class="desk-ar-list" id="desk-ar-list"></div>
+    </div>
+    <div class="sb-block" style="flex:1;display:flex;flex-direction:column;padding-bottom:0;">
+      <div class="sb-label" style="margin-bottom:4px;">creative look emulation</div>
+      <div class="desk-filter-list" id="desk-filter-list"></div>
+    </div>
+    <div class="desk-shoot-section">
+      <div class="sb-label">capture delay configuration</div>
+      <select class="desk-timer" id="desk-timer">
+        <option value="0">instant capture (no delay)</option>
+        <option value="3">3 second countdown</option>
+        <option value="5">5 second countdown</option>
+        <option value="10">10 second countdown</option>
+      </select>
+      <button class="desk-allow-btn" id="desk-allow-btn" onclick="startCamera()">initialize camera hardware</button>
+    </div>
+  </aside>
+
+  <section class="desk-vf">
+    <div class="desk-vf-wrap">
+      <video id="desk-video" autoplay playsinline muted></video>
+      <canvas id="desk-canvas"></canvas>
+      <canvas id="desk-ar-canvas"></canvas>
+      <div class="desk-vf-overlay">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+      </div>
+      <button class="vf-snap-overlay-btn" id="desk-overlay-snap-btn" disabled onclick="capturePhoto()"></button>
+      <div class="desk-flash" id="desk-flash"></div>
+      <div class="desk-cdnum" id="desk-cdnum"></div>
+      <div class="desk-vf-tag" id="desk-vf-tag">RAW</div>
+      <div class="desk-no-cam" id="desk-no-cam">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        <span class="desk-no-cam-label">hardware loop disconnected</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="desk-roll">
+    <div class="desk-roll-hdr">
+      <div>
+        <div class="sb-label">asset index pool</div>
+        <div class="desk-shot-ctr" id="desk-shot-ctr">0 <small>shots</small></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        <div class="sb-label">strip matrix</div>
+        <div class="desk-layout-picker">
+          <button class="desk-lp-btn active" data-l="1x1" onclick="setLayout('1x1',event)">1×1</button>
+          <button class="desk-lp-btn" data-l="1x2" onclick="setLayout('1x2',event)">1×2</button>
+          <button class="desk-lp-btn" data-l="1x4" onclick="setLayout('1x4',event)">1×4</button>
+          <button class="desk-lp-btn" data-l="2x2" onclick="setLayout('2x2',event)">2×2</button>
+          <button class="desk-lp-btn" data-l="2x3" onclick="setLayout('2x3',event)">2×3</button>
+          <button class="desk-lp-btn" data-l="3x3" onclick="setLayout('3x3',event)">3×3</button>
+        </div>
+      </div>
+    </div>
+    <div class="desk-pol-grid" id="desk-pol-grid">
+      <div class="desk-empty"><div class="ei">🎞️</div><p>session asset pool empty<br>awaiting digital capture input</p></div>
+    </div>
+    <div class="desk-roll-foot">
+      <button class="desk-ft-btn pri" id="desk-dl-btn"    onclick="downloadAll()" disabled>compile filmstrip</button>
+      <button class="desk-ft-btn"     id="desk-clear-btn" onclick="clearAll()"    disabled>purge cache</button>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="foot-txt">
+    made by <a class="foot-handle" href="https://www.instagram.com/hustino.28/" target="_blank" rel="noopener noreferrer">@hustino.28</a>
+    <span class="foot-dot">✦</span>
+    darkroom photobooth architecture
+  </div>
+</footer>
+
+</div><!-- .app -->
+
 <script>
-const FILTERS=[
-  {id:'normal',name:'RAW',    css:'none'},
-  {id:'kodak', name:'KODAKAN',  css:'sepia(0.2) contrast(1.1) saturate(1.1) brightness(1.05)'},
-  {id:'ilford',name:'HUSTINO', css:'grayscale(1) contrast(1.2) brightness(1.05)'},
-  {id:'lomo',  name:'LOMO',   css:'saturate(1.6) contrast(1.25) brightness(0.88)'},
-  {id:'fade',  name:'FADE',   css:'sepia(0.4) saturate(0.8) brightness(1.12) contrast(0.82)'},
-  {id:'warm',  name:'WARM',   css:'sepia(0.5) saturate(1.2) brightness(1.1)'},
-  {id:'cool',  name:'NAVIA',   css:'hue-rotate(200deg) saturate(0.85) brightness(1.05)'},
-  {id:'velvia',name:'VELVIA', css:'saturate(1.9) contrast(1.18) brightness(0.93)'},
-  {id:'mist',  name:'BLAURED',   css:'brightness(1.22) contrast(0.78) saturate(0.55)'},
+// ─────────────────────────────────────────
+// FILTERS — includes Nokia Cam (new)
+// ─────────────────────────────────────────
+const FILTERS = [
+  {id:'normal', name:'RAW',      css:'none'},
+  {id:'kodak',  name:'KODAKAN',  css:'sepia(0.2) contrast(1.1) saturate(1.1) brightness(1.05)'},
+  {id:'ilford', name:'HUSTINO',  css:'grayscale(1) contrast(1.2) brightness(1.05)'},
+  {id:'lomo',   name:'LOMO',     css:'saturate(1.6) contrast(1.25) brightness(0.88)'},
+  {id:'fade',   name:'FADE',     css:'sepia(0.4) saturate(0.8) brightness(1.12) contrast(0.82)'},
+  {id:'warm',   name:'WARM',     css:'sepia(0.5) saturate(1.2) brightness(1.1)'},
+  {id:'cool',   name:'NAVIA',    css:'hue-rotate(200deg) saturate(0.85) brightness(1.05)'},
+  {id:'velvia', name:'VELVIA',   css:'saturate(1.9) contrast(1.18) brightness(0.93)'},
+  {id:'mist',   name:'BLAURED',  css:'brightness(1.22) contrast(0.78) saturate(0.55)'},
+  // NOKIA: CSS approximation for live preview; canvas post-process for capture
+  {id:'nokia',  name:'NOKIA CAM',css:'contrast(1.15) saturate(0.65) brightness(1.08) hue-rotate(-8deg)', nokia:true},
 ];
+
+// ─────────────────────────────────────────
+// AR OVERLAYS — pure SVG, drawn on canvas
+// ─────────────────────────────────────────
+// Each overlay is a function(ctx, face, canvasW, canvasH) that draws itself.
+// face = {x, y, width, height} in canvas pixel coords, or null for center fallback.
+
+const AR_OVERLAYS = [
+  {id:'none',   name:'NONE',    emoji:'✕'},
+  {id:'cat',    name:'CAT',     emoji:'🐱'},
+  {id:'bunny',  name:'BUNNY',   emoji:'🐰'},
+  {id:'bear',   name:'BEAR',    emoji:'🐻'},
+  {id:'crown',  name:'CROWN',   emoji:'👑'},
+  {id:'hearts', name:'HEARTS',  emoji:'💕'},
+  {id:'stars',  name:'STARS',   emoji:'✨'},
+  {id:'blush',  name:'BLUSH',   emoji:'🌸'},
+];
+
+// Draw functions per overlay id
+function drawOverlay(id, ctx, face, cW, cH){
+  if(id === 'none') return;
+
+  // Derive face box with fallback to center third of frame
+  let fx, fy, fw, fh;
+  if(face){
+    fx = face.x; fy = face.y; fw = face.width; fh = face.height;
+  } else {
+    fw = cW * 0.38; fh = cW * 0.38;
+    fx = (cW - fw) / 2; fy = cH * 0.18;
+  }
+
+  const cx = fx + fw / 2;       // face center x
+  const top = fy;                // face top
+  const earW = fw * 0.28;
+  const earH = fw * 0.38;
+
+  ctx.save();
+
+  if(id === 'cat'){
+    // Cat ears — two triangles above head
+    const lx = fx + fw * 0.18;
+    const rx = fx + fw * 0.82;
+    const ey = top - earH * 0.1;
+    // Left ear outer
+    ctx.beginPath(); ctx.moveTo(lx - earW/2, ey + earH); ctx.lineTo(lx, ey - earH*0.6); ctx.lineTo(lx + earW/2, ey + earH); ctx.closePath();
+    ctx.fillStyle = '#f4a0b0'; ctx.fill();
+    ctx.strokeStyle = '#d4607a'; ctx.lineWidth = Math.max(1, fw*0.015); ctx.stroke();
+    // Left ear inner
+    ctx.beginPath(); ctx.moveTo(lx - earW*0.3, ey + earH*0.7); ctx.lineTo(lx, ey - earH*0.3); ctx.lineTo(lx + earW*0.3, ey + earH*0.7); ctx.closePath();
+    ctx.fillStyle = '#ffccd5'; ctx.fill();
+    // Right ear outer
+    ctx.beginPath(); ctx.moveTo(rx - earW/2, ey + earH); ctx.lineTo(rx, ey - earH*0.6); ctx.lineTo(rx + earW/2, ey + earH); ctx.closePath();
+    ctx.fillStyle = '#f4a0b0'; ctx.fill();
+    ctx.strokeStyle = '#d4607a'; ctx.lineWidth = Math.max(1, fw*0.015); ctx.stroke();
+    // Right ear inner
+    ctx.beginPath(); ctx.moveTo(rx - earW*0.3, ey + earH*0.7); ctx.lineTo(rx, ey - earH*0.3); ctx.lineTo(rx + earW*0.3, ey + earH*0.7); ctx.closePath();
+    ctx.fillStyle = '#ffccd5'; ctx.fill();
+    // Cute blush dots
+    _drawBlush(ctx, fx + fw*0.18, fy + fh*0.62, fw*0.1);
+    _drawBlush(ctx, fx + fw*0.82, fy + fh*0.62, fw*0.1);
+  }
+
+  if(id === 'bunny'){
+    // Long floppy bunny ears
+    const lx = cx - fw * 0.18;
+    const rx = cx + fw * 0.18;
+    const bEarH = fh * 1.1;
+    const bEarW = fw * 0.16;
+    // Left ear
+    ctx.beginPath(); ctx.ellipse(lx, top - bEarH*0.5, bEarW/2, bEarH/2, -0.15, 0, Math.PI*2);
+    ctx.fillStyle = '#f8d0e0'; ctx.fill();
+    ctx.strokeStyle = '#e890aa'; ctx.lineWidth = Math.max(1, fw*0.012); ctx.stroke();
+    // Left ear inner
+    ctx.beginPath(); ctx.ellipse(lx, top - bEarH*0.5, bEarW*0.28, bEarH*0.38, -0.15, 0, Math.PI*2);
+    ctx.fillStyle = '#ffd0e8'; ctx.fill();
+    // Right ear
+    ctx.beginPath(); ctx.ellipse(rx, top - bEarH*0.5, bEarW/2, bEarH/2, 0.15, 0, Math.PI*2);
+    ctx.fillStyle = '#f8d0e0'; ctx.fill();
+    ctx.strokeStyle = '#e890aa'; ctx.lineWidth = Math.max(1, fw*0.012); ctx.stroke();
+    // Right ear inner
+    ctx.beginPath(); ctx.ellipse(rx, top - bEarH*0.5, bEarW*0.28, bEarH*0.38, 0.15, 0, Math.PI*2);
+    ctx.fillStyle = '#ffd0e8'; ctx.fill();
+    // Blush
+    _drawBlush(ctx, fx + fw*0.16, fy + fh*0.65, fw*0.1);
+    _drawBlush(ctx, fx + fw*0.84, fy + fh*0.65, fw*0.1);
+  }
+
+  if(id === 'bear'){
+    // Round bear ears
+    const lx = fx + fw * 0.1;
+    const rx = fx + fw * 0.9;
+    const bR = fw * 0.16;
+    // Left ear outer
+    ctx.beginPath(); ctx.arc(lx, top - bR*0.4, bR, 0, Math.PI*2);
+    ctx.fillStyle = '#c8905a'; ctx.fill();
+    // Left ear inner
+    ctx.beginPath(); ctx.arc(lx, top - bR*0.4, bR*0.58, 0, Math.PI*2);
+    ctx.fillStyle = '#e8b07a'; ctx.fill();
+    // Right ear outer
+    ctx.beginPath(); ctx.arc(rx, top - bR*0.4, bR, 0, Math.PI*2);
+    ctx.fillStyle = '#c8905a'; ctx.fill();
+    // Right ear inner
+    ctx.beginPath(); ctx.arc(rx, top - bR*0.4, bR*0.58, 0, Math.PI*2);
+    ctx.fillStyle = '#e8b07a'; ctx.fill();
+    // Blush
+    _drawBlush(ctx, fx + fw*0.16, fy + fh*0.65, fw*0.1);
+    _drawBlush(ctx, fx + fw*0.84, fy + fh*0.65, fw*0.1);
+  }
+
+  if(id === 'crown'){
+    const crownY = top - fh * 0.08;
+    const crownH = fh * 0.28;
+    const crownW = fw * 0.72;
+    const crownX = cx - crownW/2;
+    // Crown base
+    ctx.fillStyle = '#f0c030';
+    ctx.beginPath();
+    ctx.moveTo(crownX, crownY);
+    ctx.lineTo(crownX, crownY - crownH * 0.55);
+    ctx.lineTo(crownX + crownW*0.2, crownY - crownH * 0.2);
+    ctx.lineTo(crownX + crownW*0.38, crownY - crownH);
+    ctx.lineTo(crownX + crownW*0.5, crownY - crownH * 0.3);
+    ctx.lineTo(crownX + crownW*0.62, crownY - crownH);
+    ctx.lineTo(crownX + crownW*0.8, crownY - crownH * 0.2);
+    ctx.lineTo(crownX + crownW, crownY - crownH * 0.55);
+    ctx.lineTo(crownX + crownW, crownY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#d09010'; ctx.lineWidth = Math.max(1, fw*0.012); ctx.stroke();
+    // Gems
+    const gems = [{x:0.2,c:'#f04040'},{x:0.5,c:'#4060f0'},{x:0.8,c:'#f04040'}];
+    gems.forEach(g => {
+      ctx.beginPath(); ctx.arc(crownX + crownW*g.x, crownY - crownH*0.15, fw*0.035, 0, Math.PI*2);
+      ctx.fillStyle = g.c; ctx.fill();
+      ctx.strokeStyle = '#fff8'; ctx.lineWidth = 1; ctx.stroke();
+    });
+  }
+
+  if(id === 'hearts'){
+    // Floating hearts around head
+    const hPositions = [
+      {x: fx - fw*0.12, y: top - fh*0.1,  s:0.9, c:'#ff6b8a'},
+      {x: fx + fw*1.12, y: top - fh*0.15, s:0.7, c:'#ff4a6e'},
+      {x: fx + fw*0.1,  y: top - fh*0.35, s:0.6, c:'#ff8aaa'},
+      {x: fx + fw*0.9,  y: top - fh*0.3,  s:0.8, c:'#ff6b8a'},
+      {x: cx,           y: top - fh*0.5,  s:0.5, c:'#ffaac0'},
+    ];
+    hPositions.forEach(h => {
+      const r = fw * 0.06 * h.s;
+      ctx.fillStyle = h.c;
+      ctx.beginPath();
+      ctx.moveTo(h.x, h.y + r*0.4);
+      ctx.bezierCurveTo(h.x, h.y - r*0.6, h.x - r*1.4, h.y - r*0.6, h.x - r*1.4, h.y + r*0.2);
+      ctx.bezierCurveTo(h.x - r*1.4, h.y + r*1.0, h.x, h.y + r*1.8, h.x, h.y + r*2.2);
+      ctx.bezierCurveTo(h.x, h.y + r*1.8, h.x + r*1.4, h.y + r*1.0, h.x + r*1.4, h.y + r*0.2);
+      ctx.bezierCurveTo(h.x + r*1.4, h.y - r*0.6, h.x, h.y - r*0.6, h.x, h.y + r*0.4);
+      ctx.fill();
+    });
+  }
+
+  if(id === 'stars'){
+    const starPositions = [
+      {x: fx - fw*0.08, y: top - fh*0.05, s:1.0, c:'#ffe030'},
+      {x: fx + fw*1.08, y: top - fh*0.1,  s:0.7, c:'#fff080'},
+      {x: fx + fw*0.15, y: top - fh*0.4,  s:0.6, c:'#ffe060'},
+      {x: fx + fw*0.85, y: top - fh*0.35, s:0.8, c:'#ffe030'},
+      {x: cx,           y: top - fh*0.55, s:0.5, c:'#ffffff'},
+      {x: fx + fw*0.5,  y: top - fh*0.22, s:0.4, c:'#ffff99'},
+    ];
+    starPositions.forEach(s => {
+      _drawStar(ctx, s.x, s.y, fw * 0.07 * s.s, s.c);
+    });
+  }
+
+  if(id === 'blush'){
+    // Prominent cheek blush
+    _drawBlush(ctx, fx + fw*0.12, fy + fh*0.58, fw*0.17);
+    _drawBlush(ctx, fx + fw*0.88, fy + fh*0.58, fw*0.17);
+    // Small stars on cheeks
+    _drawStar(ctx, fx + fw*0.12, fy + fh*0.44, fw*0.04, '#ffaacc');
+    _drawStar(ctx, fx + fw*0.88, fy + fh*0.44, fw*0.04, '#ffaacc');
+  }
+
+  ctx.restore();
+}
+
+function _drawBlush(ctx, x, y, r){
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, 'rgba(255,140,160,0.6)');
+  g.addColorStop(1, 'rgba(255,140,160,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.ellipse(x, y, r, r*0.6, 0, 0, Math.PI*2); ctx.fill();
+}
+
+function _drawStar(ctx, cx, cy, r, color){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  for(let i=0; i<5; i++){
+    const a1 = (i*2*Math.PI/5) - Math.PI/2;
+    const a2 = a1 + Math.PI/5;
+    if(i===0) ctx.moveTo(cx + r*Math.cos(a1), cy + r*Math.sin(a1));
+    else ctx.lineTo(cx + r*Math.cos(a1), cy + r*Math.sin(a1));
+    ctx.lineTo(cx + r*0.4*Math.cos(a2), cy + r*0.4*Math.sin(a2));
+  }
+  ctx.closePath(); ctx.fill();
+}
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
 const L_COLS={'1x1':1,'1x2':1,'1x4':1,'2x2':2,'2x3':2,'3x3':3};
 const L_TAKE={'1x1':1,'1x2':2,'1x4':4,'2x2':4,'2x3':6,'3x3':9};
 
-let stream=null,facing='environment',filterId='normal';
-let photos=[],capturing=false,layout='1x1',dark=true,mirrored=false,sheetOpen=false,flashEnabled=true;
+let stream=null, facing='environment', filterId='normal';
+let photos=[], capturing=false, layout='1x1', dark=true, mirrored=false;
+let sheetOpen=false, flashEnabled=true;
+let activeOverlay = 'none';
 
-const $=id=>document.getElementById(id);
-const isMob=()=>window.innerWidth<769;
-function mobVideo(){return $('video');}
-function deskVideo(){return $('desk-video');}
-function allVideos(){return [mobVideo(),deskVideo()].filter(Boolean);}
+// PERF: off-screen canvas for Nokia post-process — created once, reused
+let nokiaOffscreen = null;
 
+// AR face detection state
+let faceDetector = null, faceDetectSupported = false;
+let lastFaces = [];      // cached face positions
+let arRafId = null;      // requestAnimationFrame id for AR loop
+let arLastDetect = 0;    // timestamp of last detection call
+const AR_DETECT_INTERVAL = 200; // ms — run face detection at 5fps max (cheap)
+
+const $ = id => document.getElementById(id);
+const isMob = () => window.innerWidth < 769;
+
+// Active video element (only one is visible at a time — PERF key)
+function activeVideo(){ return isMob() ? $('video') : $('desk-video'); }
+function activeARCanvas(){ return isMob() ? $('ar-canvas') : $('desk-ar-canvas'); }
+// PERF: allVideos only needed for stream assignment and filter sync, not for per-frame ops
+function allVideos(){ return [$('video'), $('desk-video')].filter(Boolean); }
+
+// ─────────────────────────────────────────
+// THEME
+// ─────────────────────────────────────────
 function toggleTheme(){
-  dark=!dark;
-  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
-  $('theme-btn').textContent=dark?'☀':'🌙';
+  dark = !dark;
+  document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+  $('theme-btn').textContent = dark ? '☀' : '🌙';
 }
 
+// ─────────────────────────────────────────
+// MIRROR
+// ─────────────────────────────────────────
 function toggleMirror(){
-  mirrored=!mirrored;
-  allVideos().forEach(v=>v.classList.toggle('mirrored',mirrored));
-  $('mirror-btn').classList.toggle('on',mirrored);
-  const mob=$('mob-mirror-btn'); if(mob) mob.classList.toggle('on',mirrored);
-  const dt=$('desk-mirror-toggle'); if(dt) dt.classList.toggle('on',mirrored);
+  mirrored = !mirrored;
+  allVideos().forEach(v => v.classList.toggle('mirrored', mirrored));
+  $('mirror-btn').classList.toggle('on', mirrored);
+  const mob = $('mob-mirror-btn'); if(mob) mob.classList.toggle('on', mirrored);
+  const dt = $('desk-mirror-toggle'); if(dt) dt.classList.toggle('on', mirrored);
 }
 
-async function toggleFlash() {
+// ─────────────────────────────────────────
+// FLASH
+// ─────────────────────────────────────────
+async function toggleFlash(){
   flashEnabled = !flashEnabled;
   const mobBtn = $('mob-flash-btn'); if(mobBtn) mobBtn.classList.toggle('on', flashEnabled);
   const deskTgl = $('desk-flash-toggle'); if(deskTgl) deskTgl.classList.toggle('on', flashEnabled);
-  
-  if(stream) {
+  if(stream){
     const track = stream.getVideoTracks()[0];
-    if(track) {
-      try {
-        const capabilities = track.getCapabilities();
-        if(capabilities.torch) {
-          await track.applyConstraints({
-            advanced: [{ torch: flashEnabled && facing === 'environment' }]
-          });
-        }
-      } catch(e) {
-        console.warn("Hardware torch control restricted or unsupported on this specific device browser combination.", e);
-      }
+    if(track){
+      try{
+        const caps = track.getCapabilities();
+        if(caps.torch) await track.applyConstraints({advanced:[{torch: flashEnabled && facing==='environment'}]});
+      }catch(e){}
     }
   }
 }
 
-function openSheet() {
-  sheetOpen=true;
-  $('roll-sheet').classList.add('open');
-  $('sheet-backdrop').classList.add('show');
-}
-function closeSheet() {
-  sheetOpen=false;
-  $('roll-sheet').classList.remove('open');
-  $('sheet-backdrop').classList.remove('show');
-}
+// ─────────────────────────────────────────
+// SHEET
+// ─────────────────────────────────────────
+function openSheet(){ sheetOpen=true; $('roll-sheet').classList.add('open'); $('sheet-backdrop').classList.add('show'); }
+function closeSheet(){ sheetOpen=false; $('roll-sheet').classList.remove('open'); $('sheet-backdrop').classList.remove('show'); }
 
-function syncTimerUI(val) {
+// ─────────────────────────────────────────
+// TIMER UI
+// ─────────────────────────────────────────
+function syncTimerUI(val){
   const pill = $('mob-timer-pill');
-  if(pill) {
-    pill.textContent = `${val}s`;
-    if(parseInt(val)>0) pill.classList.add('active');
-    else pill.classList.remove('active');
-  }
+  if(pill){ pill.textContent=`${val}s`; pill.classList.toggle('active', parseInt(val)>0); }
 }
 
+// ─────────────────────────────────────────
+// BUILD FILTER CHIPS
+// ─────────────────────────────────────────
 function buildFilters(){
-  const ml=$('mob-filter-list'), dl=$('desk-filter-list');
-  FILTERS.forEach(f=>{
-    const mc=document.createElement('div');
-    mc.className='fchip'+(f.id==='normal'?' active':'');
-    mc.dataset.fid=f.id;
-    mc.onclick=()=>applyFilter(f.id);
-    mc.innerHTML=`<div class="fthumb"><div class="fthumb-inner" style="filter:${f.css==='none'?'none':f.css}"></div></div><div class="fchip-name">${f.name}</div>`;
+  const ml = $('mob-filter-list'), dl = $('desk-filter-list');
+  FILTERS.forEach(f => {
+    const fv = f.css === 'none' ? 'none' : f.css;
+    const mc = document.createElement('div');
+    mc.className = 'fchip' + (f.id==='normal'?' active':'');
+    mc.dataset.fid = f.id; mc.onclick = () => applyFilter(f.id);
+    mc.innerHTML = `<div class="fthumb"><div class="fthumb-inner" style="filter:${fv}"></div></div><div class="fchip-name">${f.name}</div>`;
     ml.appendChild(mc);
-
-    const dc=document.createElement('div');
-    dc.className='desk-fchip'+(f.id==='normal'?' active':'');
-    dc.dataset.fid=f.id;
-    dc.onclick=()=>applyFilter(f.id);
-    dc.innerHTML=`<div class="desk-fthumb"><div class="desk-fthumb-inner" style="filter:${f.css==='none'?'none':f.css}"></div></div><div class="desk-fchip-name">${f.name}</div>`;
+    const dc = document.createElement('div');
+    dc.className = 'desk-fchip' + (f.id==='normal'?' active':'');
+    dc.dataset.fid = f.id; dc.onclick = () => applyFilter(f.id);
+    dc.innerHTML = `<div class="desk-fthumb"><div class="desk-fthumb-inner" style="filter:${fv}"></div></div><div class="desk-fchip-name">${f.name}</div>`;
     dl.appendChild(dc);
   });
 }
 
 function applyFilter(id){
-  filterId=id;
-  const f=FILTERS.find(x=>x.id===id);
-  const fv=f.css==='none'?'':f.css;
-  allVideos().forEach(v=>v.style.filter=fv);
-  ['vf-tag','desk-vf-tag'].forEach(tid=>{const el=$(tid);if(el)el.textContent=f.name;});
-  document.querySelectorAll('.fchip').forEach(c=>c.classList.toggle('active',c.dataset.fid===id));
-  document.querySelectorAll('.desk-fchip').forEach(c=>c.classList.toggle('active',c.dataset.fid===id));
+  filterId = id;
+  const f = FILTERS.find(x => x.id === id);
+  const fv = f.css === 'none' ? '' : f.css;
+  // PERF: only apply to the currently active video, not both
+  activeVideo().style.filter = fv;
+  // Keep both in sync for when layout switches
+  allVideos().forEach(v => v.style.filter = fv);
+  ['vf-tag','desk-vf-tag'].forEach(tid => { const el=$(tid); if(el) el.textContent=f.name; });
+  document.querySelectorAll('.fchip').forEach(c => c.classList.toggle('active', c.dataset.fid===id));
+  document.querySelectorAll('.desk-fchip').forEach(c => c.classList.toggle('active', c.dataset.fid===id));
 }
 
-async function startCamera(){
-  try{await reqCam(facing);}catch(e){}
-}
-
-async function reqCam(fc){
-  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
-  const c=fc==='any'
-    ?{video:{width:{ideal:4096},height:{ideal:2160}},audio:false}
-    :{video:{facingMode:fc,width:{ideal:4096},height:{ideal:2160}},audio:false};
-  stream=await navigator.mediaDevices.getUserMedia(c);
-  allVideos().forEach(v=>{v.srcObject=stream;});
-  ['no-cam','desk-no-cam'].forEach(id=>{const el=$(id);if(el)el.style.display='none';});
-  
-  ['mob-capture-btn','desk-overlay-snap-btn'].forEach(id=>{
-    const el=$(id); if(el) el.disabled=false;
+// ─────────────────────────────────────────
+// BUILD AR PICKER
+// ─────────────────────────────────────────
+function buildARPicker(){
+  const mobRow = $('mob-ar-picker');
+  const deskList = $('desk-ar-list');
+  AR_OVERLAYS.forEach(ov => {
+    // Mobile: icon button column
+    const mb = document.createElement('button');
+    mb.className = 'ar-btn' + (ov.id==='none'?' active':'');
+    mb.dataset.aid = ov.id; mb.title = ov.name;
+    mb.textContent = ov.emoji;
+    mb.onclick = () => selectOverlay(ov.id);
+    mobRow.appendChild(mb);
+    // Desktop: text button list
+    const db = document.createElement('button');
+    db.className = 'desk-ar-btn' + (ov.id==='none'?' active':'');
+    db.dataset.aid = ov.id;
+    db.textContent = ov.emoji + ' ' + ov.name;
+    db.onclick = () => selectOverlay(ov.id);
+    deskList.appendChild(db);
   });
-  
-  const da=$('desk-allow-btn');if(da)da.style.display='none';
-  $('status-text').textContent='live';
-  const f=FILTERS.find(x=>x.id===filterId);
-  allVideos().forEach(v=>v.style.filter=f.css==='none'?'':f.css);
-  if(mirrored)allVideos().forEach(v=>v.classList.add('mirrored'));
-  
-  if(flashEnabled && fc === 'environment') {
-    setTimeout(async () => {
-      try {
-        const track = stream.getVideoTracks()[0];
-        if(track && track.getCapabilities().torch) {
-          await track.applyConstraints({ advanced: [{ torch: true }] });
-        }
-      } catch(e){}
-    }, 500);
+}
+
+function selectOverlay(id){
+  activeOverlay = id;
+  document.querySelectorAll('.ar-btn').forEach(b => b.classList.toggle('active', b.dataset.aid===id));
+  document.querySelectorAll('.desk-ar-btn').forEach(b => b.classList.toggle('active', b.dataset.aid===id));
+  // Reset cached faces when switching
+  lastFaces = [];
+}
+
+// ─────────────────────────────────────────
+// FACE DETECTION — FaceDetector API + fallback
+// ─────────────────────────────────────────
+async function initFaceDetector(){
+  if('FaceDetector' in window){
+    try{
+      faceDetector = new FaceDetector({fastMode: true, maxDetectedFaces: 2});
+      faceDetectSupported = true;
+    }catch(e){ faceDetectSupported = false; }
   }
 }
 
-async function switchCam(fc){
-  facing=fc;
-  const mobMap={environment:'mob-btn-rear',user:'mob-btn-front',any:'mob-btn-any'};
-  const deskMap={environment:'desk-btn-rear',user:'desk-btn-front',any:'desk-btn-any'};
-  Object.values(mobMap).concat(Object.values(deskMap)).forEach(id=>{const el=$(id);if(el)el.classList.remove('active');});
-  [mobMap[fc],deskMap[fc]].forEach(id=>{const el=$(id);if(el)el.classList.add('active');});
-  if(stream)try{await reqCam(fc);}catch(e){}
+// PERF: detect at max 5fps, cache result, non-blocking
+async function detectFaces(videoEl){
+  if(!faceDetectSupported || !faceDetector) return;
+  const now = performance.now();
+  if(now - arLastDetect < AR_DETECT_INTERVAL) return;
+  arLastDetect = now;
+  try{
+    const faces = await faceDetector.detect(videoEl);
+    // Convert DOMRectReadOnly to plain objects
+    const vW = videoEl.videoWidth || videoEl.offsetWidth;
+    const vH = videoEl.videoHeight || videoEl.offsetHeight;
+    const cW = videoEl.offsetWidth;
+    const cH = videoEl.offsetHeight;
+    const scaleX = cW / vW;
+    const scaleY = cH / vH;
+    lastFaces = faces.map(f => ({
+      x: f.boundingBox.x * scaleX,
+      y: f.boundingBox.y * scaleY,
+      width:  f.boundingBox.width  * scaleX,
+      height: f.boundingBox.height * scaleY,
+    }));
+  }catch(e){}
 }
 
+// ─────────────────────────────────────────
+// AR RENDER LOOP — rAF, draws overlay on ar-canvas
+// ─────────────────────────────────────────
+function startARLoop(){
+  if(arRafId) cancelAnimationFrame(arRafId);
+  function loop(){
+    arRafId = requestAnimationFrame(loop);
+    if(activeOverlay === 'none') {
+      // Clear if overlay was just turned off
+      const ac = activeARCanvas();
+      if(ac){ const ctx = ac.getContext('2d'); ctx.clearRect(0,0,ac.width,ac.height); }
+      return;
+    }
+    const vid = activeVideo();
+    const ac  = activeARCanvas();
+    if(!vid || !ac || !stream) return;
+
+    // Sync canvas size to video element display size
+    if(ac.width !== vid.offsetWidth || ac.height !== vid.offsetHeight){
+      ac.width  = vid.offsetWidth;
+      ac.height = vid.offsetHeight;
+    }
+
+    // Kick off face detection (non-blocking, result cached)
+    detectFaces(vid);
+
+    const ctx = ac.getContext('2d');
+    ctx.clearRect(0, 0, ac.width, ac.height);
+
+    if(lastFaces.length > 0){
+      lastFaces.forEach(face => drawOverlay(activeOverlay, ctx, face, ac.width, ac.height));
+    } else {
+      // Fallback: draw centered
+      drawOverlay(activeOverlay, ctx, null, ac.width, ac.height);
+    }
+  }
+  loop();
+}
+
+function stopARLoop(){
+  if(arRafId){ cancelAnimationFrame(arRafId); arRafId=null; }
+}
+
+// ─────────────────────────────────────────
+// CAMERA
+// ─────────────────────────────────────────
+async function startCamera(){
+  try{ await reqCam(facing); }catch(e){}
+}
+
+async function reqCam(fc){
+  if(stream){ stream.getTracks().forEach(t => t.stop()); stream=null; }
+  const c = fc==='any'
+    ? {video:{width:{ideal:4096},height:{ideal:2160}}, audio:false}
+    : {video:{facingMode:fc, width:{ideal:4096},height:{ideal:2160}}, audio:false};
+  stream = await navigator.mediaDevices.getUserMedia(c);
+
+  // PERF: assign stream to BOTH video elements so switching layouts is instant
+  allVideos().forEach(v => { v.srcObject = stream; });
+
+  ['no-cam','desk-no-cam'].forEach(id => { const el=$(id); if(el) el.style.display='none'; });
+  ['mob-capture-btn','desk-overlay-snap-btn'].forEach(id => { const el=$(id); if(el) el.disabled=false; });
+  const da = $('desk-allow-btn'); if(da) da.style.display='none';
+  $('status-text').textContent = 'live';
+
+  const f = FILTERS.find(x => x.id === filterId);
+  const fv = f.css==='none' ? '' : f.css;
+  allVideos().forEach(v => { v.style.filter = fv; if(mirrored) v.classList.add('mirrored'); else v.classList.remove('mirrored'); });
+
+  if(flashEnabled && fc==='environment'){
+    setTimeout(async () => {
+      try{
+        const track = stream.getVideoTracks()[0];
+        if(track && track.getCapabilities().torch)
+          await track.applyConstraints({advanced:[{torch:true}]});
+      }catch(e){}
+    }, 500);
+  }
+
+  startARLoop();
+}
+
+async function switchCam(fc){
+  facing = fc;
+  const mobMap = {environment:'mob-btn-rear', user:'mob-btn-front', any:'mob-btn-any'};
+  const deskMap = {environment:'desk-btn-rear', user:'desk-btn-front', any:'desk-btn-any'};
+  [...Object.values(mobMap), ...Object.values(deskMap)].forEach(id => { const el=$(id); if(el) el.classList.remove('active'); });
+  [mobMap[fc], deskMap[fc]].forEach(id => { const el=$(id); if(el) el.classList.add('active'); });
+  if(stream) try{ await reqCam(fc); }catch(e){}
+}
+
+// ─────────────────────────────────────────
+// CAPTURE
+// ─────────────────────────────────────────
 async function capturePhoto(){
-  if(capturing)return;
-  capturing=true;
-  
-  const targetButtons = ['mob-capture-btn','desk-overlay-snap-btn'];
-  targetButtons.forEach(id=>{const el=$(id); if(el)el.disabled=true;});
-  
-  const timerVal=parseInt((isMob()?$('mob-timer'):$('desk-timer')).value);
-  if(timerVal>0)await runCd(timerVal);
+  if(capturing) return;
+  capturing = true;
+  ['mob-capture-btn','desk-overlay-snap-btn'].forEach(id => { const el=$(id); if(el) el.disabled=true; });
+  const timerVal = parseInt((isMob() ? $('mob-timer') : $('desk-timer')).value);
+  if(timerVal > 0) await runCd(timerVal);
   doCapture();
-  capturing=false;
-  
-  targetButtons.forEach(id=>{const el=$(id); if(el)el.disabled=false;});
+  capturing = false;
+  ['mob-capture-btn','desk-overlay-snap-btn'].forEach(id => { const el=$(id); if(el) el.disabled=false; });
 }
 
 function runCd(s){
-  return new Promise(res=>{
-    let n=s;
-    const els=['cdnum','desk-cdnum'].map($).filter(Boolean);
-    els.forEach(el=>{el.textContent=n;el.classList.add('show');});
-    const t=setInterval(()=>{
+  return new Promise(res => {
+    let n = s;
+    const els = ['cdnum','desk-cdnum'].map($).filter(Boolean);
+    els.forEach(el => { el.textContent=n; el.classList.add('show'); });
+    const t = setInterval(() => {
       n--;
-      if(n<=0){clearInterval(t);els.forEach(el=>el.classList.remove('show'));res();}
-      else els.forEach(el=>el.textContent=n);
-    },1000);
+      if(n <= 0){ clearInterval(t); els.forEach(el => el.classList.remove('show')); res(); }
+      else els.forEach(el => el.textContent=n);
+    }, 1000);
   });
 }
 
-function fireFlash() {
+function fireFlash(){
   if(!flashEnabled) return;
-  const flashElements = ['flash', 'desk-flash'].map($).filter(Boolean);
-  flashElements.forEach(el => { 
+  ['flash','desk-flash'].map($).filter(Boolean).forEach(el => {
     el.classList.remove('fade-out');
-    el.classList.add('on'); 
+    el.classList.add('on');
     void el.offsetWidth;
-    setTimeout(() => {
-      el.classList.remove('on');
-      el.classList.add('fade-out');
-    }, 40);
+    setTimeout(() => { el.classList.remove('on'); el.classList.add('fade-out'); }, 40);
   });
+}
+
+// PERF: Nokia post-process — downsample then upscale on offscreen canvas
+function applyNokiaPostProcess(ctx, outputSize){
+  // 1. Read current pixels
+  const imageData = ctx.getImageData(0, 0, outputSize, outputSize);
+  // 2. Create small offscreen canvas (simulate low-res sensor: ~120px effective)
+  const lowRes = 120;
+  if(!nokiaOffscreen){
+    nokiaOffscreen = document.createElement('canvas');
+  }
+  nokiaOffscreen.width = lowRes;
+  nokiaOffscreen.height = lowRes;
+  const octx = nokiaOffscreen.getContext('2d');
+  // Draw at low res — browser handles the downsample
+  octx.imageSmoothingEnabled = false;
+  octx.drawImage(ctx.canvas, 0, 0, lowRes, lowRes);
+  // 3. Upscale back with pixelation (no smoothing = blocky pixels)
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(nokiaOffscreen, 0, 0, outputSize, outputSize);
+  ctx.imageSmoothingEnabled = true;
+
+  // 4. Mild color grading: slight warm wash + reduce contrast for "old phone" look
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = 'rgba(255,240,200,0.18)';
+  ctx.fillRect(0, 0, outputSize, outputSize);
+  ctx.globalCompositeOperation = 'source-over';
+
+  // 5. Slight compression artifact simulation: darken edges
+  const vignette = ctx.createRadialGradient(outputSize/2, outputSize/2, outputSize*0.3, outputSize/2, outputSize/2, outputSize*0.7);
+  vignette.addColorStop(0, 'rgba(0,0,0,0)');
+  vignette.addColorStop(1, 'rgba(0,0,0,0.22)');
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, outputSize, outputSize);
 }
 
 function doCapture(){
   fireFlash();
-  const vid=isMob()?mobVideo():deskVideo();
-  const cnv=isMob()?$('canvas'):$('desk-canvas');
-  
+  const vid = activeVideo();
+  // PERF: use mobile canvas on mobile, desktop canvas on desktop
+  const cnv = isMob() ? $('canvas') : $('desk-canvas');
   const outputSize = 1080;
-  cnv.width = outputSize;
-  cnv.height = outputSize;
-  
-  const ctx=cnv.getContext('2d');
-  const f=FILTERS.find(x=>x.id===filterId);
-  ctx.filter=f.css==='none'?'none':f.css;
-  
+  cnv.width = outputSize; cnv.height = outputSize;
+  const ctx = cnv.getContext('2d');
+
+  const f = FILTERS.find(x => x.id === filterId);
+  // PERF: ctx.filter is CPU-bound on Android for complex filters.
+  // For Nokia we skip ctx.filter and do it entirely in canvas ops instead.
+  if(!f.nokia){
+    ctx.filter = f.css === 'none' ? 'none' : f.css;
+  }
+
   const vW = vid.videoWidth || 1280;
   const vH = vid.videoHeight || 720;
   const minDim = Math.min(vW, vH);
@@ -889,45 +1213,57 @@ function doCapture(){
   const sy = (vH - minDim) / 2;
 
   if(mirrored){
-    ctx.save();
-    ctx.translate(outputSize, 0);
-    ctx.scale(-1, 1);
+    ctx.save(); ctx.translate(outputSize,0); ctx.scale(-1,1);
     ctx.drawImage(vid, sx, sy, minDim, minDim, 0, 0, outputSize, outputSize);
     ctx.restore();
   } else {
     ctx.drawImage(vid, sx, sy, minDim, minDim, 0, 0, outputSize, outputSize);
   }
-  ctx.filter='none';
+  ctx.filter = 'none';
 
-  // CHANGE 1: White mist/haze overlay block removed entirely.
-  // The captured image is now clean — no artificial glow is baked in.
-  
-  const photo={
-    id:Date.now(),data:cnv.toDataURL('image/jpeg',0.94),
-    w:outputSize,h:outputSize,ar:1,filter:f.name + (flashEnabled?' + FLASH':''),
-    ts:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
-    tilt:(Math.random()*4-2).toFixed(2), 
+  // Nokia post-process (applied after drawing)
+  if(f.nokia) applyNokiaPostProcess(ctx, outputSize);
+
+  // Composite AR overlay onto the captured frame
+  if(activeOverlay !== 'none'){
+    // Get AR canvas and draw it on top, scaled to outputSize
+    const ac = activeARCanvas();
+    if(ac && ac.width > 0 && ac.height > 0){
+      ctx.save();
+      ctx.drawImage(ac, 0, 0, outputSize, outputSize);
+      ctx.restore();
+    }
+  }
+
+  const photo = {
+    id: Date.now(),
+    data: cnv.toDataURL('image/jpeg', 0.94),
+    w: outputSize, h: outputSize, ar: 1,
+    filter: f.name + (flashEnabled?' + FLASH':'') + (activeOverlay!=='none'?' + '+activeOverlay.toUpperCase():''),
+    ts: new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    tilt: (Math.random()*4-2).toFixed(2),
   };
   photos.unshift(photo);
-  updateCounters();rebuildGrids();updateFoot();
+  updateCounters(); rebuildGrids(); updateFoot();
 }
 
+// ─────────────────────────────────────────
+// GRID / COUNTERS
+// ─────────────────────────────────────────
 function updateCounters(){
-  const h=`${photos.length} <small>shots</small>`;
-  ['mob-shot-ctr','desk-shot-ctr'].forEach(id=>{const el=$(id);if(el)el.innerHTML=h;});
+  const h = `${photos.length} <small>shots</small>`;
+  ['mob-shot-ctr','desk-shot-ctr'].forEach(id => { const el=$(id); if(el) el.innerHTML=h; });
 }
 
 function makePolaroidCard(photo, index){
-  const div=document.createElement('div');
-  div.className='pol';
-  div.id='ph-'+photo.id;
+  const div = document.createElement('div');
+  div.className = 'pol'; div.id = 'ph-'+photo.id;
   div.style.setProperty('--tilt', `${photo.tilt}deg`);
-  
-  div.innerHTML=`
+  div.innerHTML = `
     <img class="pol-img" src="${photo.data}" style="aspect-ratio:1/1" alt="">
     <div class="pol-foot">
       <div class="p-meta">
-        <div style="color:var(--amber); font-weight:500;">INDEX FRAME #${String(index).padStart(2, '0')}</div>
+        <div style="color:var(--amber);font-weight:500;">INDEX FRAME #${String(index).padStart(2,'0')}</div>
         <div>EMU: ${photo.filter} // ${photo.ts}</div>
       </div>
       <div class="p-acts">
@@ -939,183 +1275,185 @@ function makePolaroidCard(photo, index){
 }
 
 function rebuildGrids(){
-  const mg=$('mob-pol-grid'), dg=$('desk-pol-grid'), mt=$('mob-filmstrip-thumbs'), gp=$('mob-gallery-preview');
-  
-  mt.innerHTML='';
-  if(!photos.length) {
-    mt.innerHTML='<div class="fs-empty">no assets captured in active roll pool</div>';
-    if(gp) gp.innerHTML='<div class="gal-icon-fallback">⊞</div>';
+  const mg = $('mob-pol-grid'), dg = $('desk-pol-grid');
+  const mt = $('mob-filmstrip-thumbs'), gp = $('mob-gallery-preview');
+
+  // Update filmstrip
+  mt.innerHTML = '';
+  if(!photos.length){
+    mt.innerHTML = '<div class="fs-empty">no assets captured in active roll pool</div>';
+    if(gp) gp.innerHTML = '<div class="gal-icon-fallback">⊞</div>';
   } else {
-    photos.slice(0,6).forEach(p=>{
-      const th=document.createElement('div'); th.className='fs-thumb';
-      th.onclick=()=>openSheet();
-      th.innerHTML=`<img src="${p.data}">`; mt.appendChild(th);
+    photos.slice(0,6).forEach(p => {
+      const th = document.createElement('div'); th.className='fs-thumb';
+      th.onclick = openSheet;
+      // PERF: use a small thumbnail src instead of full base64 repeated
+      th.innerHTML = `<img src="${p.data}">`;
+      mt.appendChild(th);
     });
-    if(gp) gp.innerHTML=`<img src="${photos[0].data}">`;
+    if(gp) gp.innerHTML = `<img src="${photos[0].data}">`;
   }
 
+  // PERF: only rebuild the visible grid; other grid built lazily when sheet opens
   [mg, dg].forEach((g, idx) => {
-    g.innerHTML='';
-    const fallbackClass = idx===0 ? 'empty-st':'desk-empty';
-    if(!photos.length) {
-      const e=document.createElement('div'); e.className=fallbackClass;
-      e.innerHTML='<div class="ei">🎞️</div><p>session asset pool empty<br>awaiting digital capture input</p>';
+    if(!g) return;
+    g.innerHTML = '';
+    const fallbackClass = idx===0 ? 'empty-st' : 'desk-empty';
+    if(!photos.length){
+      const e = document.createElement('div'); e.className=fallbackClass;
+      e.innerHTML = '<div class="ei">🎞️</div><p>session asset pool empty<br>awaiting digital capture input</p>';
       g.appendChild(e); return;
     }
-    const cols=L_COLS[layout]||1;
-    let totalItems = photos.length;
-    if(cols===1){
-      photos.forEach((p, idx)=>{ g.appendChild(makePolaroidCard(p, totalItems - idx)); });
+    const cols = L_COLS[layout] || 1;
+    const total = photos.length;
+    if(cols === 1){
+      photos.forEach((p, i) => g.appendChild(makePolaroidCard(p, total-i)));
       return;
     }
     for(let i=0; i<photos.length; i+=cols){
-      const row=document.createElement('div'); row.className=`prow c${cols}`;
-      for(let j=0;j<cols;j++) {
-        const targetIndex = i + j;
-        if(photos[targetIndex]) row.appendChild(makePolaroidCard(photos[targetIndex], totalItems - targetIndex));
+      const row = document.createElement('div'); row.className=`prow c${cols}`;
+      for(let j=0; j<cols; j++){
+        const ti = i+j;
+        if(photos[ti]) row.appendChild(makePolaroidCard(photos[ti], total-ti));
       }
       g.appendChild(row);
     }
   });
 }
 
-function setLayout(mode,event){
-  if(event)event.stopPropagation();
-  layout=mode;
-  document.querySelectorAll('.lp-btn').forEach(b=>b.classList.toggle('active',b.dataset.l===mode));
-  document.querySelectorAll('.desk-lp-btn').forEach(b=>b.classList.toggle('active',b.dataset.l===mode));
+function setLayout(mode, event){
+  if(event) event.stopPropagation();
+  layout = mode;
+  document.querySelectorAll('.lp-btn').forEach(b => b.classList.toggle('active', b.dataset.l===mode));
+  document.querySelectorAll('.desk-lp-btn').forEach(b => b.classList.toggle('active', b.dataset.l===mode));
   rebuildGrids();
 }
 
+// ─────────────────────────────────────────
+// DOWNLOAD
+// ─────────────────────────────────────────
 function framePolaroid(photo){
-  return new Promise(res=>{
-    const scale=Math.min(800/photo.w,600/photo.h,1);
-    const imgW=Math.round(photo.w*scale),imgH=Math.round(photo.h*scale);
-    const padS=24,padT=24,padB=88;
-    const fc=document.createElement('canvas');
-    fc.width=imgW+padS*2;fc.height=imgH+padT+padB;
-    const ctx=fc.getContext('2d');
-    ctx.fillStyle='#fdfaf4';ctx.fillRect(0,0,fc.width,fc.height);
+  return new Promise(res => {
+    const scale = Math.min(800/photo.w, 600/photo.h, 1);
+    const imgW = Math.round(photo.w*scale), imgH = Math.round(photo.h*scale);
+    const padS=24, padT=24, padB=88;
+    const fc = document.createElement('canvas');
+    fc.width = imgW+padS*2; fc.height = imgH+padT+padB;
+    const ctx = fc.getContext('2d');
+    ctx.fillStyle = '#fdfaf4'; ctx.fillRect(0,0,fc.width,fc.height);
     const img = new Image();
-    img.onload=()=>{
-      ctx.drawImage(img,padS,padT,imgW,imgH);
-      ctx.strokeStyle='#e0d8cc';ctx.lineWidth=1;ctx.strokeRect(padS,padT,imgW,imgH);
-      ctx.fillStyle='#8a7060';ctx.font='500 12px "DM Mono",monospace';ctx.textAlign='left';
-      ctx.fillText(photo.filter,padS+4,fc.height-56);
-      ctx.fillText(photo.ts,padS+4,fc.height-36);
-      ctx.fillStyle='#c8a070';ctx.font='italic 10px Georgia,serif';ctx.textAlign='right';
-      ctx.fillText('darkroom ✦ @hustino.28',fc.width-padS,fc.height-16);
-      res(fc.toDataURL('image/jpeg',0.94));
+    img.onload = () => {
+      ctx.drawImage(img, padS, padT, imgW, imgH);
+      ctx.strokeStyle='#e0d8cc'; ctx.lineWidth=1; ctx.strokeRect(padS,padT,imgW,imgH);
+      ctx.fillStyle='#8a7060'; ctx.font='500 12px "DM Mono",monospace'; ctx.textAlign='left';
+      ctx.fillText(photo.filter, padS+4, fc.height-56);
+      ctx.fillText(photo.ts, padS+4, fc.height-36);
+      ctx.fillStyle='#c8a070'; ctx.font='italic 10px Georgia,serif'; ctx.textAlign='right';
+      ctx.fillText('darkroom ✦ @hustino.28', fc.width-padS, fc.height-16);
+      res(fc.toDataURL('image/jpeg', 0.94));
     };
-    img.src=photo.data;
+    img.src = photo.data;
   });
 }
 
-function drawCover(ctx,img,x,y,w,h){
-  const sa=img.naturalWidth/img.naturalHeight,da=w/h;
+function drawCover(ctx, img, x, y, w, h){
+  const sa=img.naturalWidth/img.naturalHeight, da=w/h;
   let sx=0,sy=0,sw=img.naturalWidth,sh=img.naturalHeight;
-  if(sa>da){sw=Math.round(sh*da);sx=Math.round((img.naturalWidth-sw)/2);}
-  else{sh=Math.round(sw/da);sy=Math.round((img.naturalHeight-sh)/2);}
-  ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);
+  if(sa>da){ sw=Math.round(sh*da); sx=Math.round((img.naturalWidth-sw)/2); }
+  else { sh=Math.round(sw/da); sy=Math.round((img.naturalHeight-sh)/2); }
+  ctx.drawImage(img, sx,sy,sw,sh, x,y,w,h);
 }
 
 async function downloadOne(id){
-  const p=photos.find(x=>x.id===id);if(!p)return;
-  const url=await framePolaroid(p);
-  const a=document.createElement('a');a.href=url;a.download=`darkroom_${p.id}.jpg`;a.click();
+  const p = photos.find(x => x.id===id); if(!p) return;
+  const url = await framePolaroid(p);
+  const a = document.createElement('a'); a.href=url; a.download=`darkroom_${p.id}.jpg`; a.click();
 }
 
 async function downloadAll(){
-  if(!photos.length)return;
-  if(photos.length===1){downloadOne(photos[0].id);return;}
-  const cols=L_COLS[layout]||1;
-  const take=Math.min(photos.length,L_TAKE[layout]||photos.length);
-  const sub=photos.slice(0,take);
-  const rows=Math.ceil(sub.length/cols);
+  if(!photos.length) return;
+  if(photos.length===1){ downloadOne(photos[0].id); return; }
+  const cols = L_COLS[layout]||1;
+  const take = Math.min(photos.length, L_TAKE[layout]||photos.length);
+  const sub = photos.slice(0, take);
+  const rows = Math.ceil(sub.length/cols);
   const cW=400,cH=400,padS=40,padT=24,capH=56,gap=20,hdrH=80,ftrH=40;
   const sW=cols*cW+(cols-1)*gap+padS*2;
   const sH=rows*(cH+capH)+(rows-1)*gap+padS*2+hdrH+ftrH;
-  const sheet=document.createElement('canvas');sheet.width=sW;sheet.height=sH;
-  const ctx=sheet.getContext('2d');
-  
-  // CHANGE 2: Theme-aware strip background and colors
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  
+  const sheet = document.createElement('canvas'); sheet.width=sW; sheet.height=sH;
+  const ctx = sheet.getContext('2d');
+  const isDark = document.documentElement.getAttribute('data-theme')==='dark';
+
   if(isDark){
-    // Dark mode: dark background, existing dark design
-    ctx.fillStyle='#11110f';ctx.fillRect(0,0,sW,sH);
-    ctx.fillStyle='#e0981c';ctx.font='italic bold 26px Georgia,serif';ctx.textAlign='center';
-    ctx.fillText('darkroom — photobooth',sW/2,padT+30);
-    ctx.font='11px monospace';ctx.fillStyle='#7a7060';
-    ctx.fillText(`${layout} compilation  ✦  ${new Date().toLocaleDateString()}`,sW/2,padT+50);
+    ctx.fillStyle='#11110f'; ctx.fillRect(0,0,sW,sH);
+    ctx.fillStyle='#e0981c'; ctx.font='italic bold 26px Georgia,serif'; ctx.textAlign='center';
+    ctx.fillText('darkroom — photobooth', sW/2, padT+30);
+    ctx.font='11px monospace'; ctx.fillStyle='#7a7060';
+    ctx.fillText(`${layout} compilation  ✦  ${new Date().toLocaleDateString()}`, sW/2, padT+50);
   } else {
-    // Light mode: warm cream/ivory background matching the light theme
-    ctx.fillStyle='#f5f1eb';ctx.fillRect(0,0,sW,sH);
-    ctx.fillStyle='#c07810';ctx.font='italic bold 26px Georgia,serif';ctx.textAlign='center';
-    ctx.fillText('darkroom — photobooth',sW/2,padT+30);
-    ctx.font='11px monospace';ctx.fillStyle='#a09488';
-    ctx.fillText(`${layout} compilation  ✦  ${new Date().toLocaleDateString()}`,sW/2,padT+50);
+    ctx.fillStyle='#f5f1eb'; ctx.fillRect(0,0,sW,sH);
+    ctx.fillStyle='#c07810'; ctx.font='italic bold 26px Georgia,serif'; ctx.textAlign='center';
+    ctx.fillText('darkroom — photobooth', sW/2, padT+30);
+    ctx.font='11px monospace'; ctx.fillStyle='#a09488';
+    ctx.fillText(`${layout} compilation  ✦  ${new Date().toLocaleDateString()}`, sW/2, padT+50);
   }
-  
-  const loadImg=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});
-  let totalPhotos = photos.length;
+
+  const loadImg = src => new Promise(r => { const i=new Image(); i.onload=()=>r(i); i.src=src; });
+  const total = photos.length;
 
   for(let i=0; i<sub.length; i++){
-    const col=i%cols,row=Math.floor(i/cols);
-    const x=padS+col*(cW+gap),y=padS+hdrH+row*(cH+capH+gap);
-    
+    const col=i%cols, row=Math.floor(i/cols);
+    const x=padS+col*(cW+gap), y=padS+hdrH+row*(cH+capH+gap);
     if(isDark){
-      // Dark: black cell border
-      ctx.fillStyle='#000000';ctx.fillRect(x-4,y-4,cW+8,cH+capH+8);
+      ctx.fillStyle='#000000'; ctx.fillRect(x-4,y-4,cW+8,cH+capH+8);
     } else {
-      // Light: warm paper polaroid backing
-      ctx.fillStyle='#fffef9';ctx.fillRect(x-4,y-4,cW+8,cH+capH+8);
-      // Light inner border
-      ctx.strokeStyle='#ede5d8';ctx.lineWidth=1;ctx.strokeRect(x-4,y-4,cW+8,cH+capH+8);
+      ctx.fillStyle='#fffef9'; ctx.fillRect(x-4,y-4,cW+8,cH+capH+8);
+      ctx.strokeStyle='#ede5d8'; ctx.lineWidth=1; ctx.strokeRect(x-4,y-4,cW+8,cH+capH+8);
     }
-    
-    const img=await loadImg(sub[i].data);
-    ctx.save();ctx.beginPath();ctx.rect(x,y,cW,cH);ctx.clip();
-    drawCover(ctx,img,x,y,cW,cH);ctx.restore();
-    
+    const img = await loadImg(sub[i].data);
+    ctx.save(); ctx.beginPath(); ctx.rect(x,y,cW,cH); ctx.clip();
+    drawCover(ctx, img, x, y, cW, cH); ctx.restore();
     if(isDark){
-      ctx.fillStyle='#e0981c';ctx.font='500 11px monospace';ctx.textAlign='left';
-      ctx.fillText(`FRAME NUM-${String(totalPhotos - i).padStart(2,'0')}`, x+4, y+cH+20);
-      ctx.fillStyle='#8a7060';ctx.font='10px monospace';
-      ctx.fillText(`${sub[i].filter} // ${sub[i].ts}`,x+4,y+cH+38);
+      ctx.fillStyle='#e0981c'; ctx.font='500 11px monospace'; ctx.textAlign='left';
+      ctx.fillText(`FRAME NUM-${String(total-i).padStart(2,'0')}`, x+4, y+cH+20);
+      ctx.fillStyle='#8a7060'; ctx.font='10px monospace';
+      ctx.fillText(`${sub[i].filter} // ${sub[i].ts}`, x+4, y+cH+38);
     } else {
-      ctx.fillStyle='#c07810';ctx.font='500 11px monospace';ctx.textAlign='left';
-      ctx.fillText(`FRAME NUM-${String(totalPhotos - i).padStart(2,'0')}`, x+4, y+cH+20);
-      ctx.fillStyle='#8a7a68';ctx.font='10px monospace';
-      ctx.fillText(`${sub[i].filter} // ${sub[i].ts}`,x+4,y+cH+38);
+      ctx.fillStyle='#c07810'; ctx.font='500 11px monospace'; ctx.textAlign='left';
+      ctx.fillText(`FRAME NUM-${String(total-i).padStart(2,'0')}`, x+4, y+cH+20);
+      ctx.fillStyle='#8a7a68'; ctx.font='10px monospace';
+      ctx.fillText(`${sub[i].filter} // ${sub[i].ts}`, x+4, y+cH+38);
     }
   }
-  
   if(isDark){
-    ctx.fillStyle='#4a4540';ctx.font='italic 10px Georgia,serif';ctx.textAlign='center';
-    ctx.fillText('made by @hustino.28  ✦  matrix print core system',sW/2,sH-16);
+    ctx.fillStyle='#4a4540'; ctx.font='italic 10px Georgia,serif'; ctx.textAlign='center';
+    ctx.fillText('made by @hustino.28  ✦  matrix print core system', sW/2, sH-16);
   } else {
-    ctx.fillStyle='#a09488';ctx.font='italic 10px Georgia,serif';ctx.textAlign='center';
-    ctx.fillText('made by @hustino.28  ✦  darkroom photobooth',sW/2,sH-16);
+    ctx.fillStyle='#a09488'; ctx.font='italic 10px Georgia,serif'; ctx.textAlign='center';
+    ctx.fillText('made by @hustino.28  ✦  darkroom photobooth', sW/2, sH-16);
   }
-  
-  const a=document.createElement('a');
-  a.href=sheet.toDataURL('image/jpeg',0.94);
-  a.download=`darkroom_strip_${Date.now()}.jpg`;a.click();
+  const a = document.createElement('a');
+  a.href = sheet.toDataURL('image/jpeg', 0.94);
+  a.download = `darkroom_strip_${Date.now()}.jpg`; a.click();
 }
 
-function deleteOne(id){photos=photos.filter(p=>p.id!==id);updateCounters();rebuildGrids();updateFoot();}
-function clearAll(){if(!photos.length)return;photos=[];updateCounters();rebuildGrids();updateFoot();closeSheet();}
+function deleteOne(id){ photos=photos.filter(p=>p.id!==id); updateCounters(); rebuildGrids(); updateFoot(); }
+function clearAll(){ if(!photos.length) return; photos=[]; updateCounters(); rebuildGrids(); updateFoot(); closeSheet(); }
 
 function updateFoot(){
-  ['mob-clear-btn','desk-clear-btn'].forEach(id=>{const el=$(id);if(el)el.disabled=!photos.length;});
-  ['mob-strip-btn','desk-dl-btn'].forEach(id=>{const el=$(id);if(el){el.disabled=!photos.length;el.textContent=photos.length>1?'compile strip':'download snapshot';}});
+  ['mob-clear-btn','desk-clear-btn'].forEach(id => { const el=$(id); if(el) el.disabled=!photos.length; });
+  ['mob-strip-btn','desk-dl-btn'].forEach(id => { if(!$(id)) return; $(id).disabled=!photos.length; $(id).textContent=photos.length>1?'compile strip':'download snapshot'; });
 }
 
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
 buildFilters();
+buildARPicker();
+initFaceDetector();
 navigator.mediaDevices.enumerateDevices()
-  .then(devs=>{if(devs.some(d=>d.kind==='videoinput'&&d.label))startCamera();})
-  .catch(()=>{});
+  .then(devs => { if(devs.some(d => d.kind==='videoinput' && d.label)) startCamera(); })
+  .catch(() => {});
 </script>
 </body>
 </html>
