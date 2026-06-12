@@ -133,6 +133,11 @@ header{
   will-change:transform;
   transform:translateZ(0);
 }
+/* Mirror the AR overlay canvas in lockstep with the video so overlays
+   drawn in raw (unmirrored) coordinates land in the correct screen position */
+#ar-canvas.mirrored, #desk-ar-canvas.mirrored{
+  transform:translateZ(0) scaleX(-1);
+}
 
 .vf-overlay{position:absolute;inset:0;pointer-events:none;}
 .corner{position:absolute;width:18px;height:18px;border-color:var(--amber);border-style:solid;opacity:.6;}
@@ -190,18 +195,25 @@ header{
 .flash-toggle-btn{font-weight:bold;}
 .flash-toggle-btn.on{border-color:var(--amber)!important;color:var(--amber)!important;background:var(--amber-bg)!important;}
 
-/* AR overlay picker row — shown above vf-controls on mobile */
+/* AR overlay picker row — horizontal scrollable strip, top-right.
+   Kept as a single 34px row (max-width capped) so it can NEVER grow tall
+   enough to overlap .vf-controls (bottom) or .cd-num (center) — this is
+   the fix for the layout-overlap issue. */
 .ar-picker-row{
   position:absolute;top:10px;right:10px;
-  display:flex;flex-direction:column;gap:5px;z-index:20;pointer-events:auto;
+  max-width:calc(100% - 90px);
+  display:flex;flex-direction:row;gap:5px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  z-index:20;pointer-events:auto;
 }
+.ar-picker-row::-webkit-scrollbar{display:none;}
 .ar-btn{
   width:34px;height:34px;border-radius:50%;
   background:var(--overlay-btn);border:1px solid var(--overlay-btn-border);
   color:#fff;font-size:14px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   transition:all .15s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-  line-height:1;
+  line-height:1;flex-shrink:0;
 }
 .ar-btn:active{transform:scale(.88);}
 .ar-btn.active{border-color:var(--amber);background:var(--amber-bg);}
@@ -373,9 +385,12 @@ header{
   .desk-cdnum{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'DM Serif Display',serif;font-size:88px;color:#fff;text-shadow:0 4px 28px rgba(0,0,0,.75);opacity:0;transition:opacity .18s;z-index:10;line-height:1;}
   .desk-cdnum.show{opacity:1;}
   .desk-vf-tag{position:absolute;bottom:10px;left:10px;font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:.14em;text-transform:uppercase;background:rgba(0,0,0,.55);padding:3px 7px;border-radius:2px;border:1px solid rgba(180,110,10,.4);}
-  /* Desktop AR picker inside sidebar */
+  /* Desktop AR picker inside sidebar — height-capped & scrollable so it
+     cannot push .desk-shoot-section or .desk-filter-list out of view */
   .desk-ar-section{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
-  .desk-ar-list{display:flex;flex-wrap:wrap;gap:4px;}
+  .desk-ar-list{display:flex;flex-wrap:wrap;gap:4px;max-height:84px;overflow-y:auto;}
+  .desk-ar-list::-webkit-scrollbar{width:3px;}
+  .desk-ar-list::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px;}
   .desk-ar-btn{font-family:'DM Mono',monospace;font-size:9px;padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap;}
   .desk-ar-btn:hover{border-color:var(--amber);color:var(--amber);}
   .desk-ar-btn.active{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
@@ -451,7 +466,7 @@ header{
       <button class="vf-cam-btn"        id="mob-btn-any"   onclick="switchCam('any')">any</button>
     </div>
   </div>
-  <!-- AR overlay picker: vertical column top-right -->
+  <!-- AR overlay picker: horizontal scrollable row top-right -->
   <div class="ar-picker-row" id="mob-ar-picker"></div>
   <div class="no-cam" id="no-cam">
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
@@ -636,7 +651,7 @@ const FILTERS = [
   {id:'velvia', name:'VELVIA',   css:'saturate(1.9) contrast(1.18) brightness(0.93)'},
   {id:'mist',   name:'BLAURED',  css:'brightness(1.22) contrast(0.78) saturate(0.55)'},
   // NOKIA: CSS approximation for live preview; canvas post-process for capture
-  {id:'nokia',  name:'NOKIA CAM',css:'contrast(1.15) saturate(0.65) brightness(1.08) hue-rotate(-8deg)', nokia:true},
+  {id:'nokia',  name:'NOKIA CAM',css:'contrast(0.92) saturate(0.6) brightness(1.1) hue-rotate(4deg)', nokia:true},
 ];
 
 // ─────────────────────────────────────────
@@ -846,6 +861,95 @@ function _drawStar(ctx, cx, cy, r, color){
 }
 
 // ─────────────────────────────────────────
+// COORDINATE MAPPING (object-fit: cover correction)
+// ─────────────────────────────────────────
+// All face boxes are tracked in NATIVE VIDEO PIXEL coordinates
+// (video.videoWidth × video.videoHeight). This is the single source of
+// truth for both the live preview overlay and the final capture, so the
+// two can never drift apart (fixes the preview/capture mismatch).
+
+// Computes the scale + crop offsets that CSS `object-fit:cover` applies
+// when mapping a vW×vH video into a cW×cH container.
+function getCoverMap(vW, vH, cW, cH){
+  if(!vW || !vH || !cW || !cH) return {scale:1, offsetX:0, offsetY:0};
+  const videoAspect = vW/vH, containerAspect = cW/cH;
+  let scale, offsetX=0, offsetY=0;
+  if(videoAspect > containerAspect){
+    // video wider than container -> height matches, width overflows & crops
+    scale = cH/vH;
+    offsetX = (vW*scale - cW)/2;
+  } else {
+    // video taller than container -> width matches, height overflows & crops
+    scale = cW/vW;
+    offsetY = (vH*scale - cH)/2;
+  }
+  return {scale, offsetX, offsetY};
+}
+
+// Native video-space rect -> container (CSS pixel) rect, accounting for cover-crop
+function mapNativeToContainer(rect, map){
+  return {
+    x: rect.x*map.scale - map.offsetX,
+    y: rect.y*map.scale - map.offsetY,
+    width: rect.width*map.scale,
+    height: rect.height*map.scale,
+  };
+}
+
+// Native video-space rect -> capture square rect, accounting for the
+// center-crop-to-square used when exporting the photo.
+function mapNativeToSquareCrop(rect, sx, sy, cropDim, outputSize){
+  const s = outputSize/cropDim;
+  return {
+    x: (rect.x - sx)*s,
+    y: (rect.y - sy)*s,
+    width: rect.width*s,
+    height: rect.height*s,
+  };
+}
+
+// Extend a tight face-detector bounding box (forehead-to-chin) into a
+// "head" box so ears/hats/crowns anchor above the hairline rather than
+// sitting on the eyebrows. Proportional, so it works in any coordinate space.
+function adjustFaceBox(b){
+  const extendUp   = b.height*0.38;
+  const extendDown = b.height*0.05;
+  const extendSide = b.width*0.06;
+  return {
+    x: b.x - extendSide,
+    y: b.y - extendUp,
+    width: b.width + extendSide*2,
+    height: b.height + extendUp + extendDown,
+  };
+}
+
+// Linear interpolation between two face rects — used for smooth,
+// jitter-free following between detection updates.
+function lerpFace(a,b,t){
+  return {
+    x: a.x+(b.x-a.x)*t,
+    y: a.y+(b.y-a.y)*t,
+    width: a.width+(b.width-a.width)*t,
+    height: a.height+(b.height-a.height)*t,
+  };
+}
+
+// Stable centered "head" box in native video coordinates — used when no
+// face-detector result is available. Kept in the SAME coordinate space as
+// real detections so preview and capture remain consistent even without
+// a tracked face.
+function getFallbackFaceNative(vW, vH){
+  const minDim = Math.min(vW, vH);
+  const size = minDim * 0.46;
+  return {
+    x: (vW - size)/2,
+    y: (vH - size)/2 - minDim*0.05,
+    width: size,
+    height: size,
+  };
+}
+
+// ─────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────
 const L_COLS={'1x1':1,'1x2':1,'1x4':1,'2x2':2,'2x3':2,'3x3':3};
@@ -859,9 +963,13 @@ let activeOverlay = 'none';
 // PERF: off-screen canvas for Nokia post-process — created once, reused
 let nokiaOffscreen = null;
 
-// AR face detection state
+// AR face detection state — all coordinates are in NATIVE VIDEO PIXELS
 let faceDetector = null, faceDetectSupported = false;
-let lastFaces = [];      // cached face positions
+let targetFaces = [];   // latest detector result, native coords, head-adjusted
+let renderFaces = [];   // smoothed/interpolated faces actually drawn each frame
+let faceMissCount = 0;
+const FACE_MISS_LIMIT = 6;       // ~1.2s of consecutive misses before falling back to center
+const AR_SMOOTH = 0.22;          // per-frame interpolation factor (higher = snappier)
 let arRafId = null;      // requestAnimationFrame id for AR loop
 let arLastDetect = 0;    // timestamp of last detection call
 const AR_DETECT_INTERVAL = 200; // ms — run face detection at 5fps max (cheap)
@@ -890,6 +998,11 @@ function toggleTheme(){
 function toggleMirror(){
   mirrored = !mirrored;
   allVideos().forEach(v => v.classList.toggle('mirrored', mirrored));
+  // Mirror the AR overlay canvases in lockstep with the video so overlays
+  // drawn in raw (unmirrored) native coordinates land in the correct
+  // on-screen position when the selfie camera is mirrored.
+  [$('ar-canvas'), $('desk-ar-canvas')].filter(Boolean)
+    .forEach(c => c.classList.toggle('mirrored', mirrored));
   $('mirror-btn').classList.toggle('on', mirrored);
   const mob = $('mob-mirror-btn'); if(mob) mob.classList.toggle('on', mirrored);
   const dt = $('desk-mirror-toggle'); if(dt) dt.classList.toggle('on', mirrored);
@@ -967,7 +1080,7 @@ function buildARPicker(){
   const mobRow = $('mob-ar-picker');
   const deskList = $('desk-ar-list');
   AR_OVERLAYS.forEach(ov => {
-    // Mobile: icon button column
+    // Mobile: icon button row
     const mb = document.createElement('button');
     mb.className = 'ar-btn' + (ov.id==='none'?' active':'');
     mb.dataset.aid = ov.id; mb.title = ov.name;
@@ -988,8 +1101,11 @@ function selectOverlay(id){
   activeOverlay = id;
   document.querySelectorAll('.ar-btn').forEach(b => b.classList.toggle('active', b.dataset.aid===id));
   document.querySelectorAll('.desk-ar-btn').forEach(b => b.classList.toggle('active', b.dataset.aid===id));
-  // Reset cached faces when switching
-  lastFaces = [];
+  // Reset cached/smoothed faces when switching overlays so the new
+  // overlay doesn't inherit a stale interpolation target.
+  targetFaces = [];
+  renderFaces = [];
+  faceMissCount = 0;
 }
 
 // ─────────────────────────────────────────
@@ -1004,7 +1120,10 @@ async function initFaceDetector(){
   }
 }
 
-// PERF: detect at max 5fps, cache result, non-blocking
+// PERF: detect at max 5fps, cache result, non-blocking.
+// Stores results in NATIVE VIDEO PIXEL coordinates (no per-axis scaling —
+// that was the source of the cover-fit misalignment), with the bounding
+// box extended into a "head" box via adjustFaceBox().
 async function detectFaces(videoEl){
   if(!faceDetectSupported || !faceDetector) return;
   const now = performance.now();
@@ -1012,57 +1131,76 @@ async function detectFaces(videoEl){
   arLastDetect = now;
   try{
     const faces = await faceDetector.detect(videoEl);
-    // Convert DOMRectReadOnly to plain objects
-    const vW = videoEl.videoWidth || videoEl.offsetWidth;
-    const vH = videoEl.videoHeight || videoEl.offsetHeight;
-    const cW = videoEl.offsetWidth;
-    const cH = videoEl.offsetHeight;
-    const scaleX = cW / vW;
-    const scaleY = cH / vH;
-    lastFaces = faces.map(f => ({
-      x: f.boundingBox.x * scaleX,
-      y: f.boundingBox.y * scaleY,
-      width:  f.boundingBox.width  * scaleX,
-      height: f.boundingBox.height * scaleY,
-    }));
+    if(faces.length){
+      targetFaces = faces.map(f => adjustFaceBox({
+        x: f.boundingBox.x, y: f.boundingBox.y,
+        width: f.boundingBox.width, height: f.boundingBox.height,
+      }));
+      faceMissCount = 0;
+    } else {
+      faceMissCount++;
+      // Tolerate brief detection gaps (a few frames) before falling back
+      // to the centered box, so the overlay doesn't snap/disappear.
+      if(faceMissCount > FACE_MISS_LIMIT) targetFaces = [];
+    }
   }catch(e){}
 }
 
 // ─────────────────────────────────────────
 // AR RENDER LOOP — rAF, draws overlay on ar-canvas
 // ─────────────────────────────────────────
+// Every frame (60fps) interpolates renderFaces toward targetFaces
+// (updated at ~5fps by detectFaces). This is what gives the smooth,
+// TikTok-style "follow" feel instead of jitter/snapping.
 function startARLoop(){
   if(arRafId) cancelAnimationFrame(arRafId);
   function loop(){
     arRafId = requestAnimationFrame(loop);
-    if(activeOverlay === 'none') {
-      // Clear if overlay was just turned off
-      const ac = activeARCanvas();
-      if(ac){ const ctx = ac.getContext('2d'); ctx.clearRect(0,0,ac.width,ac.height); }
+
+    const ac  = activeARCanvas();
+    const vid = activeVideo();
+    if(!ac || !vid) return;
+
+    if(activeOverlay === 'none'){
+      const actx = ac.getContext('2d');
+      actx.clearRect(0,0,ac.width,ac.height);
+      renderFaces = [];
       return;
     }
-    const vid = activeVideo();
-    const ac  = activeARCanvas();
-    if(!vid || !ac || !stream) return;
+    if(!stream) return;
 
-    // Sync canvas size to video element display size
+    // Sync canvas drawing-buffer size to the displayed video size.
+    // This is purely a canvas-buffer resize (position:absolute element) —
+    // it never affects flex layout, container sizing, or viewport dims.
     if(ac.width !== vid.offsetWidth || ac.height !== vid.offsetHeight){
       ac.width  = vid.offsetWidth;
       ac.height = vid.offsetHeight;
     }
+    if(!ac.width || !ac.height) return;
 
     // Kick off face detection (non-blocking, result cached)
     detectFaces(vid);
 
-    const ctx = ac.getContext('2d');
-    ctx.clearRect(0, 0, ac.width, ac.height);
+    const vW = vid.videoWidth  || vid.offsetWidth  || 1;
+    const vH = vid.videoHeight || vid.offsetHeight || 1;
 
-    if(lastFaces.length > 0){
-      lastFaces.forEach(face => drawOverlay(activeOverlay, ctx, face, ac.width, ac.height));
+    const targets = targetFaces.length ? targetFaces : [getFallbackFaceNative(vW, vH)];
+
+    // Smooth/interpolate toward targets every frame
+    if(renderFaces.length !== targets.length){
+      renderFaces = targets.map(t => ({...t}));
     } else {
-      // Fallback: draw centered
-      drawOverlay(activeOverlay, ctx, null, ac.width, ac.height);
+      renderFaces = renderFaces.map((rf,i) => lerpFace(rf, targets[i], AR_SMOOTH));
     }
+
+    // Map native-coordinate faces into container (cover-fit) coordinates
+    const map = getCoverMap(vW, vH, ac.width, ac.height);
+    const actx = ac.getContext('2d');
+    actx.clearRect(0, 0, ac.width, ac.height);
+    renderFaces.forEach(face => {
+      const mapped = mapNativeToContainer(face, map);
+      drawOverlay(activeOverlay, actx, mapped, ac.width, ac.height);
+    });
   }
   loop();
 }
@@ -1107,6 +1245,8 @@ async function reqCam(fc){
     }, 500);
   }
 
+  // Reset AR tracking state for the new stream
+  targetFaces = []; renderFaces = []; faceMissCount = 0;
   startARLoop();
 }
 
@@ -1156,38 +1296,77 @@ function fireFlash(){
   });
 }
 
-// PERF: Nokia post-process — downsample then upscale on offscreen canvas
+// ─────────────────────────────────────────
+// NOKIA POST-PROCESS — authentic early-2000s keypad-phone camera look
+// ─────────────────────────────────────────
+// Combines: low-res pixelation, sensor noise, limited dynamic range
+// (lifted shadows + washed highlights), greenish CCD color cast,
+// cheap-lens vignette, and an LCD-style date stamp. The final JPEG
+// re-encode at low quality (see doCapture) adds compression blocking.
 function applyNokiaPostProcess(ctx, outputSize){
-  // 1. Read current pixels
-  const imageData = ctx.getImageData(0, 0, outputSize, outputSize);
-  // 2. Create small offscreen canvas (simulate low-res sensor: ~120px effective)
-  const lowRes = 120;
-  if(!nokiaOffscreen){
-    nokiaOffscreen = document.createElement('canvas');
-  }
-  nokiaOffscreen.width = lowRes;
-  nokiaOffscreen.height = lowRes;
+  const lowRes = 128; // emulate ~early-2000s sensor resolution
+  if(!nokiaOffscreen) nokiaOffscreen = document.createElement('canvas');
+  nokiaOffscreen.width = lowRes; nokiaOffscreen.height = lowRes;
   const octx = nokiaOffscreen.getContext('2d');
-  // Draw at low res — browser handles the downsample
-  octx.imageSmoothingEnabled = false;
+
+  // Desaturate + slight CCD color shift, baked in cheaply at 128px
+  octx.filter = 'saturate(0.7) contrast(0.9) brightness(1.08) hue-rotate(4deg)';
+  octx.imageSmoothingEnabled = true;
+  octx.imageSmoothingQuality = 'low';
   octx.drawImage(ctx.canvas, 0, 0, lowRes, lowRes);
-  // 3. Upscale back with pixelation (no smoothing = blocky pixels)
+  octx.filter = 'none';
+
+  // Cheap sensor noise — scattered at low-res so it blockifies on upscale
+  const noiseCount = Math.floor(lowRes*lowRes*0.12);
+  for(let i=0;i<noiseCount;i++){
+    const nx = Math.random()*lowRes, ny = Math.random()*lowRes;
+    const v = Math.random()*255;
+    octx.fillStyle = `rgba(${v},${v},${v},0.08)`;
+    octx.fillRect(nx, ny, 1, 1);
+  }
+
+  // Upscale with NO smoothing = visible blocky pixelation
   ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0,0,outputSize,outputSize);
   ctx.drawImage(nokiaOffscreen, 0, 0, outputSize, outputSize);
   ctx.imageSmoothingEnabled = true;
 
-  // 4. Mild color grading: slight warm wash + reduce contrast for "old phone" look
+  // Limited dynamic range: lift shadows, then compress/wash highlights
+  ctx.globalCompositeOperation = 'lighten';
+  ctx.fillStyle = 'rgba(28,26,24,0.10)';
+  ctx.fillRect(0,0,outputSize,outputSize);
+
   ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = 'rgba(255,240,200,0.18)';
-  ctx.fillRect(0, 0, outputSize, outputSize);
+  ctx.fillStyle = 'rgba(238,232,218,0.85)';
+  ctx.fillRect(0,0,outputSize,outputSize);
+
+  // Greenish CCD color cast common to early phone sensors
+  ctx.globalCompositeOperation = 'overlay';
+  ctx.fillStyle = 'rgba(200,225,190,0.10)';
+  ctx.fillRect(0,0,outputSize,outputSize);
+
   ctx.globalCompositeOperation = 'source-over';
 
-  // 5. Slight compression artifact simulation: darken edges
-  const vignette = ctx.createRadialGradient(outputSize/2, outputSize/2, outputSize*0.3, outputSize/2, outputSize/2, outputSize*0.7);
+  // Cheap-lens corner falloff
+  const vignette = ctx.createRadialGradient(
+    outputSize/2, outputSize/2, outputSize*0.32,
+    outputSize/2, outputSize/2, outputSize*0.72
+  );
   vignette.addColorStop(0, 'rgba(0,0,0,0)');
-  vignette.addColorStop(1, 'rgba(0,0,0,0.22)');
+  vignette.addColorStop(1, 'rgba(0,0,0,0.28)');
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, outputSize, outputSize);
+
+  // Subtle LCD-style date stamp, like Nokia/SE keypad-cam overlays
+  const ts = new Date();
+  const stamp = `${String(ts.getMonth()+1).padStart(2,'0')}/${String(ts.getDate()).padStart(2,'0')}/${ts.getFullYear()}`;
+  ctx.font = `${Math.round(outputSize*0.032)}px monospace`;
+  ctx.textAlign = 'right';
+  ctx.shadowColor = 'rgba(0,0,0,0.6)';
+  ctx.shadowBlur = 2;
+  ctx.fillStyle = 'rgba(255,140,40,0.85)';
+  ctx.fillText(stamp, outputSize - outputSize*0.04, outputSize - outputSize*0.04);
+  ctx.shadowBlur = 0;
 }
 
 function doCapture(){
@@ -1198,6 +1377,8 @@ function doCapture(){
   const outputSize = 1080;
   cnv.width = outputSize; cnv.height = outputSize;
   const ctx = cnv.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   const f = FILTERS.find(x => x.id === filterId);
   // PERF: ctx.filter is CPU-bound on Android for complex filters.
@@ -1224,20 +1405,39 @@ function doCapture(){
   // Nokia post-process (applied after drawing)
   if(f.nokia) applyNokiaPostProcess(ctx, outputSize);
 
-  // Composite AR overlay onto the captured frame
+  // Draw the AR overlay directly onto the capture canvas using the SAME
+  // native-coordinate face data as the live preview, mapped through the
+  // square center-crop. This guarantees the captured overlay position
+  // matches what was shown live (fixes preview/capture mismatch) —
+  // instead of stretching the preview's cover-fit ar-canvas bitmap into
+  // a square, which previously produced a different transform than the
+  // live view used.
   if(activeOverlay !== 'none'){
-    // Get AR canvas and draw it on top, scaled to outputSize
-    const ac = activeARCanvas();
-    if(ac && ac.width > 0 && ac.height > 0){
-      ctx.save();
-      ctx.drawImage(ac, 0, 0, outputSize, outputSize);
+    const faces = renderFaces.length ? renderFaces : [getFallbackFaceNative(vW, vH)];
+    const drawAll = () => {
+      faces.forEach(face => {
+        const mapped = mapNativeToSquareCrop(face, sx, sy, minDim, outputSize);
+        drawOverlay(activeOverlay, ctx, mapped, outputSize, outputSize);
+      });
+    };
+    if(mirrored){
+      // Re-apply the same mirror transform used for the photo so the
+      // overlay mirrors identically and stays aligned.
+      ctx.save(); ctx.translate(outputSize,0); ctx.scale(-1,1);
+      drawAll();
       ctx.restore();
+    } else {
+      drawAll();
     }
   }
 
+  // Nokia exports at lower JPEG quality to introduce authentic
+  // compression-block artifacts on top of the pixelation/noise/vignette.
+  const jpegQuality = f.nokia ? 0.45 : 0.94;
+
   const photo = {
     id: Date.now(),
-    data: cnv.toDataURL('image/jpeg', 0.94),
+    data: cnv.toDataURL('image/jpeg', jpegQuality),
     w: outputSize, h: outputSize, ar: 1,
     filter: f.name + (flashEnabled?' + FLASH':'') + (activeOverlay!=='none'?' + '+activeOverlay.toUpperCase():''),
     ts: new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
