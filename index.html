@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>darkroom — photobooth</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
@@ -37,13 +38,10 @@
 
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;-webkit-tap-highlight-color:transparent;}
 
-/* PERF: grain uses will-change to promote to its own layer, preventing repaint on scroll/compositing */
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
   background-size:200px 200px;opacity:var(--grain-op);
-  /* PERF: avoid mix-blend-mode on Android — it forces layer compositing every frame */
-  /* mix-blend-mode:multiply; -- REMOVED for Android perf */
   will-change:opacity;
 }
 body::after{
@@ -111,30 +109,24 @@ header{
 .vf-snap-overlay-btn:active{transform:translateX(-50%) scale(0.90);}
 .vf-snap-overlay-btn:disabled{opacity:0.3;cursor:not-allowed;}
 
-/* PERF: vf-panel uses transform:translateZ(0) to force GPU compositing layer for video */
 .vf-panel{
   flex:1;position:relative;overflow:hidden;background:var(--vf-bg);min-height:0;
   transform:translateZ(0);
 }
 #video{
   width:100%;height:100%;object-fit:cover;display:block;
-  /* PERF: promote video to own compositing layer */
   will-change:transform;
   transform:translateZ(0);
 }
 #canvas{display:none;}
 #video.mirrored{transform:translateZ(0) scaleX(-1);}
 
-/* AR overlay canvas sits on top of video, pointer-events none */
 #ar-canvas{
   position:absolute;inset:0;width:100%;height:100%;
   pointer-events:none;z-index:8;
-  /* PERF: own compositing layer */
   will-change:transform;
   transform:translateZ(0);
 }
-/* Mirror the AR overlay canvas in lockstep with the video so overlays
-   drawn in raw (unmirrored) coordinates land in the correct screen position */
 #ar-canvas.mirrored, #desk-ar-canvas.mirrored{
   transform:translateZ(0) scaleX(-1);
 }
@@ -195,10 +187,6 @@ header{
 .flash-toggle-btn{font-weight:bold;}
 .flash-toggle-btn.on{border-color:var(--amber)!important;color:var(--amber)!important;background:var(--amber-bg)!important;}
 
-/* AR overlay picker row — horizontal scrollable strip, top-right.
-   Kept as a single 34px row (max-width capped) so it can NEVER grow tall
-   enough to overlap .vf-controls (bottom) or .cd-num (center) — this is
-   the fix for the layout-overlap issue. */
 .ar-picker-row{
   position:absolute;top:10px;right:10px;
   max-width:calc(100% - 90px);
@@ -373,7 +361,6 @@ header{
   .desk-vf-wrap{position:relative;width:100%;max-width:600px;background:var(--vf-bg);border-radius:6px;overflow:hidden;border:1px solid var(--border);aspect-ratio:4/3;max-height:calc(100vh - 48px - 30px - 32px);}
   .desk-vf-wrap video{width:100%;height:100%;object-fit:cover;display:block;will-change:transform;transform:translateZ(0);}
   .desk-vf-wrap video.mirrored{transform:translateZ(0) scaleX(-1);}
-  /* Desktop AR overlay canvas */
   #desk-ar-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:8;will-change:transform;transform:translateZ(0);}
   .desk-no-cam{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--vf-bg);}
   .desk-no-cam svg{opacity:.15;}
@@ -385,8 +372,6 @@ header{
   .desk-cdnum{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'DM Serif Display',serif;font-size:88px;color:#fff;text-shadow:0 4px 28px rgba(0,0,0,.75);opacity:0;transition:opacity .18s;z-index:10;line-height:1;}
   .desk-cdnum.show{opacity:1;}
   .desk-vf-tag{position:absolute;bottom:10px;left:10px;font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:.14em;text-transform:uppercase;background:rgba(0,0,0,.55);padding:3px 7px;border-radius:2px;border:1px solid rgba(180,110,10,.4);}
-  /* Desktop AR picker inside sidebar — height-capped & scrollable so it
-     cannot push .desk-shoot-section or .desk-filter-list out of view */
   .desk-ar-section{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
   .desk-ar-list{display:flex;flex-wrap:wrap;gap:4px;max-height:84px;overflow-y:auto;}
   .desk-ar-list::-webkit-scrollbar{width:3px;}
@@ -443,7 +428,6 @@ header{
   </div>
 </header>
 
-<!-- MOBILE VIEWFINDER -->
 <div class="vf-panel">
   <video id="video" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
@@ -466,7 +450,6 @@ header{
       <button class="vf-cam-btn"        id="mob-btn-any"   onclick="switchCam('any')">any</button>
     </div>
   </div>
-  <!-- AR overlay picker: horizontal scrollable row top-right -->
   <div class="ar-picker-row" id="mob-ar-picker"></div>
   <div class="no-cam" id="no-cam">
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
@@ -535,7 +518,6 @@ header{
   </div>
 </div>
 
-<!-- DESKTOP -->
 <div class="desk-main">
   <aside class="desk-sidebar">
     <div class="sb-block">
@@ -554,7 +536,6 @@ header{
         <button class="toggle-track on" id="desk-flash-toggle" onclick="toggleFlash()"><div class="toggle-thumb"></div></button>
       </div>
     </div>
-    <!-- Desktop AR overlay picker -->
     <div class="desk-ar-section">
       <div class="sb-label">ar overlays</div>
       <div class="desk-ar-list" id="desk-ar-list"></div>
@@ -634,12 +615,9 @@ header{
   </div>
 </footer>
 
-</div><!-- .app -->
+</div>
 
 <script>
-// ─────────────────────────────────────────
-// FILTERS — includes Nokia Cam (new)
-// ─────────────────────────────────────────
 const FILTERS = [
   {id:'normal', name:'RAW',      css:'none'},
   {id:'kodak',  name:'KODAKAN',  css:'sepia(0.2) contrast(1.1) saturate(1.1) brightness(1.05)'},
@@ -650,15 +628,8 @@ const FILTERS = [
   {id:'cool',   name:'NAVIA',    css:'hue-rotate(200deg) saturate(0.85) brightness(1.05)'},
   {id:'velvia', name:'VELVIA',   css:'saturate(1.9) contrast(1.18) brightness(0.93)'},
   {id:'mist',   name:'BLAURED',  css:'brightness(1.22) contrast(0.78) saturate(0.55)'},
-  // NOKIA: CSS approximation for live preview; canvas post-process for capture
   {id:'nokia',  name:'NOKIA CAM',css:'contrast(0.92) saturate(0.6) brightness(1.1) hue-rotate(4deg)', nokia:true},
 ];
-
-// ─────────────────────────────────────────
-// AR OVERLAYS — pure SVG, drawn on canvas
-// ─────────────────────────────────────────
-// Each overlay is a function(ctx, face, canvasW, canvasH) that draws itself.
-// face = {x, y, width, height} in canvas pixel coords, or null for center fallback.
 
 const AR_OVERLAYS = [
   {id:'none',   name:'NONE',    emoji:'✕'},
@@ -671,425 +642,104 @@ const AR_OVERLAYS = [
   {id:'blush',  name:'BLUSH',   emoji:'🌸'},
 ];
 
-// Draw functions per overlay id
-function drawOverlay(id, ctx, face, cW, cH){
-  if(id === 'none') return;
-
-  // Derive face box with fallback to center third of frame
-  let fx, fy, fw, fh;
-  if(face){
-    fx = face.x; fy = face.y; fw = face.width; fh = face.height;
-  } else {
-    fw = cW * 0.38; fh = cW * 0.38;
-    fx = (cW - fw) / 2; fy = cH * 0.18;
-  }
-
-  const cx = fx + fw / 2;       // face center x
-  const top = fy;                // face top
-  const earW = fw * 0.28;
-  const earH = fw * 0.38;
-
-  ctx.save();
-
-  if(id === 'cat'){
-    // Cat ears — two triangles above head
-    const lx = fx + fw * 0.18;
-    const rx = fx + fw * 0.82;
-    const ey = top - earH * 0.1;
-    // Left ear outer
-    ctx.beginPath(); ctx.moveTo(lx - earW/2, ey + earH); ctx.lineTo(lx, ey - earH*0.6); ctx.lineTo(lx + earW/2, ey + earH); ctx.closePath();
-    ctx.fillStyle = '#f4a0b0'; ctx.fill();
-    ctx.strokeStyle = '#d4607a'; ctx.lineWidth = Math.max(1, fw*0.015); ctx.stroke();
-    // Left ear inner
-    ctx.beginPath(); ctx.moveTo(lx - earW*0.3, ey + earH*0.7); ctx.lineTo(lx, ey - earH*0.3); ctx.lineTo(lx + earW*0.3, ey + earH*0.7); ctx.closePath();
-    ctx.fillStyle = '#ffccd5'; ctx.fill();
-    // Right ear outer
-    ctx.beginPath(); ctx.moveTo(rx - earW/2, ey + earH); ctx.lineTo(rx, ey - earH*0.6); ctx.lineTo(rx + earW/2, ey + earH); ctx.closePath();
-    ctx.fillStyle = '#f4a0b0'; ctx.fill();
-    ctx.strokeStyle = '#d4607a'; ctx.lineWidth = Math.max(1, fw*0.015); ctx.stroke();
-    // Right ear inner
-    ctx.beginPath(); ctx.moveTo(rx - earW*0.3, ey + earH*0.7); ctx.lineTo(rx, ey - earH*0.3); ctx.lineTo(rx + earW*0.3, ey + earH*0.7); ctx.closePath();
-    ctx.fillStyle = '#ffccd5'; ctx.fill();
-    // Cute blush dots
-    _drawBlush(ctx, fx + fw*0.18, fy + fh*0.62, fw*0.1);
-    _drawBlush(ctx, fx + fw*0.82, fy + fh*0.62, fw*0.1);
-  }
-
-  if(id === 'bunny'){
-    // Long floppy bunny ears
-    const lx = cx - fw * 0.18;
-    const rx = cx + fw * 0.18;
-    const bEarH = fh * 1.1;
-    const bEarW = fw * 0.16;
-    // Left ear
-    ctx.beginPath(); ctx.ellipse(lx, top - bEarH*0.5, bEarW/2, bEarH/2, -0.15, 0, Math.PI*2);
-    ctx.fillStyle = '#f8d0e0'; ctx.fill();
-    ctx.strokeStyle = '#e890aa'; ctx.lineWidth = Math.max(1, fw*0.012); ctx.stroke();
-    // Left ear inner
-    ctx.beginPath(); ctx.ellipse(lx, top - bEarH*0.5, bEarW*0.28, bEarH*0.38, -0.15, 0, Math.PI*2);
-    ctx.fillStyle = '#ffd0e8'; ctx.fill();
-    // Right ear
-    ctx.beginPath(); ctx.ellipse(rx, top - bEarH*0.5, bEarW/2, bEarH/2, 0.15, 0, Math.PI*2);
-    ctx.fillStyle = '#f8d0e0'; ctx.fill();
-    ctx.strokeStyle = '#e890aa'; ctx.lineWidth = Math.max(1, fw*0.012); ctx.stroke();
-    // Right ear inner
-    ctx.beginPath(); ctx.ellipse(rx, top - bEarH*0.5, bEarW*0.28, bEarH*0.38, 0.15, 0, Math.PI*2);
-    ctx.fillStyle = '#ffd0e8'; ctx.fill();
-    // Blush
-    _drawBlush(ctx, fx + fw*0.16, fy + fh*0.65, fw*0.1);
-    _drawBlush(ctx, fx + fw*0.84, fy + fh*0.65, fw*0.1);
-  }
-
-  if(id === 'bear'){
-    // Round bear ears
-    const lx = fx + fw * 0.1;
-    const rx = fx + fw * 0.9;
-    const bR = fw * 0.16;
-    // Left ear outer
-    ctx.beginPath(); ctx.arc(lx, top - bR*0.4, bR, 0, Math.PI*2);
-    ctx.fillStyle = '#c8905a'; ctx.fill();
-    // Left ear inner
-    ctx.beginPath(); ctx.arc(lx, top - bR*0.4, bR*0.58, 0, Math.PI*2);
-    ctx.fillStyle = '#e8b07a'; ctx.fill();
-    // Right ear outer
-    ctx.beginPath(); ctx.arc(rx, top - bR*0.4, bR, 0, Math.PI*2);
-    ctx.fillStyle = '#c8905a'; ctx.fill();
-    // Right ear inner
-    ctx.beginPath(); ctx.arc(rx, top - bR*0.4, bR*0.58, 0, Math.PI*2);
-    ctx.fillStyle = '#e8b07a'; ctx.fill();
-    // Blush
-    _drawBlush(ctx, fx + fw*0.16, fy + fh*0.65, fw*0.1);
-    _drawBlush(ctx, fx + fw*0.84, fy + fh*0.65, fw*0.1);
-  }
-
-  if(id === 'crown'){
-    const crownY = top - fh * 0.08;
-    const crownH = fh * 0.28;
-    const crownW = fw * 0.72;
-    const crownX = cx - crownW/2;
-    // Crown base
-    ctx.fillStyle = '#f0c030';
-    ctx.beginPath();
-    ctx.moveTo(crownX, crownY);
-    ctx.lineTo(crownX, crownY - crownH * 0.55);
-    ctx.lineTo(crownX + crownW*0.2, crownY - crownH * 0.2);
-    ctx.lineTo(crownX + crownW*0.38, crownY - crownH);
-    ctx.lineTo(crownX + crownW*0.5, crownY - crownH * 0.3);
-    ctx.lineTo(crownX + crownW*0.62, crownY - crownH);
-    ctx.lineTo(crownX + crownW*0.8, crownY - crownH * 0.2);
-    ctx.lineTo(crownX + crownW, crownY - crownH * 0.55);
-    ctx.lineTo(crownX + crownW, crownY);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#d09010'; ctx.lineWidth = Math.max(1, fw*0.012); ctx.stroke();
-    // Gems
-    const gems = [{x:0.2,c:'#f04040'},{x:0.5,c:'#4060f0'},{x:0.8,c:'#f04040'}];
-    gems.forEach(g => {
-      ctx.beginPath(); ctx.arc(crownX + crownW*g.x, crownY - crownH*0.15, fw*0.035, 0, Math.PI*2);
-      ctx.fillStyle = g.c; ctx.fill();
-      ctx.strokeStyle = '#fff8'; ctx.lineWidth = 1; ctx.stroke();
-    });
-  }
-
-  if(id === 'hearts'){
-    // Floating hearts around head
-    const hPositions = [
-      {x: fx - fw*0.12, y: top - fh*0.1,  s:0.9, c:'#ff6b8a'},
-      {x: fx + fw*1.12, y: top - fh*0.15, s:0.7, c:'#ff4a6e'},
-      {x: fx + fw*0.1,  y: top - fh*0.35, s:0.6, c:'#ff8aaa'},
-      {x: fx + fw*0.9,  y: top - fh*0.3,  s:0.8, c:'#ff6b8a'},
-      {x: cx,           y: top - fh*0.5,  s:0.5, c:'#ffaac0'},
-    ];
-    hPositions.forEach(h => {
-      const r = fw * 0.06 * h.s;
-      ctx.fillStyle = h.c;
-      ctx.beginPath();
-      ctx.moveTo(h.x, h.y + r*0.4);
-      ctx.bezierCurveTo(h.x, h.y - r*0.6, h.x - r*1.4, h.y - r*0.6, h.x - r*1.4, h.y + r*0.2);
-      ctx.bezierCurveTo(h.x - r*1.4, h.y + r*1.0, h.x, h.y + r*1.8, h.x, h.y + r*2.2);
-      ctx.bezierCurveTo(h.x, h.y + r*1.8, h.x + r*1.4, h.y + r*1.0, h.x + r*1.4, h.y + r*0.2);
-      ctx.bezierCurveTo(h.x + r*1.4, h.y - r*0.6, h.x, h.y - r*0.6, h.x, h.y + r*0.4);
-      ctx.fill();
-    });
-  }
-
-  if(id === 'stars'){
-    const starPositions = [
-      {x: fx - fw*0.08, y: top - fh*0.05, s:1.0, c:'#ffe030'},
-      {x: fx + fw*1.08, y: top - fh*0.1,  s:0.7, c:'#fff080'},
-      {x: fx + fw*0.15, y: top - fh*0.4,  s:0.6, c:'#ffe060'},
-      {x: fx + fw*0.85, y: top - fh*0.35, s:0.8, c:'#ffe030'},
-      {x: cx,           y: top - fh*0.55, s:0.5, c:'#ffffff'},
-      {x: fx + fw*0.5,  y: top - fh*0.22, s:0.4, c:'#ffff99'},
-    ];
-    starPositions.forEach(s => {
-      _drawStar(ctx, s.x, s.y, fw * 0.07 * s.s, s.c);
-    });
-  }
-
-  if(id === 'blush'){
-    // Prominent cheek blush
-    _drawBlush(ctx, fx + fw*0.12, fy + fh*0.58, fw*0.17);
-    _drawBlush(ctx, fx + fw*0.88, fy + fh*0.58, fw*0.17);
-    // Small stars on cheeks
-    _drawStar(ctx, fx + fw*0.12, fy + fh*0.44, fw*0.04, '#ffaacc');
-    _drawStar(ctx, fx + fw*0.88, fy + fh*0.44, fw*0.04, '#ffaacc');
-  }
-
-  ctx.restore();
-}
-
-function _drawBlush(ctx, x, y, r){
-  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-  g.addColorStop(0, 'rgba(255,140,160,0.6)');
-  g.addColorStop(1, 'rgba(255,140,160,0)');
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.ellipse(x, y, r, r*0.6, 0, 0, Math.PI*2); ctx.fill();
-}
-
-function _drawStar(ctx, cx, cy, r, color){
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  for(let i=0; i<5; i++){
-    const a1 = (i*2*Math.PI/5) - Math.PI/2;
-    const a2 = a1 + Math.PI/5;
-    if(i===0) ctx.moveTo(cx + r*Math.cos(a1), cy + r*Math.sin(a1));
-    else ctx.lineTo(cx + r*Math.cos(a1), cy + r*Math.sin(a1));
-    ctx.lineTo(cx + r*0.4*Math.cos(a2), cy + r*0.4*Math.sin(a2));
-  }
-  ctx.closePath(); ctx.fill();
-}
-
-// ─────────────────────────────────────────
-// COORDINATE MAPPING (object-fit: cover correction)
-// ─────────────────────────────────────────
-// All face boxes are tracked in NATIVE VIDEO PIXEL coordinates
-// (video.videoWidth × video.videoHeight). This is the single source of
-// truth for both the live preview overlay and the final capture, so the
-// two can never drift apart (fixes the preview/capture mismatch).
-
-// Computes the scale + crop offsets that CSS `object-fit:cover` applies
-// when mapping a vW×vH video into a cW×cH container.
-function getCoverMap(vW, vH, cW, cH){
-  if(!vW || !vH || !cW || !cH) return {scale:1, offsetX:0, offsetY:0};
-  const videoAspect = vW/vH, containerAspect = cW/cH;
-  let scale, offsetX=0, offsetY=0;
-  if(videoAspect > containerAspect){
-    // video wider than container -> height matches, width overflows & crops
-    scale = cH/vH;
-    offsetX = (vW*scale - cW)/2;
-  } else {
-    // video taller than container -> width matches, height overflows & crops
-    scale = cW/vW;
-    offsetY = (vH*scale - cH)/2;
-  }
-  return {scale, offsetX, offsetY};
-}
-
-// Native video-space rect -> container (CSS pixel) rect, accounting for cover-crop
-function mapNativeToContainer(rect, map){
-  return {
-    x: rect.x*map.scale - map.offsetX,
-    y: rect.y*map.scale - map.offsetY,
-    width: rect.width*map.scale,
-    height: rect.height*map.scale,
-  };
-}
-
-// Native video-space rect -> capture square rect, accounting for the
-// center-crop-to-square used when exporting the photo.
-function mapNativeToSquareCrop(rect, sx, sy, cropDim, outputSize){
-  const s = outputSize/cropDim;
-  return {
-    x: (rect.x - sx)*s,
-    y: (rect.y - sy)*s,
-    width: rect.width*s,
-    height: rect.height*s,
-  };
-}
-
-// Extend a tight face-detector bounding box (forehead-to-chin) into a
-// "head" box so ears/hats/crowns anchor above the hairline rather than
-// sitting on the eyebrows. Proportional, so it works in any coordinate space.
-function adjustFaceBox(b){
-  const extendUp   = b.height*0.38;
-  const extendDown = b.height*0.05;
-  const extendSide = b.width*0.06;
-  return {
-    x: b.x - extendSide,
-    y: b.y - extendUp,
-    width: b.width + extendSide*2,
-    height: b.height + extendUp + extendDown,
-  };
-}
-
-// Linear interpolation between two face rects — used for smooth,
-// jitter-free following between detection updates.
-function lerpFace(a,b,t){
-  return {
-    x: a.x+(b.x-a.x)*t,
-    y: a.y+(b.y-a.y)*t,
-    width: a.width+(b.width-a.width)*t,
-    height: a.height+(b.height-a.height)*t,
-  };
-}
-
-// Stable centered "head" box in native video coordinates — used when no
-// face-detector result is available. Kept in the SAME coordinate space as
-// real detections so preview and capture remain consistent even without
-// a tracked face.
-function getFallbackFaceNative(vW, vH){
-  const minDim = Math.min(vW, vH);
-  const size = minDim * 0.46;
-  return {
-    x: (vW - size)/2,
-    y: (vH - size)/2 - minDim*0.05,
-    width: size,
-    height: size,
-  };
-}
-
-// ─────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────
-const L_COLS={'1x1':1,'1x2':1,'1x4':1,'2x2':2,'2x3':2,'3x3':3};
-const L_TAKE={'1x1':1,'1x2':2,'1x4':4,'2x2':4,'2x3':6,'3x3':9};
-
-let stream=null, facing='environment', filterId='normal';
-let photos=[], capturing=false, layout='1x1', dark=true, mirrored=false;
-let sheetOpen=false, flashEnabled=true;
+let stream = null, facing = 'environment', filterId = 'normal';
+let photos = [], capturing = false, layout = '1x1', dark = true, mirrored = false;
+let sheetOpen = false, flashEnabled = true;
 let activeOverlay = 'none';
-
-// PERF: off-screen canvas for Nokia post-process — created once, reused
 let nokiaOffscreen = null;
 
-// AR face detection state — all coordinates are in NATIVE VIDEO PIXELS
-let faceDetector = null, faceDetectSupported = false;
-let targetFaces = [];   // latest detector result, native coords, head-adjusted
-let renderFaces = [];   // smoothed/interpolated faces actually drawn each frame
-let faceMissCount = 0;
-const FACE_MISS_LIMIT = 6;       // ~1.2s of consecutive misses before falling back to center
-const AR_SMOOTH = 0.22;          // per-frame interpolation factor (higher = snappier)
-let arRafId = null;      // requestAnimationFrame id for AR loop
-let arLastDetect = 0;    // timestamp of last detection call
-const AR_DETECT_INTERVAL = 200; // ms — run face detection at 5fps max (cheap)
+let faceLandmarker = null;
+let lastLandmarks = null;
+let smoothLandmarks = null;
+let arRafId = null;
+let lastDetectionTime = 0;
+const DETECTION_INTERVAL = 100;
+
+const L_COLS = {'1x1':1,'1x2':1,'1x4':1,'2x2':2,'2x3':2,'3x3':3};
+const L_TAKE = {'1x1':1,'1x2':2,'1x4':4,'2x2':4,'2x3':6,'3x3':9};
 
 const $ = id => document.getElementById(id);
 const isMob = () => window.innerWidth < 769;
 
-// Active video element (only one is visible at a time — PERF key)
-function activeVideo(){ return isMob() ? $('video') : $('desk-video'); }
-function activeARCanvas(){ return isMob() ? $('ar-canvas') : $('desk-ar-canvas'); }
-// PERF: allVideos only needed for stream assignment and filter sync, not for per-frame ops
-function allVideos(){ return [$('video'), $('desk-video')].filter(Boolean); }
+function activeVideo() { return isMob() ? $('video') : $('desk-video'); }
+function activeARCanvas() { return isMob() ? $('ar-canvas') : $('desk-ar-canvas'); }
+function allVideos() { return [$('video'), $('desk-video')].filter(Boolean); }
 
-// ─────────────────────────────────────────
-// THEME
-// ─────────────────────────────────────────
-function toggleTheme(){
+function toggleTheme() {
   dark = !dark;
-  document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   $('theme-btn').textContent = dark ? '☀' : '🌙';
 }
 
-// ─────────────────────────────────────────
-// MIRROR
-// ─────────────────────────────────────────
-function toggleMirror(){
+function toggleMirror() {
   mirrored = !mirrored;
   allVideos().forEach(v => v.classList.toggle('mirrored', mirrored));
-  // Mirror the AR overlay canvases in lockstep with the video so overlays
-  // drawn in raw (unmirrored) native coordinates land in the correct
-  // on-screen position when the selfie camera is mirrored.
-  [$('ar-canvas'), $('desk-ar-canvas')].filter(Boolean)
-    .forEach(c => c.classList.toggle('mirrored', mirrored));
+  [$('ar-canvas'), $('desk-ar-canvas')].filter(Boolean).forEach(c => c.classList.toggle('mirrored', mirrored));
   $('mirror-btn').classList.toggle('on', mirrored);
-  const mob = $('mob-mirror-btn'); if(mob) mob.classList.toggle('on', mirrored);
-  const dt = $('desk-mirror-toggle'); if(dt) dt.classList.toggle('on', mirrored);
+  const mob = $('mob-mirror-btn'); if (mob) mob.classList.toggle('on', mirrored);
+  const dt = $('desk-mirror-toggle'); if (dt) dt.classList.toggle('on', mirrored);
 }
 
-// ─────────────────────────────────────────
-// FLASH
-// ─────────────────────────────────────────
-async function toggleFlash(){
+async function toggleFlash() {
   flashEnabled = !flashEnabled;
-  const mobBtn = $('mob-flash-btn'); if(mobBtn) mobBtn.classList.toggle('on', flashEnabled);
-  const deskTgl = $('desk-flash-toggle'); if(deskTgl) deskTgl.classList.toggle('on', flashEnabled);
-  if(stream){
+  const mobBtn = $('mob-flash-btn'); if (mobBtn) mobBtn.classList.toggle('on', flashEnabled);
+  const deskTgl = $('desk-flash-toggle'); if (deskTgl) deskTgl.classList.toggle('on', flashEnabled);
+  if (stream) {
     const track = stream.getVideoTracks()[0];
-    if(track){
-      try{
-        const caps = track.getCapabilities();
-        if(caps.torch) await track.applyConstraints({advanced:[{torch: flashEnabled && facing==='environment'}]});
-      }catch(e){}
+    if (track && track.getCapabilities().torch) {
+      try { await track.applyConstraints({ advanced: [{ torch: flashEnabled && facing === 'environment' }] }); } catch (e) {}
     }
   }
 }
 
-// ─────────────────────────────────────────
-// SHEET
-// ─────────────────────────────────────────
-function openSheet(){ sheetOpen=true; $('roll-sheet').classList.add('open'); $('sheet-backdrop').classList.add('show'); }
-function closeSheet(){ sheetOpen=false; $('roll-sheet').classList.remove('open'); $('sheet-backdrop').classList.remove('show'); }
+function openSheet() { sheetOpen = true; $('roll-sheet').classList.add('open'); $('sheet-backdrop').classList.add('show'); }
+function closeSheet() { sheetOpen = false; $('roll-sheet').classList.remove('open'); $('sheet-backdrop').classList.remove('show'); }
 
-// ─────────────────────────────────────────
-// TIMER UI
-// ─────────────────────────────────────────
-function syncTimerUI(val){
+function syncTimerUI(val) {
   const pill = $('mob-timer-pill');
-  if(pill){ pill.textContent=`${val}s`; pill.classList.toggle('active', parseInt(val)>0); }
+  if (pill) { pill.textContent = `${val}s`; pill.classList.toggle('active', parseInt(val) > 0); }
 }
 
-// ─────────────────────────────────────────
-// BUILD FILTER CHIPS
-// ─────────────────────────────────────────
-function buildFilters(){
+function buildFilters() {
   const ml = $('mob-filter-list'), dl = $('desk-filter-list');
   FILTERS.forEach(f => {
     const fv = f.css === 'none' ? 'none' : f.css;
     const mc = document.createElement('div');
-    mc.className = 'fchip' + (f.id==='normal'?' active':'');
+    mc.className = 'fchip' + (f.id === 'normal' ? ' active' : '');
     mc.dataset.fid = f.id; mc.onclick = () => applyFilter(f.id);
     mc.innerHTML = `<div class="fthumb"><div class="fthumb-inner" style="filter:${fv}"></div></div><div class="fchip-name">${f.name}</div>`;
     ml.appendChild(mc);
     const dc = document.createElement('div');
-    dc.className = 'desk-fchip' + (f.id==='normal'?' active':'');
+    dc.className = 'desk-fchip' + (f.id === 'normal' ? ' active' : '');
     dc.dataset.fid = f.id; dc.onclick = () => applyFilter(f.id);
     dc.innerHTML = `<div class="desk-fthumb"><div class="desk-fthumb-inner" style="filter:${fv}"></div></div><div class="desk-fchip-name">${f.name}</div>`;
     dl.appendChild(dc);
   });
 }
 
-function applyFilter(id){
+function applyFilter(id) {
   filterId = id;
   const f = FILTERS.find(x => x.id === id);
   const fv = f.css === 'none' ? '' : f.css;
-  // PERF: only apply to the currently active video, not both
   activeVideo().style.filter = fv;
-  // Keep both in sync for when layout switches
   allVideos().forEach(v => v.style.filter = fv);
-  ['vf-tag','desk-vf-tag'].forEach(tid => { const el=$(tid); if(el) el.textContent=f.name; });
-  document.querySelectorAll('.fchip').forEach(c => c.classList.toggle('active', c.dataset.fid===id));
-  document.querySelectorAll('.desk-fchip').forEach(c => c.classList.toggle('active', c.dataset.fid===id));
+  ['vf-tag', 'desk-vf-tag'].forEach(tid => { const el = $(tid); if (el) el.textContent = f.name; });
+  document.querySelectorAll('.fchip').forEach(c => c.classList.toggle('active', c.dataset.fid === id));
+  document.querySelectorAll('.desk-fchip').forEach(c => c.classList.toggle('active', c.dataset.fid === id));
 }
 
-// ─────────────────────────────────────────
-// BUILD AR PICKER
-// ─────────────────────────────────────────
-function buildARPicker(){
+function buildARPicker() {
   const mobRow = $('mob-ar-picker');
   const deskList = $('desk-ar-list');
   AR_OVERLAYS.forEach(ov => {
-    // Mobile: icon button row
     const mb = document.createElement('button');
-    mb.className = 'ar-btn' + (ov.id==='none'?' active':'');
+    mb.className = 'ar-btn' + (ov.id === 'none' ? ' active' : '');
     mb.dataset.aid = ov.id; mb.title = ov.name;
     mb.textContent = ov.emoji;
     mb.onclick = () => selectOverlay(ov.id);
     mobRow.appendChild(mb);
-    // Desktop: text button list
     const db = document.createElement('button');
-    db.className = 'desk-ar-btn' + (ov.id==='none'?' active':'');
+    db.className = 'desk-ar-btn' + (ov.id === 'none' ? ' active' : '');
     db.dataset.aid = ov.id;
     db.textContent = ov.emoji + ' ' + ov.name;
     db.onclick = () => selectOverlay(ov.id);
@@ -1097,198 +747,242 @@ function buildARPicker(){
   });
 }
 
-function selectOverlay(id){
+function selectOverlay(id) {
   activeOverlay = id;
-  document.querySelectorAll('.ar-btn').forEach(b => b.classList.toggle('active', b.dataset.aid===id));
-  document.querySelectorAll('.desk-ar-btn').forEach(b => b.classList.toggle('active', b.dataset.aid===id));
-  // Reset cached/smoothed faces when switching overlays so the new
-  // overlay doesn't inherit a stale interpolation target.
-  targetFaces = [];
-  renderFaces = [];
-  faceMissCount = 0;
+  document.querySelectorAll('.ar-btn').forEach(b => b.classList.toggle('active', b.dataset.aid === id));
+  document.querySelectorAll('.desk-ar-btn').forEach(b => b.classList.toggle('active', b.dataset.aid === id));
 }
 
-// ─────────────────────────────────────────
-// FACE DETECTION — FaceDetector API + fallback
-// ─────────────────────────────────────────
-async function initFaceDetector(){
-  if('FaceDetector' in window){
-    try{
-      faceDetector = new FaceDetector({fastMode: true, maxDetectedFaces: 2});
-      faceDetectSupported = true;
-    }catch(e){ faceDetectSupported = false; }
-  }
+async function initFaceLandmarker() {
+  const vision = window.vision;
+  if (!vision) { console.warn('MediaPipe not loaded'); return; }
+  try {
+    faceLandmarker = await vision.FaceLandmarker.createFromOptions(vision, {
+      baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task', delegate: 'GPU' },
+      runningMode: 'VIDEO',
+      numFaces: 1,
+      minFaceDetectionConfidence: 0.5,
+      minFacePresenceConfidence: 0.5,
+      minTrackingConfidence: 0.5,
+      outputFaceBlendshapes: false,
+      outputFacialTransformationMatrixes: true
+    });
+  } catch (e) { console.error('FaceLandmarker init failed:', e); }
 }
 
-// PERF: detect at max 5fps, cache result, non-blocking.
-// Stores results in NATIVE VIDEO PIXEL coordinates (no per-axis scaling —
-// that was the source of the cover-fit misalignment), with the bounding
-// box extended into a "head" box via adjustFaceBox().
-async function detectFaces(videoEl){
-  if(!faceDetectSupported || !faceDetector) return;
-  const now = performance.now();
-  if(now - arLastDetect < AR_DETECT_INTERVAL) return;
-  arLastDetect = now;
-  try{
-    const faces = await faceDetector.detect(videoEl);
-    if(faces.length){
-      targetFaces = faces.map(f => adjustFaceBox({
-        x: f.boundingBox.x, y: f.boundingBox.y,
-        width: f.boundingBox.width, height: f.boundingBox.height,
-      }));
-      faceMissCount = 0;
-    } else {
-      faceMissCount++;
-      // Tolerate brief detection gaps (a few frames) before falling back
-      // to the centered box, so the overlay doesn't snap/disappear.
-      if(faceMissCount > FACE_MISS_LIMIT) targetFaces = [];
+function getForeheadPoint(landmarks) {
+  const leftTemple = landmarks[54];
+  const rightTemple = landmarks[284];
+  const foreheadCenter = { x: (leftTemple.x + rightTemple.x) / 2, y: (leftTemple.y + rightTemple.y) / 2 - 0.08 };
+  return foreheadCenter;
+}
+
+function getHeadScale(landmarks, canvasW, canvasH) {
+  const leftCheek = landmarks[234];
+  const rightCheek = landmarks[454];
+  const width = Math.abs(rightCheek.x - leftCheek.x);
+  const height = Math.abs(landmarks[10].y - landmarks[152].y);
+  return Math.max(width, height) * Math.min(canvasW, canvasH) * 1.2;
+}
+
+function drawOverlay(ctx, landmarks, canvasW, canvasH) {
+  if (activeOverlay === 'none' || !landmarks) return;
+  
+  const forehead = getForeheadPoint(landmarks);
+  const leftEye = landmarks[33];
+  const rightEye = landmarks[263];
+  const nose = landmarks[1];
+  const faceCenter = { x: (leftEye.x + rightEye.x) / 2, y: (nose.y + forehead.y) / 2 };
+  const scale = getHeadScale(landmarks, canvasW, canvasH) * 0.8;
+  const x = faceCenter.x * canvasW;
+  const y = forehead.y * canvasH - scale * 0.25;
+  
+  ctx.save();
+  if (activeOverlay === 'cat') {
+    const earW = scale * 0.5;
+    const earH = scale * 0.6;
+    ctx.fillStyle = '#f4a0b0';
+    ctx.beginPath(); ctx.moveTo(x - earW, y + earH); ctx.lineTo(x, y - earH*0.5); ctx.lineTo(x + earW, y + earH); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ffccd5';
+    ctx.beginPath(); ctx.moveTo(x - earW*0.6, y + earH*0.6); ctx.lineTo(x, y - earH*0.2); ctx.lineTo(x + earW*0.6, y + earH*0.6); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + earW*0.4, y + earH*0.6); ctx.lineTo(x + earW, y - earH*0.5); ctx.lineTo(x + earW*1.6, y + earH*0.6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ffccd5';
+    ctx.beginPath(); ctx.moveTo(x + earW*0.8, y + earH*0.6); ctx.lineTo(x + earW*1.2, y - earH*0.2); ctx.lineTo(x + earW*1.6, y + earH*0.6); ctx.closePath(); ctx.fill();
+  } else if (activeOverlay === 'bunny') {
+    const earW = scale * 0.3;
+    const earH = scale * 0.9;
+    ctx.fillStyle = '#f8d0e0';
+    ctx.beginPath(); ctx.ellipse(x - earW, y - earH*0.4, earW*0.6, earH*0.5, -0.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + earW, y - earH*0.4, earW*0.6, earH*0.5, 0.2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffd0e8';
+    ctx.beginPath(); ctx.ellipse(x - earW, y - earH*0.4, earW*0.35, earH*0.35, -0.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + earW, y - earH*0.4, earW*0.35, earH*0.35, 0.2, 0, Math.PI*2); ctx.fill();
+  } else if (activeOverlay === 'bear') {
+    const earR = scale * 0.25;
+    ctx.fillStyle = '#c8905a';
+    ctx.beginPath(); ctx.arc(x - earR*1.2, y, earR, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + earR*1.2, y, earR, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#e8b07a';
+    ctx.beginPath(); ctx.arc(x - earR*1.2, y, earR*0.65, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + earR*1.2, y, earR*0.65, 0, Math.PI*2); ctx.fill();
+  } else if (activeOverlay === 'crown') {
+    const crownW = scale * 0.9;
+    const crownH = scale * 0.45;
+    ctx.fillStyle = '#f0c030';
+    ctx.beginPath();
+    ctx.moveTo(x - crownW/2, y);
+    ctx.lineTo(x - crownW/2, y - crownH*0.5);
+    ctx.lineTo(x - crownW*0.2, y - crownH*0.2);
+    ctx.lineTo(x, y - crownH);
+    ctx.lineTo(x + crownW*0.2, y - crownH*0.2);
+    ctx.lineTo(x + crownW/2, y - crownH*0.5);
+    ctx.lineTo(x + crownW/2, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#f04040';
+    ctx.beginPath(); ctx.arc(x - crownW*0.25, y - crownH*0.3, scale*0.05, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y - crownH*0.4, scale*0.06, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + crownW*0.25, y - crownH*0.3, scale*0.05, 0, Math.PI*2); ctx.fill();
+  } else if (activeOverlay === 'hearts') {
+    for (let i = 0; i < 5; i++) {
+      const angle = Date.now() * 0.002 + i * Math.PI * 2 / 5;
+      const offX = Math.cos(angle) * scale * 0.8;
+      const offY = Math.sin(angle) * scale * 0.6 - scale * 0.3;
+      ctx.fillStyle = `hsl(${340 + i * 10}, 70%, 65%)`;
+      ctx.beginPath();
+      ctx.moveTo(x + offX, y + offY - scale*0.05);
+      ctx.bezierCurveTo(x + offX - scale*0.1, y + offY - scale*0.2, x + offX - scale*0.2, y + offY - scale*0.05, x + offX, y + offY + scale*0.1);
+      ctx.bezierCurveTo(x + offX + scale*0.2, y + offY - scale*0.05, x + offX + scale*0.1, y + offY - scale*0.2, x + offX, y + offY - scale*0.05);
+      ctx.fill();
     }
-  }catch(e){}
+  } else if (activeOverlay === 'stars') {
+    for (let i = 0; i < 8; i++) {
+      const angle = Date.now() * 0.0015 + i * Math.PI * 2 / 8;
+      const rad = scale * (0.4 + Math.sin(Date.now() * 0.003 + i) * 0.1);
+      const sx = x + Math.cos(angle) * rad;
+      const sy = y + Math.sin(angle) * rad - scale*0.1;
+      ctx.fillStyle = `hsl(${50 + i * 10}, 100%, 65%)`;
+      ctx.beginPath();
+      for (let j = 0; j < 5; j++) {
+        const a1 = (j * Math.PI * 2 / 5) - Math.PI/2;
+        const a2 = a1 + Math.PI/5;
+        const r = scale * 0.07;
+        if (j === 0) ctx.moveTo(sx + r * Math.cos(a1), sy + r * Math.sin(a1));
+        else ctx.lineTo(sx + r * Math.cos(a1), sy + r * Math.sin(a1));
+        ctx.lineTo(sx + r * 0.4 * Math.cos(a2), sy + r * 0.4 * Math.sin(a2));
+      }
+      ctx.closePath(); ctx.fill();
+    }
+  } else if (activeOverlay === 'blush') {
+    const blushR = scale * 0.12;
+    ctx.fillStyle = 'rgba(255,140,160,0.5)';
+    ctx.beginPath(); ctx.ellipse(x - scale*0.35, y + scale*0.15, blushR, blushR*0.7, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + scale*0.35, y + scale*0.15, blushR, blushR*0.7, 0, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
 }
 
-// ─────────────────────────────────────────
-// AR RENDER LOOP — rAF, draws overlay on ar-canvas
-// ─────────────────────────────────────────
-// Every frame (60fps) interpolates renderFaces toward targetFaces
-// (updated at ~5fps by detectFaces). This is what gives the smooth,
-// TikTok-style "follow" feel instead of jitter/snapping.
-function startARLoop(){
-  if(arRafId) cancelAnimationFrame(arRafId);
-  function loop(){
+function startARLoop() {
+  if (arRafId) cancelAnimationFrame(arRafId);
+  async function loop() {
     arRafId = requestAnimationFrame(loop);
-
-    const ac  = activeARCanvas();
     const vid = activeVideo();
-    if(!ac || !vid) return;
-
-    if(activeOverlay === 'none'){
-      const actx = ac.getContext('2d');
-      actx.clearRect(0,0,ac.width,ac.height);
-      renderFaces = [];
+    const ac = activeARCanvas();
+    if (!vid || !ac || !stream || activeOverlay === 'none') {
+      if (ac) { const ctx = ac.getContext('2d'); ctx.clearRect(0, 0, ac.width, ac.height); }
       return;
     }
-    if(!stream) return;
-
-    // Sync canvas drawing-buffer size to the displayed video size.
-    // This is purely a canvas-buffer resize (position:absolute element) —
-    // it never affects flex layout, container sizing, or viewport dims.
-    if(ac.width !== vid.offsetWidth || ac.height !== vid.offsetHeight){
-      ac.width  = vid.offsetWidth;
+    if (ac.width !== vid.offsetWidth || ac.height !== vid.offsetHeight) {
+      ac.width = vid.offsetWidth;
       ac.height = vid.offsetHeight;
     }
-    if(!ac.width || !ac.height) return;
-
-    // Kick off face detection (non-blocking, result cached)
-    detectFaces(vid);
-
-    const vW = vid.videoWidth  || vid.offsetWidth  || 1;
-    const vH = vid.videoHeight || vid.offsetHeight || 1;
-
-    const targets = targetFaces.length ? targetFaces : [getFallbackFaceNative(vW, vH)];
-
-    // Smooth/interpolate toward targets every frame
-    if(renderFaces.length !== targets.length){
-      renderFaces = targets.map(t => ({...t}));
-    } else {
-      renderFaces = renderFaces.map((rf,i) => lerpFace(rf, targets[i], AR_SMOOTH));
+    const now = performance.now();
+    if (faceLandmarker && now - lastDetectionTime >= DETECTION_INTERVAL && vid.videoWidth > 0) {
+      lastDetectionTime = now;
+      try {
+        const results = await faceLandmarker.detectForVideo(vid, now);
+        if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+          lastLandmarks = results.faceLandmarks[0];
+          if (!smoothLandmarks) smoothLandmarks = lastLandmarks.map(l => ({ x: l.x, y: l.y }));
+          else {
+            for (let i = 0; i < lastLandmarks.length; i++) {
+              smoothLandmarks[i].x = smoothLandmarks[i].x * 0.7 + lastLandmarks[i].x * 0.3;
+              smoothLandmarks[i].y = smoothLandmarks[i].y * 0.7 + lastLandmarks[i].y * 0.3;
+            }
+          }
+        }
+      } catch (e) {}
     }
-
-    // Map native-coordinate faces into container (cover-fit) coordinates
-    const map = getCoverMap(vW, vH, ac.width, ac.height);
-    const actx = ac.getContext('2d');
-    actx.clearRect(0, 0, ac.width, ac.height);
-    renderFaces.forEach(face => {
-      const mapped = mapNativeToContainer(face, map);
-      drawOverlay(activeOverlay, actx, mapped, ac.width, ac.height);
-    });
+    const ctx = ac.getContext('2d');
+    ctx.clearRect(0, 0, ac.width, ac.height);
+    if (smoothLandmarks) drawOverlay(ctx, smoothLandmarks, ac.width, ac.height);
   }
   loop();
 }
 
-function stopARLoop(){
-  if(arRafId){ cancelAnimationFrame(arRafId); arRafId=null; }
+async function startCamera() {
+  try { await reqCam(facing); } catch (e) {}
 }
 
-// ─────────────────────────────────────────
-// CAMERA
-// ─────────────────────────────────────────
-async function startCamera(){
-  try{ await reqCam(facing); }catch(e){}
-}
-
-async function reqCam(fc){
-  if(stream){ stream.getTracks().forEach(t => t.stop()); stream=null; }
-  const c = fc==='any'
-    ? {video:{width:{ideal:4096},height:{ideal:2160}}, audio:false}
-    : {video:{facingMode:fc, width:{ideal:4096},height:{ideal:2160}}, audio:false};
+async function reqCam(fc) {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  const c = fc === 'any'
+    ? { video: { width: { ideal: 4096 }, height: { ideal: 2160 } }, audio: false }
+    : { video: { facingMode: fc, width: { ideal: 4096 }, height: { ideal: 2160 } }, audio: false };
   stream = await navigator.mediaDevices.getUserMedia(c);
-
-  // PERF: assign stream to BOTH video elements so switching layouts is instant
   allVideos().forEach(v => { v.srcObject = stream; });
-
-  ['no-cam','desk-no-cam'].forEach(id => { const el=$(id); if(el) el.style.display='none'; });
-  ['mob-capture-btn','desk-overlay-snap-btn'].forEach(id => { const el=$(id); if(el) el.disabled=false; });
-  const da = $('desk-allow-btn'); if(da) da.style.display='none';
+  ['no-cam', 'desk-no-cam'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  ['mob-capture-btn', 'desk-overlay-snap-btn'].forEach(id => { const el = $(id); if (el) el.disabled = false; });
+  const da = $('desk-allow-btn'); if (da) da.style.display = 'none';
   $('status-text').textContent = 'live';
-
   const f = FILTERS.find(x => x.id === filterId);
-  const fv = f.css==='none' ? '' : f.css;
-  allVideos().forEach(v => { v.style.filter = fv; if(mirrored) v.classList.add('mirrored'); else v.classList.remove('mirrored'); });
-
-  if(flashEnabled && fc==='environment'){
+  const fv = f.css === 'none' ? '' : f.css;
+  allVideos().forEach(v => { v.style.filter = fv; if (mirrored) v.classList.add('mirrored'); else v.classList.remove('mirrored'); });
+  if (flashEnabled && fc === 'environment') {
     setTimeout(async () => {
-      try{
-        const track = stream.getVideoTracks()[0];
-        if(track && track.getCapabilities().torch)
-          await track.applyConstraints({advanced:[{torch:true}]});
-      }catch(e){}
+      const track = stream.getVideoTracks()[0];
+      if (track && track.getCapabilities().torch) await track.applyConstraints({ advanced: [{ torch: true }] });
     }, 500);
   }
-
-  // Reset AR tracking state for the new stream
-  targetFaces = []; renderFaces = []; faceMissCount = 0;
   startARLoop();
 }
 
-async function switchCam(fc){
+async function switchCam(fc) {
   facing = fc;
-  const mobMap = {environment:'mob-btn-rear', user:'mob-btn-front', any:'mob-btn-any'};
-  const deskMap = {environment:'desk-btn-rear', user:'desk-btn-front', any:'desk-btn-any'};
-  [...Object.values(mobMap), ...Object.values(deskMap)].forEach(id => { const el=$(id); if(el) el.classList.remove('active'); });
-  [mobMap[fc], deskMap[fc]].forEach(id => { const el=$(id); if(el) el.classList.add('active'); });
-  if(stream) try{ await reqCam(fc); }catch(e){}
+  const mobMap = { environment: 'mob-btn-rear', user: 'mob-btn-front', any: 'mob-btn-any' };
+  const deskMap = { environment: 'desk-btn-rear', user: 'desk-btn-front', any: 'desk-btn-any' };
+  [...Object.values(mobMap), ...Object.values(deskMap)].forEach(id => { const el = $(id); if (el) el.classList.remove('active'); });
+  [mobMap[fc], deskMap[fc]].forEach(id => { const el = $(id); if (el) el.classList.add('active'); });
+  if (stream) try { await reqCam(fc); } catch (e) {}
 }
 
-// ─────────────────────────────────────────
-// CAPTURE
-// ─────────────────────────────────────────
-async function capturePhoto(){
-  if(capturing) return;
+async function capturePhoto() {
+  if (capturing) return;
   capturing = true;
-  ['mob-capture-btn','desk-overlay-snap-btn'].forEach(id => { const el=$(id); if(el) el.disabled=true; });
+  ['mob-capture-btn', 'desk-overlay-snap-btn'].forEach(id => { const el = $(id); if (el) el.disabled = true; });
   const timerVal = parseInt((isMob() ? $('mob-timer') : $('desk-timer')).value);
-  if(timerVal > 0) await runCd(timerVal);
+  if (timerVal > 0) await runCd(timerVal);
   doCapture();
   capturing = false;
-  ['mob-capture-btn','desk-overlay-snap-btn'].forEach(id => { const el=$(id); if(el) el.disabled=false; });
+  ['mob-capture-btn', 'desk-overlay-snap-btn'].forEach(id => { const el = $(id); if (el) el.disabled = false; });
 }
 
-function runCd(s){
+function runCd(s) {
   return new Promise(res => {
     let n = s;
-    const els = ['cdnum','desk-cdnum'].map($).filter(Boolean);
-    els.forEach(el => { el.textContent=n; el.classList.add('show'); });
+    const els = ['cdnum', 'desk-cdnum'].map($).filter(Boolean);
+    els.forEach(el => { el.textContent = n; el.classList.add('show'); });
     const t = setInterval(() => {
       n--;
-      if(n <= 0){ clearInterval(t); els.forEach(el => el.classList.remove('show')); res(); }
-      else els.forEach(el => el.textContent=n);
+      if (n <= 0) { clearInterval(t); els.forEach(el => el.classList.remove('show')); res(); }
+      else els.forEach(el => el.textContent = n);
     }, 1000);
   });
 }
 
-function fireFlash(){
-  if(!flashEnabled) return;
-  ['flash','desk-flash'].map($).filter(Boolean).forEach(el => {
+function fireFlash() {
+  if (!flashEnabled) return;
+  ['flash', 'desk-flash'].map($).filter(Boolean).forEach(el => {
     el.classList.remove('fade-out');
     el.classList.add('on');
     void el.offsetWidth;
@@ -1296,174 +990,82 @@ function fireFlash(){
   });
 }
 
-// ─────────────────────────────────────────
-// NOKIA POST-PROCESS — authentic early-2000s keypad-phone camera look
-// ─────────────────────────────────────────
-// Combines: low-res pixelation, sensor noise, limited dynamic range
-// (lifted shadows + washed highlights), greenish CCD color cast,
-// cheap-lens vignette, and an LCD-style date stamp. The final JPEG
-// re-encode at low quality (see doCapture) adds compression blocking.
-function applyNokiaPostProcess(ctx, outputSize){
-  const lowRes = 128; // emulate ~early-2000s sensor resolution
-  if(!nokiaOffscreen) nokiaOffscreen = document.createElement('canvas');
-  nokiaOffscreen.width = lowRes; nokiaOffscreen.height = lowRes;
+function applyNokiaPostProcess(ctx, outputSize) {
+  const lowRes = 120;
+  if (!nokiaOffscreen) nokiaOffscreen = document.createElement('canvas');
+  nokiaOffscreen.width = lowRes;
+  nokiaOffscreen.height = lowRes;
   const octx = nokiaOffscreen.getContext('2d');
-
-  // Desaturate + slight CCD color shift, baked in cheaply at 128px
-  octx.filter = 'saturate(0.7) contrast(0.9) brightness(1.08) hue-rotate(4deg)';
-  octx.imageSmoothingEnabled = true;
-  octx.imageSmoothingQuality = 'low';
+  octx.imageSmoothingEnabled = false;
   octx.drawImage(ctx.canvas, 0, 0, lowRes, lowRes);
-  octx.filter = 'none';
-
-  // Cheap sensor noise — scattered at low-res so it blockifies on upscale
-  const noiseCount = Math.floor(lowRes*lowRes*0.12);
-  for(let i=0;i<noiseCount;i++){
-    const nx = Math.random()*lowRes, ny = Math.random()*lowRes;
-    const v = Math.random()*255;
-    octx.fillStyle = `rgba(${v},${v},${v},0.08)`;
-    octx.fillRect(nx, ny, 1, 1);
-  }
-
-  // Upscale with NO smoothing = visible blocky pixelation
   ctx.imageSmoothingEnabled = false;
-  ctx.clearRect(0,0,outputSize,outputSize);
+  ctx.clearRect(0, 0, outputSize, outputSize);
   ctx.drawImage(nokiaOffscreen, 0, 0, outputSize, outputSize);
   ctx.imageSmoothingEnabled = true;
-
-  // Limited dynamic range: lift shadows, then compress/wash highlights
-  ctx.globalCompositeOperation = 'lighten';
-  ctx.fillStyle = 'rgba(28,26,24,0.10)';
-  ctx.fillRect(0,0,outputSize,outputSize);
-
   ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = 'rgba(238,232,218,0.85)';
-  ctx.fillRect(0,0,outputSize,outputSize);
-
-  // Greenish CCD color cast common to early phone sensors
-  ctx.globalCompositeOperation = 'overlay';
-  ctx.fillStyle = 'rgba(200,225,190,0.10)';
-  ctx.fillRect(0,0,outputSize,outputSize);
-
+  ctx.fillStyle = 'rgba(255,240,200,0.18)';
+  ctx.fillRect(0, 0, outputSize, outputSize);
   ctx.globalCompositeOperation = 'source-over';
-
-  // Cheap-lens corner falloff
-  const vignette = ctx.createRadialGradient(
-    outputSize/2, outputSize/2, outputSize*0.32,
-    outputSize/2, outputSize/2, outputSize*0.72
-  );
+  const vignette = ctx.createRadialGradient(outputSize/2, outputSize/2, outputSize*0.3, outputSize/2, outputSize/2, outputSize*0.7);
   vignette.addColorStop(0, 'rgba(0,0,0,0)');
-  vignette.addColorStop(1, 'rgba(0,0,0,0.28)');
+  vignette.addColorStop(1, 'rgba(0,0,0,0.22)');
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, outputSize, outputSize);
-
-  // Subtle LCD-style date stamp, like Nokia/SE keypad-cam overlays
-  const ts = new Date();
-  const stamp = `${String(ts.getMonth()+1).padStart(2,'0')}/${String(ts.getDate()).padStart(2,'0')}/${ts.getFullYear()}`;
-  ctx.font = `${Math.round(outputSize*0.032)}px monospace`;
-  ctx.textAlign = 'right';
-  ctx.shadowColor = 'rgba(0,0,0,0.6)';
-  ctx.shadowBlur = 2;
-  ctx.fillStyle = 'rgba(255,140,40,0.85)';
-  ctx.fillText(stamp, outputSize - outputSize*0.04, outputSize - outputSize*0.04);
-  ctx.shadowBlur = 0;
 }
 
-function doCapture(){
+function doCapture() {
   fireFlash();
   const vid = activeVideo();
-  // PERF: use mobile canvas on mobile, desktop canvas on desktop
   const cnv = isMob() ? $('canvas') : $('desk-canvas');
   const outputSize = 1080;
   cnv.width = outputSize; cnv.height = outputSize;
   const ctx = cnv.getContext('2d');
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-
   const f = FILTERS.find(x => x.id === filterId);
-  // PERF: ctx.filter is CPU-bound on Android for complex filters.
-  // For Nokia we skip ctx.filter and do it entirely in canvas ops instead.
-  if(!f.nokia){
-    ctx.filter = f.css === 'none' ? 'none' : f.css;
-  }
-
+  if (!f.nokia) ctx.filter = f.css === 'none' ? 'none' : f.css;
   const vW = vid.videoWidth || 1280;
   const vH = vid.videoHeight || 720;
   const minDim = Math.min(vW, vH);
   const sx = (vW - minDim) / 2;
   const sy = (vH - minDim) / 2;
-
-  if(mirrored){
-    ctx.save(); ctx.translate(outputSize,0); ctx.scale(-1,1);
+  if (mirrored) {
+    ctx.save(); ctx.translate(outputSize, 0); ctx.scale(-1, 1);
     ctx.drawImage(vid, sx, sy, minDim, minDim, 0, 0, outputSize, outputSize);
     ctx.restore();
   } else {
     ctx.drawImage(vid, sx, sy, minDim, minDim, 0, 0, outputSize, outputSize);
   }
   ctx.filter = 'none';
-
-  // Nokia post-process (applied after drawing)
-  if(f.nokia) applyNokiaPostProcess(ctx, outputSize);
-
-  // Draw the AR overlay directly onto the capture canvas using the SAME
-  // native-coordinate face data as the live preview, mapped through the
-  // square center-crop. This guarantees the captured overlay position
-  // matches what was shown live (fixes preview/capture mismatch) —
-  // instead of stretching the preview's cover-fit ar-canvas bitmap into
-  // a square, which previously produced a different transform than the
-  // live view used.
-  if(activeOverlay !== 'none'){
-    const faces = renderFaces.length ? renderFaces : [getFallbackFaceNative(vW, vH)];
-    const drawAll = () => {
-      faces.forEach(face => {
-        const mapped = mapNativeToSquareCrop(face, sx, sy, minDim, outputSize);
-        drawOverlay(activeOverlay, ctx, mapped, outputSize, outputSize);
-      });
-    };
-    if(mirrored){
-      // Re-apply the same mirror transform used for the photo so the
-      // overlay mirrors identically and stays aligned.
-      ctx.save(); ctx.translate(outputSize,0); ctx.scale(-1,1);
-      drawAll();
-      ctx.restore();
-    } else {
-      drawAll();
-    }
+  if (f.nokia) applyNokiaPostProcess(ctx, outputSize);
+  if (activeOverlay !== 'none' && smoothLandmarks) {
+    const ac = activeARCanvas();
+    if (ac && ac.width > 0 && ac.height > 0) ctx.drawImage(ac, 0, 0, outputSize, outputSize);
   }
-
-  // Nokia exports at lower JPEG quality to introduce authentic
-  // compression-block artifacts on top of the pixelation/noise/vignette.
-  const jpegQuality = f.nokia ? 0.45 : 0.94;
-
   const photo = {
     id: Date.now(),
-    data: cnv.toDataURL('image/jpeg', jpegQuality),
+    data: cnv.toDataURL('image/jpeg', 0.94),
     w: outputSize, h: outputSize, ar: 1,
-    filter: f.name + (flashEnabled?' + FLASH':'') + (activeOverlay!=='none'?' + '+activeOverlay.toUpperCase():''),
-    ts: new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
-    tilt: (Math.random()*4-2).toFixed(2),
+    filter: f.name + (flashEnabled ? ' + FLASH' : '') + (activeOverlay !== 'none' ? ' + ' + activeOverlay.toUpperCase() : ''),
+    ts: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    tilt: (Math.random() * 4 - 2).toFixed(2),
   };
   photos.unshift(photo);
   updateCounters(); rebuildGrids(); updateFoot();
 }
 
-// ─────────────────────────────────────────
-// GRID / COUNTERS
-// ─────────────────────────────────────────
-function updateCounters(){
+function updateCounters() {
   const h = `${photos.length} <small>shots</small>`;
-  ['mob-shot-ctr','desk-shot-ctr'].forEach(id => { const el=$(id); if(el) el.innerHTML=h; });
+  ['mob-shot-ctr', 'desk-shot-ctr'].forEach(id => { const el = $(id); if (el) el.innerHTML = h; });
 }
 
-function makePolaroidCard(photo, index){
+function makePolaroidCard(photo, index) {
   const div = document.createElement('div');
-  div.className = 'pol'; div.id = 'ph-'+photo.id;
+  div.className = 'pol'; div.id = 'ph-' + photo.id;
   div.style.setProperty('--tilt', `${photo.tilt}deg`);
   div.innerHTML = `
     <img class="pol-img" src="${photo.data}" style="aspect-ratio:1/1" alt="">
     <div class="pol-foot">
       <div class="p-meta">
-        <div style="color:var(--amber);font-weight:500;">INDEX FRAME #${String(index).padStart(2,'0')}</div>
+        <div style="color:var(--amber);font-weight:500;">INDEX FRAME #${String(index).padStart(2, '0')}</div>
         <div>EMU: ${photo.filter} // ${photo.ts}</div>
       </div>
       <div class="p-acts">
@@ -1474,185 +1076,171 @@ function makePolaroidCard(photo, index){
   return div;
 }
 
-function rebuildGrids(){
+function rebuildGrids() {
   const mg = $('mob-pol-grid'), dg = $('desk-pol-grid');
   const mt = $('mob-filmstrip-thumbs'), gp = $('mob-gallery-preview');
-
-  // Update filmstrip
   mt.innerHTML = '';
-  if(!photos.length){
+  if (!photos.length) {
     mt.innerHTML = '<div class="fs-empty">no assets captured in active roll pool</div>';
-    if(gp) gp.innerHTML = '<div class="gal-icon-fallback">⊞</div>';
+    if (gp) gp.innerHTML = '<div class="gal-icon-fallback">⊞</div>';
   } else {
-    photos.slice(0,6).forEach(p => {
-      const th = document.createElement('div'); th.className='fs-thumb';
+    photos.slice(0, 6).forEach(p => {
+      const th = document.createElement('div'); th.className = 'fs-thumb';
       th.onclick = openSheet;
-      // PERF: use a small thumbnail src instead of full base64 repeated
       th.innerHTML = `<img src="${p.data}">`;
       mt.appendChild(th);
     });
-    if(gp) gp.innerHTML = `<img src="${photos[0].data}">`;
+    if (gp) gp.innerHTML = `<img src="${photos[0].data}">`;
   }
-
-  // PERF: only rebuild the visible grid; other grid built lazily when sheet opens
   [mg, dg].forEach((g, idx) => {
-    if(!g) return;
+    if (!g) return;
     g.innerHTML = '';
-    const fallbackClass = idx===0 ? 'empty-st' : 'desk-empty';
-    if(!photos.length){
-      const e = document.createElement('div'); e.className=fallbackClass;
+    const fallbackClass = idx === 0 ? 'empty-st' : 'desk-empty';
+    if (!photos.length) {
+      const e = document.createElement('div'); e.className = fallbackClass;
       e.innerHTML = '<div class="ei">🎞️</div><p>session asset pool empty<br>awaiting digital capture input</p>';
       g.appendChild(e); return;
     }
     const cols = L_COLS[layout] || 1;
     const total = photos.length;
-    if(cols === 1){
-      photos.forEach((p, i) => g.appendChild(makePolaroidCard(p, total-i)));
+    if (cols === 1) {
+      photos.forEach((p, i) => g.appendChild(makePolaroidCard(p, total - i)));
       return;
     }
-    for(let i=0; i<photos.length; i+=cols){
-      const row = document.createElement('div'); row.className=`prow c${cols}`;
-      for(let j=0; j<cols; j++){
-        const ti = i+j;
-        if(photos[ti]) row.appendChild(makePolaroidCard(photos[ti], total-ti));
+    for (let i = 0; i < photos.length; i += cols) {
+      const row = document.createElement('div'); row.className = `prow c${cols}`;
+      for (let j = 0; j < cols; j++) {
+        const ti = i + j;
+        if (photos[ti]) row.appendChild(makePolaroidCard(photos[ti], total - ti));
       }
       g.appendChild(row);
     }
   });
 }
 
-function setLayout(mode, event){
-  if(event) event.stopPropagation();
+function setLayout(mode, event) {
+  if (event) event.stopPropagation();
   layout = mode;
-  document.querySelectorAll('.lp-btn').forEach(b => b.classList.toggle('active', b.dataset.l===mode));
-  document.querySelectorAll('.desk-lp-btn').forEach(b => b.classList.toggle('active', b.dataset.l===mode));
+  document.querySelectorAll('.lp-btn').forEach(b => b.classList.toggle('active', b.dataset.l === mode));
+  document.querySelectorAll('.desk-lp-btn').forEach(b => b.classList.toggle('active', b.dataset.l === mode));
   rebuildGrids();
 }
 
-// ─────────────────────────────────────────
-// DOWNLOAD
-// ─────────────────────────────────────────
-function framePolaroid(photo){
+function framePolaroid(photo) {
   return new Promise(res => {
-    const scale = Math.min(800/photo.w, 600/photo.h, 1);
-    const imgW = Math.round(photo.w*scale), imgH = Math.round(photo.h*scale);
-    const padS=24, padT=24, padB=88;
+    const scale = Math.min(800 / photo.w, 600 / photo.h, 1);
+    const imgW = Math.round(photo.w * scale), imgH = Math.round(photo.h * scale);
+    const padS = 24, padT = 24, padB = 88;
     const fc = document.createElement('canvas');
-    fc.width = imgW+padS*2; fc.height = imgH+padT+padB;
+    fc.width = imgW + padS * 2; fc.height = imgH + padT + padB;
     const ctx = fc.getContext('2d');
-    ctx.fillStyle = '#fdfaf4'; ctx.fillRect(0,0,fc.width,fc.height);
+    ctx.fillStyle = '#fdfaf4'; ctx.fillRect(0, 0, fc.width, fc.height);
     const img = new Image();
     img.onload = () => {
       ctx.drawImage(img, padS, padT, imgW, imgH);
-      ctx.strokeStyle='#e0d8cc'; ctx.lineWidth=1; ctx.strokeRect(padS,padT,imgW,imgH);
-      ctx.fillStyle='#8a7060'; ctx.font='500 12px "DM Mono",monospace'; ctx.textAlign='left';
-      ctx.fillText(photo.filter, padS+4, fc.height-56);
-      ctx.fillText(photo.ts, padS+4, fc.height-36);
-      ctx.fillStyle='#c8a070'; ctx.font='italic 10px Georgia,serif'; ctx.textAlign='right';
-      ctx.fillText('darkroom ✦ @hustino.28', fc.width-padS, fc.height-16);
+      ctx.strokeStyle = '#e0d8cc'; ctx.lineWidth = 1; ctx.strokeRect(padS, padT, imgW, imgH);
+      ctx.fillStyle = '#8a7060'; ctx.font = '500 12px "DM Mono",monospace'; ctx.textAlign = 'left';
+      ctx.fillText(photo.filter, padS + 4, fc.height - 56);
+      ctx.fillText(photo.ts, padS + 4, fc.height - 36);
+      ctx.fillStyle = '#c8a070'; ctx.font = 'italic 10px Georgia,serif'; ctx.textAlign = 'right';
+      ctx.fillText('darkroom ✦ @hustino.28', fc.width - padS, fc.height - 16);
       res(fc.toDataURL('image/jpeg', 0.94));
     };
     img.src = photo.data;
   });
 }
 
-function drawCover(ctx, img, x, y, w, h){
-  const sa=img.naturalWidth/img.naturalHeight, da=w/h;
-  let sx=0,sy=0,sw=img.naturalWidth,sh=img.naturalHeight;
-  if(sa>da){ sw=Math.round(sh*da); sx=Math.round((img.naturalWidth-sw)/2); }
-  else { sh=Math.round(sw/da); sy=Math.round((img.naturalHeight-sh)/2); }
-  ctx.drawImage(img, sx,sy,sw,sh, x,y,w,h);
+function drawCover(ctx, img, x, y, w, h) {
+  const sa = img.naturalWidth / img.naturalHeight, da = w / h;
+  let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight;
+  if (sa > da) { sw = Math.round(sh * da); sx = Math.round((img.naturalWidth - sw) / 2); }
+  else { sh = Math.round(sw / da); sy = Math.round((img.naturalHeight - sh) / 2); }
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-async function downloadOne(id){
-  const p = photos.find(x => x.id===id); if(!p) return;
+async function downloadOne(id) {
+  const p = photos.find(x => x.id === id); if (!p) return;
   const url = await framePolaroid(p);
-  const a = document.createElement('a'); a.href=url; a.download=`darkroom_${p.id}.jpg`; a.click();
+  const a = document.createElement('a'); a.href = url; a.download = `darkroom_${p.id}.jpg`; a.click();
 }
 
-async function downloadAll(){
-  if(!photos.length) return;
-  if(photos.length===1){ downloadOne(photos[0].id); return; }
-  const cols = L_COLS[layout]||1;
-  const take = Math.min(photos.length, L_TAKE[layout]||photos.length);
+async function downloadAll() {
+  if (!photos.length) return;
+  if (photos.length === 1) { downloadOne(photos[0].id); return; }
+  const cols = L_COLS[layout] || 1;
+  const take = Math.min(photos.length, L_TAKE[layout] || photos.length);
   const sub = photos.slice(0, take);
-  const rows = Math.ceil(sub.length/cols);
-  const cW=400,cH=400,padS=40,padT=24,capH=56,gap=20,hdrH=80,ftrH=40;
-  const sW=cols*cW+(cols-1)*gap+padS*2;
-  const sH=rows*(cH+capH)+(rows-1)*gap+padS*2+hdrH+ftrH;
-  const sheet = document.createElement('canvas'); sheet.width=sW; sheet.height=sH;
+  const rows = Math.ceil(sub.length / cols);
+  const cW = 400, cH = 400, padS = 40, padT = 24, capH = 56, gap = 20, hdrH = 80, ftrH = 40;
+  const sW = cols * cW + (cols - 1) * gap + padS * 2;
+  const sH = rows * (cH + capH) + (rows - 1) * gap + padS * 2 + hdrH + ftrH;
+  const sheet = document.createElement('canvas'); sheet.width = sW; sheet.height = sH;
   const ctx = sheet.getContext('2d');
-  const isDark = document.documentElement.getAttribute('data-theme')==='dark';
-
-  if(isDark){
-    ctx.fillStyle='#11110f'; ctx.fillRect(0,0,sW,sH);
-    ctx.fillStyle='#e0981c'; ctx.font='italic bold 26px Georgia,serif'; ctx.textAlign='center';
-    ctx.fillText('darkroom — photobooth', sW/2, padT+30);
-    ctx.font='11px monospace'; ctx.fillStyle='#7a7060';
-    ctx.fillText(`${layout} compilation  ✦  ${new Date().toLocaleDateString()}`, sW/2, padT+50);
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    ctx.fillStyle = '#11110f'; ctx.fillRect(0, 0, sW, sH);
+    ctx.fillStyle = '#e0981c'; ctx.font = 'italic bold 26px Georgia,serif'; ctx.textAlign = 'center';
+    ctx.fillText('darkroom — photobooth', sW / 2, padT + 30);
+    ctx.font = '11px monospace'; ctx.fillStyle = '#7a7060';
+    ctx.fillText(`${layout} compilation  ✦  ${new Date().toLocaleDateString()}`, sW / 2, padT + 50);
   } else {
-    ctx.fillStyle='#f5f1eb'; ctx.fillRect(0,0,sW,sH);
-    ctx.fillStyle='#c07810'; ctx.font='italic bold 26px Georgia,serif'; ctx.textAlign='center';
-    ctx.fillText('darkroom — photobooth', sW/2, padT+30);
-    ctx.font='11px monospace'; ctx.fillStyle='#a09488';
-    ctx.fillText(`${layout} compilation  ✦  ${new Date().toLocaleDateString()}`, sW/2, padT+50);
+    ctx.fillStyle = '#f5f1eb'; ctx.fillRect(0, 0, sW, sH);
+    ctx.fillStyle = '#c07810'; ctx.font = 'italic bold 26px Georgia,serif'; ctx.textAlign = 'center';
+    ctx.fillText('darkroom — photobooth', sW / 2, padT + 30);
+    ctx.font = '11px monospace'; ctx.fillStyle = '#a09488';
+    ctx.fillText(`${layout} compilation  ✦  ${new Date().toLocaleDateString()}`, sW / 2, padT + 50);
   }
-
-  const loadImg = src => new Promise(r => { const i=new Image(); i.onload=()=>r(i); i.src=src; });
+  const loadImg = src => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = src; });
   const total = photos.length;
-
-  for(let i=0; i<sub.length; i++){
-    const col=i%cols, row=Math.floor(i/cols);
-    const x=padS+col*(cW+gap), y=padS+hdrH+row*(cH+capH+gap);
-    if(isDark){
-      ctx.fillStyle='#000000'; ctx.fillRect(x-4,y-4,cW+8,cH+capH+8);
+  for (let i = 0; i < sub.length; i++) {
+    const col = i % cols, row = Math.floor(i / cols);
+    const x = padS + col * (cW + gap), y = padS + hdrH + row * (cH + capH + gap);
+    if (isDark) {
+      ctx.fillStyle = '#000000'; ctx.fillRect(x - 4, y - 4, cW + 8, cH + capH + 8);
     } else {
-      ctx.fillStyle='#fffef9'; ctx.fillRect(x-4,y-4,cW+8,cH+capH+8);
-      ctx.strokeStyle='#ede5d8'; ctx.lineWidth=1; ctx.strokeRect(x-4,y-4,cW+8,cH+capH+8);
+      ctx.fillStyle = '#fffef9'; ctx.fillRect(x - 4, y - 4, cW + 8, cH + capH + 8);
+      ctx.strokeStyle = '#ede5d8'; ctx.lineWidth = 1; ctx.strokeRect(x - 4, y - 4, cW + 8, cH + capH + 8);
     }
     const img = await loadImg(sub[i].data);
-    ctx.save(); ctx.beginPath(); ctx.rect(x,y,cW,cH); ctx.clip();
+    ctx.save(); ctx.beginPath(); ctx.rect(x, y, cW, cH); ctx.clip();
     drawCover(ctx, img, x, y, cW, cH); ctx.restore();
-    if(isDark){
-      ctx.fillStyle='#e0981c'; ctx.font='500 11px monospace'; ctx.textAlign='left';
-      ctx.fillText(`FRAME NUM-${String(total-i).padStart(2,'0')}`, x+4, y+cH+20);
-      ctx.fillStyle='#8a7060'; ctx.font='10px monospace';
-      ctx.fillText(`${sub[i].filter} // ${sub[i].ts}`, x+4, y+cH+38);
+    if (isDark) {
+      ctx.fillStyle = '#e0981c'; ctx.font = '500 11px monospace'; ctx.textAlign = 'left';
+      ctx.fillText(`FRAME NUM-${String(total - i).padStart(2, '0')}`, x + 4, y + cH + 20);
+      ctx.fillStyle = '#8a7060'; ctx.font = '10px monospace';
+      ctx.fillText(`${sub[i].filter} // ${sub[i].ts}`, x + 4, y + cH + 38);
     } else {
-      ctx.fillStyle='#c07810'; ctx.font='500 11px monospace'; ctx.textAlign='left';
-      ctx.fillText(`FRAME NUM-${String(total-i).padStart(2,'0')}`, x+4, y+cH+20);
-      ctx.fillStyle='#8a7a68'; ctx.font='10px monospace';
-      ctx.fillText(`${sub[i].filter} // ${sub[i].ts}`, x+4, y+cH+38);
+      ctx.fillStyle = '#c07810'; ctx.font = '500 11px monospace'; ctx.textAlign = 'left';
+      ctx.fillText(`FRAME NUM-${String(total - i).padStart(2, '0')}`, x + 4, y + cH + 20);
+      ctx.fillStyle = '#8a7a68'; ctx.font = '10px monospace';
+      ctx.fillText(`${sub[i].filter} // ${sub[i].ts}`, x + 4, y + cH + 38);
     }
   }
-  if(isDark){
-    ctx.fillStyle='#4a4540'; ctx.font='italic 10px Georgia,serif'; ctx.textAlign='center';
-    ctx.fillText('made by @hustino.28  ✦  matrix print core system', sW/2, sH-16);
+  if (isDark) {
+    ctx.fillStyle = '#4a4540'; ctx.font = 'italic 10px Georgia,serif'; ctx.textAlign = 'center';
+    ctx.fillText('made by @hustino.28  ✦  matrix print core system', sW / 2, sH - 16);
   } else {
-    ctx.fillStyle='#a09488'; ctx.font='italic 10px Georgia,serif'; ctx.textAlign='center';
-    ctx.fillText('made by @hustino.28  ✦  darkroom photobooth', sW/2, sH-16);
+    ctx.fillStyle = '#a09488'; ctx.font = 'italic 10px Georgia,serif'; ctx.textAlign = 'center';
+    ctx.fillText('made by @hustino.28  ✦  darkroom photobooth', sW / 2, sH - 16);
   }
   const a = document.createElement('a');
   a.href = sheet.toDataURL('image/jpeg', 0.94);
   a.download = `darkroom_strip_${Date.now()}.jpg`; a.click();
 }
 
-function deleteOne(id){ photos=photos.filter(p=>p.id!==id); updateCounters(); rebuildGrids(); updateFoot(); }
-function clearAll(){ if(!photos.length) return; photos=[]; updateCounters(); rebuildGrids(); updateFoot(); closeSheet(); }
+function deleteOne(id) { photos = photos.filter(p => p.id !== id); updateCounters(); rebuildGrids(); updateFoot(); }
+function clearAll() { if (!photos.length) return; photos = []; updateCounters(); rebuildGrids(); updateFoot(); closeSheet(); }
 
-function updateFoot(){
-  ['mob-clear-btn','desk-clear-btn'].forEach(id => { const el=$(id); if(el) el.disabled=!photos.length; });
-  ['mob-strip-btn','desk-dl-btn'].forEach(id => { if(!$(id)) return; $(id).disabled=!photos.length; $(id).textContent=photos.length>1?'compile strip':'download snapshot'; });
+function updateFoot() {
+  ['mob-clear-btn', 'desk-clear-btn'].forEach(id => { const el = $(id); if (el) el.disabled = !photos.length; });
+  ['mob-strip-btn', 'desk-dl-btn'].forEach(id => { if (!$(id)) return; $(id).disabled = !photos.length; $(id).textContent = photos.length > 1 ? 'compile strip' : 'download snapshot'; });
 }
 
-// ─────────────────────────────────────────
-// INIT
-// ─────────────────────────────────────────
 buildFilters();
 buildARPicker();
-initFaceDetector();
+initFaceLandmarker();
 navigator.mediaDevices.enumerateDevices()
-  .then(devs => { if(devs.some(d => d.kind==='videoinput' && d.label)) startCamera(); })
+  .then(devs => { if (devs.some(d => d.kind === 'videoinput' && d.label)) startCamera(); })
   .catch(() => {});
 </script>
 </body>
